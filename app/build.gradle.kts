@@ -11,8 +11,11 @@ val localProps = Properties().also { props ->
     if (f.exists()) f.inputStream().use(props::load)
 }
 
-// Release APK will be named myFlashCard-<versionName>.apk
-base.archivesName.set("myFlashCard")
+// Single source of truth for the version — bump here before every release
+val appVersion = "1.0"
+
+// Release APK will be named myFlashCard-<version>-release.apk
+base.archivesName.set("myFlashCard-$appVersion")
 
 android {
     namespace = "com.example.myflashcard"
@@ -25,7 +28,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = appVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
