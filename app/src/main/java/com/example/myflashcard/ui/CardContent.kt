@@ -175,9 +175,11 @@ fun TableBlock(block: Block.Table, accent: Color) {
     val totalCols   = block.columns.size
 
     // Narrow fixed width ONLY when the first column is the index "#".
-    // All other tables give every column equal space via weight(1f).
     val indexColumn = totalCols > 1 && block.columns.firstOrNull()?.trim() == "#"
     val indexWidth  = 36.dp
+
+    // Use JSON-supplied weights when available, otherwise equal weight(1f) per column.
+    val weights = block.columnWeights?.takeIf { it.size == totalCols }
 
     Column(modifier = Modifier.fillMaxWidth()) {
 
@@ -203,7 +205,11 @@ fun TableBlock(block: Block.Table, accent: Color) {
             ) {
                 block.columns.forEachIndexed { colIdx, col ->
                     val isIdx = indexColumn && colIdx == 0
-                    val mod   = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(1f)
+                    val mod = when {
+                        isIdx               -> Modifier.width(indexWidth)
+                        weights != null     -> Modifier.weight(weights[colIdx])
+                        else                -> Modifier.weight(1f)
+                    }
                     Text(
                         text       = col,
                         fontSize   = 13.sp,
@@ -227,7 +233,11 @@ fun TableBlock(block: Block.Table, accent: Color) {
                 ) {
                     row.forEachIndexed { colIdx, cell ->
                         val isIdx = indexColumn && colIdx == 0
-                        val mod   = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(1f)
+                        val mod = when {
+                            isIdx           -> Modifier.width(indexWidth)
+                            weights != null -> Modifier.weight(weights[colIdx])
+                            else            -> Modifier.weight(1f)
+                        }
                         Text(
                             text       = cell,
                             fontSize   = 15.sp,

@@ -36,7 +36,8 @@ sealed class Block {
         val heading: String?,
         val accentColor: String?,
         val columns: List<String>,
-        val rows: List<List<String>>
+        val rows: List<List<String>>,
+        val columnWeights: List<Float>? = null   // optional relative widths, e.g. [0.3, 0.7]
     ) : Block()
 
     data class TextBlock(val text: String) : Block()

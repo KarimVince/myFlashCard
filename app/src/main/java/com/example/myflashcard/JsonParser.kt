@@ -52,6 +52,9 @@ object JsonParser {
                     (0 until rowsArr.length()).map { i ->
                         rowsArr.getJSONArray(i).toStringList()
                     }
+                },
+                columnWeights = obj.optJSONArray("columnWeights")?.let { arr ->
+                    (0 until arr.length()).map { arr.getDouble(it).toFloat() }
                 }
             )
             "text" -> Block.TextBlock(obj.getString("text"))

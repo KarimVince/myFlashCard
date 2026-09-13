@@ -16,12 +16,31 @@
           "type": "table",
           "heading": "Causes principales",
           "accentColor": "#1A3A5C",
-          "columns": ["Facteur", "Conséquence"],
+          "columns": [
+            "Facteur",
+            "Conséquence"
+          ],
           "rows": [
-            ["Traité de Versailles", "Réparations lourdes, amputation du territoire, humiliation nationale"],
-            ["Crise de 1929", "Chômage massif, instabilité politique, ruine de la classe moyenne"],
-            ["Faiblesse de la SDN", "Aucune capacité à imposer la paix, isolationnisme américain"],
-            ["Montée des nationalismes", "Fascisme en Italie (1922), nazisme en Allemagne (1933)"]
+            [
+              "Traité de Versailles",
+              "Réparations lourdes, amputation du territoire, humiliation nationale"
+            ],
+            [
+              "Crise de 1929",
+              "Chômage massif, instabilité politique, ruine de la classe moyenne"
+            ],
+            [
+              "Faiblesse de la SDN",
+              "Aucune capacité à imposer la paix, isolationnisme américain"
+            ],
+            [
+              "Montée des nationalismes",
+              "Fascisme en Italie (1922), nazisme en Allemagne (1933)"
+            ]
+          ],
+          "columnWeights": [
+            0.38,
+            0.62
           ]
         },
         {
@@ -56,22 +75,56 @@
           "type": "table",
           "heading": "Mise en place de la dictature",
           "accentColor": "#1A3A5C",
-          "columns": ["Date", "Événement"],
+          "columns": [
+            "Date",
+            "Événement"
+          ],
           "rows": [
-            ["Fév. 1933", "Incendie du Reichstag — prétexte pour suspendre les libertés"],
-            ["Mars 1933", "Loi des pleins pouvoirs — Hitler légifère par décret"],
-            ["1934", "Nuit des Longs Couteaux — élimination des opposants internes"],
-            ["1935", "Lois de Nuremberg — discrimination légale des Juifs"],
-            ["1936", "Réoccupation de la Rhénanie — premier défi aux traités"],
-            ["1938", "Anschluss (annexion de l'Autriche) ; accords de Munich"]
+            [
+              "Fév. 1933",
+              "Incendie du Reichstag — prétexte pour suspendre les libertés"
+            ],
+            [
+              "Mars 1933",
+              "Loi des pleins pouvoirs — Hitler légifère par décret"
+            ],
+            [
+              "1934",
+              "Nuit des Longs Couteaux — élimination des opposants internes"
+            ],
+            [
+              "1935",
+              "Lois de Nuremberg — discrimination légale des Juifs"
+            ],
+            [
+              "1936",
+              "Réoccupation de la Rhénanie — premier défi aux traités"
+            ],
+            [
+              "1938",
+              "Anschluss (annexion de l'Autriche) ; accords de Munich"
+            ]
+          ],
+          "columnWeights": [
+            0.27,
+            0.73
           ]
         },
         {
           "type": "stats",
           "items": [
-            { "label": "Chômeurs en 1932", "value": "6 M" },
-            { "label": "Chômeurs en 1938", "value": "< 1 M" },
-            { "label": "Wehrmacht 1939", "value": "3 M ♟" }
+            {
+              "label": "Chômeurs en 1932",
+              "value": "6 M"
+            },
+            {
+              "label": "Chômeurs en 1938",
+              "value": "< 1 M"
+            },
+            {
+              "label": "Wehrmacht 1939",
+              "value": "3 M ♟"
+            }
           ]
         }
       ]
@@ -105,10 +158,23 @@
           "type": "table",
           "heading": "Deux zones en France",
           "accentColor": "#1A3A5C",
-          "columns": ["Zone", "Caractéristiques"],
+          "columns": [
+            "Zone",
+            "Caractéristiques"
+          ],
           "rows": [
-            ["Zone occupée (Nord)", "Sous contrôle direct allemand, Paris inclus"],
-            ["Zone libre (Sud)", "Gouvernement de Vichy, Pétain ; collaboration avec Berlin"]
+            [
+              "Zone occupée (Nord)",
+              "Sous contrôle direct allemand, Paris inclus"
+            ],
+            [
+              "Zone libre (Sud)",
+              "Gouvernement de Vichy, Pétain ; collaboration avec Berlin"
+            ]
+          ],
+          "columnWeights": [
+            0.3,
+            0.7
           ]
         }
       ]
@@ -127,12 +193,31 @@
           "type": "table",
           "heading": "La collaboration",
           "accentColor": "#4A3520",
-          "columns": ["Domaine", "Exemples"],
+          "columns": [
+            "Domaine",
+            "Exemples"
+          ],
           "rows": [
-            ["Politique", "Entrevue Montoire (Pétain–Hitler, oct. 1940)"],
-            ["Économique", "Livraisons de matières premières, travail forcé (STO)"],
-            ["Policière", "Rafle du Vél d'Hiv (juil. 1942) — 13 000 Juifs arrêtés par la police française"],
-            ["Idéologique", "Propagande antisémite, culte du Maréchal"]
+            [
+              "Politique",
+              "Entrevue Montoire (Pétain–Hitler, oct. 1940)"
+            ],
+            [
+              "Économique",
+              "Livraisons de matières premières, travail forcé (STO)"
+            ],
+            [
+              "Policière",
+              "Rafle du Vél d'Hiv (juil. 1942) — 13 000 Juifs arrêtés par la police française"
+            ],
+            [
+              "Idéologique",
+              "Propagande antisémite, culte du Maréchal"
+            ]
+          ],
+          "columnWeights": [
+            0.33,
+            0.67
           ]
         },
         {
@@ -163,20 +248,48 @@
           "type": "table",
           "heading": "Formes de résistance",
           "accentColor": "#2E5E2E",
-          "columns": ["Type", "Actions"],
+          "columns": [
+            "Type",
+            "Actions"
+          ],
           "rows": [
-            ["Résistance extérieure", "Forces françaises libres (FFL) de Gaulle depuis Londres"],
-            ["Résistance intérieure", "Réseaux clandestins, presse clandestine, sabotages"],
-            ["Maquis", "Jeunes fuyant le STO, groupes armés en zone rurale"],
-            ["CNR", "Conseil National de la Résistance unifié par Jean Moulin (1943)"]
+            [
+              "Résistance extérieure",
+              "Forces françaises libres (FFL) de Gaulle depuis Londres"
+            ],
+            [
+              "Résistance intérieure",
+              "Réseaux clandestins, presse clandestine, sabotages"
+            ],
+            [
+              "Maquis",
+              "Jeunes fuyant le STO, groupes armés en zone rurale"
+            ],
+            [
+              "CNR",
+              "Conseil National de la Résistance unifié par Jean Moulin (1943)"
+            ]
+          ],
+          "columnWeights": [
+            0.33,
+            0.67
           ]
         },
         {
           "type": "stats",
           "items": [
-            { "label": "Appel du 18 juin", "value": "1940" },
-            { "label": "Réseaux recensés", "value": "+200" },
-            { "label": "Morts résistants", "value": "~100K" }
+            {
+              "label": "Appel du 18 juin",
+              "value": "1940"
+            },
+            {
+              "label": "Réseaux recensés",
+              "value": "+200"
+            },
+            {
+              "label": "Morts résistants",
+              "value": "~100K"
+            }
           ]
         }
       ]
@@ -208,9 +321,18 @@
         {
           "type": "stats",
           "items": [
-            { "label": "Victimes juives", "value": "6 M" },
-            { "label": "Juifs français déportés", "value": "77 000" },
-            { "label": "Survivants Auschwitz", "value": "< 10 %" }
+            {
+              "label": "Victimes juives",
+              "value": "6 M"
+            },
+            {
+              "label": "Juifs français déportés",
+              "value": "77 000"
+            },
+            {
+              "label": "Survivants Auschwitz",
+              "value": "< 10 %"
+            }
           ]
         }
       ]
@@ -229,12 +351,37 @@
           "type": "table",
           "heading": "Les tournants décisifs",
           "accentColor": "#1A3A5C",
-          "columns": ["Événement", "Date", "Signification"],
+          "columns": [
+            "Événement",
+            "Date",
+            "Signification"
+          ],
           "rows": [
-            ["Opération Barbarossa", "Juin 1941", "Invasion de l'URSS — front de l'Est colossal"],
-            ["Pearl Harbor", "7 déc. 1941", "Entrée en guerre des États-Unis"],
-            ["Bataille de Stalingrad", "Fév. 1943", "Capitulation allemande — 300 000 soldats perdus"],
-            ["El-Alamein", "Nov. 1942", "Victoire britannique — fin de l'avancée en Afrique du Nord"]
+            [
+              "Opération Barbarossa",
+              "Juin 1941",
+              "Invasion de l'URSS — front de l'Est colossal"
+            ],
+            [
+              "Pearl Harbor",
+              "7 déc. 1941",
+              "Entrée en guerre des États-Unis"
+            ],
+            [
+              "Bataille de Stalingrad",
+              "Fév. 1943",
+              "Capitulation allemande — 300 000 soldats perdus"
+            ],
+            [
+              "El-Alamein",
+              "Nov. 1942",
+              "Victoire britannique — fin de l'avancée en Afrique du Nord"
+            ]
+          ],
+          "columnWeights": [
+            0.35,
+            0.23,
+            0.42
           ]
         },
         {
@@ -269,9 +416,18 @@
         {
           "type": "stats",
           "items": [
-            { "label": "Soldats J-1", "value": "156K" },
-            { "label": "Navires alliés", "value": "6 939" },
-            { "label": "Morts alliés J-1", "value": "~10K" }
+            {
+              "label": "Soldats J-1",
+              "value": "156K"
+            },
+            {
+              "label": "Navires alliés",
+              "value": "6 939"
+            },
+            {
+              "label": "Morts alliés J-1",
+              "value": "~10K"
+            }
           ]
         }
       ]
@@ -298,13 +454,35 @@
           "type": "table",
           "heading": "Bilan humain et matériel",
           "accentColor": "#8B1A1A",
-          "columns": ["Catégorie", "Estimation"],
+          "columns": [
+            "Catégorie",
+            "Estimation"
+          ],
           "rows": [
-            ["Morts totaux (monde)", "60 à 85 millions"],
-            ["Civils tués", "~55 % des victimes"],
-            ["URSS (pertes totales)", "27 millions"],
-            ["France (pertes totales)", "600 000"],
-            ["Déplacés en Europe 1945", "40 millions"]
+            [
+              "Morts totaux (monde)",
+              "60 à 85 millions"
+            ],
+            [
+              "Civils tués",
+              "~55 % des victimes"
+            ],
+            [
+              "URSS (pertes totales)",
+              "27 millions"
+            ],
+            [
+              "France (pertes totales)",
+              "600 000"
+            ],
+            [
+              "Déplacés en Europe 1945",
+              "40 millions"
+            ]
+          ],
+          "columnWeights": [
+            0.42,
+            0.58
           ]
         },
         {
@@ -323,14 +501,39 @@
           "type": "table",
           "heading": "Vocabulaire essentiel",
           "accentColor": "#1A3A5C",
-          "columns": ["Terme", "Définition"],
+          "columns": [
+            "Terme",
+            "Définition"
+          ],
           "rows": [
-            ["Totalitarisme", "Régime qui contrôle tous les aspects de la vie publique et privée"],
-            ["Collaboration", "Coopération active d'un gouvernement avec l'occupant ennemi"],
-            ["Résistance", "Opposition organisée à l'occupant par des moyens clandestins ou armés"],
-            ["Génocide", "Destruction systématique et intentionnelle d'un groupe ethnique ou religieux"],
-            ["Blitzkrieg", "Guerre éclair : offensive rapide combinant blindés, aviation et infanterie"],
-            ["Solution finale", "Euphémisme nazi désignant l'extermination systématique des Juifs d'Europe"]
+            [
+              "Totalitarisme",
+              "Régime qui contrôle tous les aspects de la vie publique et privée"
+            ],
+            [
+              "Collaboration",
+              "Coopération active d'un gouvernement avec l'occupant ennemi"
+            ],
+            [
+              "Résistance",
+              "Opposition organisée à l'occupant par des moyens clandestins ou armés"
+            ],
+            [
+              "Génocide",
+              "Destruction systématique et intentionnelle d'un groupe ethnique ou religieux"
+            ],
+            [
+              "Blitzkrieg",
+              "Guerre éclair : offensive rapide combinant blindés, aviation et infanterie"
+            ],
+            [
+              "Solution finale",
+              "Euphémisme nazi désignant l'extermination systématique des Juifs d'Europe"
+            ]
+          ],
+          "columnWeights": [
+            0.33,
+            0.67
           ]
         },
         {
