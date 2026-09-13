@@ -1,0 +1,346 @@
+{
+  "deckTitle": "La Seconde Guerre mondiale",
+  "accentColor": "#1A3A5C",
+  "cards": [
+    {
+      "title": "Chapitre 1 — Les origines",
+      "subtitle": "1918 – 1933",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Le traité de Versailles (1919) humilie l'Allemagne et prépare le terrain à la montée des extrêmes.",
+          "accentColor": "#1A3A5C"
+        },
+        {
+          "type": "table",
+          "heading": "Causes principales",
+          "accentColor": "#1A3A5C",
+          "columns": ["Facteur", "Conséquence"],
+          "rows": [
+            ["Traité de Versailles", "Réparations lourdes, amputation du territoire, humiliation nationale"],
+            ["Crise de 1929", "Chômage massif, instabilité politique, ruine de la classe moyenne"],
+            ["Faiblesse de la SDN", "Aucune capacité à imposer la paix, isolationnisme américain"],
+            ["Montée des nationalismes", "Fascisme en Italie (1922), nazisme en Allemagne (1933)"]
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Chronologie clé",
+          "style": "number",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "1919 — Traité de Versailles signé",
+            "1923 — Hyperinflation en Allemagne, putsch de Munich (Hitler)",
+            "1929 — Krach boursier de Wall Street",
+            "1933 — Hitler nommé chancelier (30 janvier)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 2 — L'Allemagne nazie",
+      "subtitle": "1933 – 1939",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Hitler instaure un régime totalitaire et réarme l'Allemagne en violation des traités.",
+          "accentColor": "#8B1A1A"
+        },
+        {
+          "type": "table",
+          "heading": "Mise en place de la dictature",
+          "accentColor": "#1A3A5C",
+          "columns": ["Date", "Événement"],
+          "rows": [
+            ["Fév. 1933", "Incendie du Reichstag — prétexte pour suspendre les libertés"],
+            ["Mars 1933", "Loi des pleins pouvoirs — Hitler légifère par décret"],
+            ["1934", "Nuit des Longs Couteaux — élimination des opposants internes"],
+            ["1935", "Lois de Nuremberg — discrimination légale des Juifs"],
+            ["1936", "Réoccupation de la Rhénanie — premier défi aux traités"],
+            ["1938", "Anschluss (annexion de l'Autriche) ; accords de Munich"]
+          ]
+        },
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Chômeurs en 1932", "value": "6 M" },
+            { "label": "Chômeurs en 1938", "value": "< 1 M" },
+            { "label": "Wehrmacht 1939", "value": "3 M ♟" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 3 — La drôle de guerre et la chute",
+      "subtitle": "Sept. 1939 – Juin 1940",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "En 6 semaines, la Wehrmacht écrase la France. L'armistice est signé le 22 juin 1940.",
+          "accentColor": "#8B1A1A"
+        },
+        {
+          "type": "steps",
+          "heading": "Déroulement",
+          "style": "number",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "1er sept. 1939 — Invasion de la Pologne par l'Allemagne",
+            "3 sept. 1939 — France et Royaume-Uni déclarent la guerre",
+            "Sept. 1939 – Mai 1940 — Drôle de guerre : front statique, pas de combats majeurs",
+            "10 mai 1940 — Offensive allemande (Plan Sichelschnitt) via les Ardennes",
+            "28 mai 1940 — Capitulation belge ; évacuation de Dunkerque (338 000 soldats)",
+            "14 juin 1940 — Paris occupée sans combat",
+            "22 juin 1940 — Armistice de Compiègne ; France coupée en deux zones"
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Deux zones en France",
+          "accentColor": "#1A3A5C",
+          "columns": ["Zone", "Caractéristiques"],
+          "rows": [
+            ["Zone occupée (Nord)", "Sous contrôle direct allemand, Paris inclus"],
+            ["Zone libre (Sud)", "Gouvernement de Vichy, Pétain ; collaboration avec Berlin"]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 4 — La France sous l'Occupation",
+      "subtitle": "1940 – 1944",
+      "accentColor": "#4A3520",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Le régime de Vichy collabore activement avec l'occupant nazi, notamment dans la persécution des Juifs.",
+          "accentColor": "#4A3520"
+        },
+        {
+          "type": "table",
+          "heading": "La collaboration",
+          "accentColor": "#4A3520",
+          "columns": ["Domaine", "Exemples"],
+          "rows": [
+            ["Politique", "Entrevue Montoire (Pétain–Hitler, oct. 1940)"],
+            ["Économique", "Livraisons de matières premières, travail forcé (STO)"],
+            ["Policière", "Rafle du Vél d'Hiv (juil. 1942) — 13 000 Juifs arrêtés par la police française"],
+            ["Idéologique", "Propagande antisémite, culte du Maréchal"]
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "La vie quotidienne",
+          "style": "bullet",
+          "accentColor": "#4A3520",
+          "items": [
+            "Rationnement alimentaire sévère (tickets de pain, de viande, de sucre)",
+            "Couvre-feu et contrôles d'identité permanents",
+            "Port de l'étoile jaune obligatoire pour les Juifs (à partir de 1942)",
+            "Marché noir florissant et débrouille généralisée"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 5 — La Résistance",
+      "subtitle": "1940 – 1944",
+      "accentColor": "#2E5E2E",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "« La France a perdu une bataille. Mais la France n'a pas perdu la guerre ! » — Général de Gaulle, 18 juin 1940",
+          "accentColor": "#2E5E2E"
+        },
+        {
+          "type": "table",
+          "heading": "Formes de résistance",
+          "accentColor": "#2E5E2E",
+          "columns": ["Type", "Actions"],
+          "rows": [
+            ["Résistance extérieure", "Forces françaises libres (FFL) de Gaulle depuis Londres"],
+            ["Résistance intérieure", "Réseaux clandestins, presse clandestine, sabotages"],
+            ["Maquis", "Jeunes fuyant le STO, groupes armés en zone rurale"],
+            ["CNR", "Conseil National de la Résistance unifié par Jean Moulin (1943)"]
+          ]
+        },
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Appel du 18 juin", "value": "1940" },
+            { "label": "Réseaux recensés", "value": "+200" },
+            { "label": "Morts résistants", "value": "~100K" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 6 — La Shoah",
+      "subtitle": "1941 – 1945",
+      "accentColor": "#2B1A0A",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "La Shoah est le génocide systématique de 6 millions de Juifs d'Europe, organisé par le régime nazi.",
+          "accentColor": "#8B1A1A"
+        },
+        {
+          "type": "steps",
+          "heading": "Étapes de la persécution",
+          "style": "number",
+          "accentColor": "#2B1A0A",
+          "items": [
+            "1933–1938 — Exclusion légale (Lois de Nuremberg, 1935) et boycott économique",
+            "Nov. 1938 — Nuit de Cristal : pogroms organisés en Allemagne",
+            "1939–1941 — Ghettoïsation en Pologne occupée (ghetto de Varsovie)",
+            "Juin 1941 — Einsatzgruppen : exécutions de masse à l'Est (ex. Babi Yar, 33 000 morts)",
+            "Jan. 1942 — Conférence de Wannsee : planification de la 'Solution finale'",
+            "1942–1945 — Camps d'extermination : Auschwitz-Birkenau, Treblinka, Sobibor…"
+          ]
+        },
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Victimes juives", "value": "6 M" },
+            { "label": "Juifs français déportés", "value": "77 000" },
+            { "label": "Survivants Auschwitz", "value": "< 10 %" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 7 — Le tournant de la guerre",
+      "subtitle": "1941 – 1943",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Trois événements renversent le cours de la guerre : Pearl Harbor, Stalingrad, El-Alamein.",
+          "accentColor": "#1A3A5C"
+        },
+        {
+          "type": "table",
+          "heading": "Les tournants décisifs",
+          "accentColor": "#1A3A5C",
+          "columns": ["Événement", "Date", "Signification"],
+          "rows": [
+            ["Opération Barbarossa", "Juin 1941", "Invasion de l'URSS — front de l'Est colossal"],
+            ["Pearl Harbor", "7 déc. 1941", "Entrée en guerre des États-Unis"],
+            ["Bataille de Stalingrad", "Fév. 1943", "Capitulation allemande — 300 000 soldats perdus"],
+            ["El-Alamein", "Nov. 1942", "Victoire britannique — fin de l'avancée en Afrique du Nord"]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 8 — Le Débarquement et la Libération",
+      "subtitle": "Juin – Août 1944",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Le 6 juin 1944 (D-Day), 156 000 soldats alliés débarquent en Normandie — le plus grand débarquement amphibie de l'histoire.",
+          "accentColor": "#2E5E2E"
+        },
+        {
+          "type": "steps",
+          "heading": "De Normandie à Paris",
+          "style": "number",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "6 juin 1944 — Débarquement de Normandie (opération Overlord) : Utah, Omaha, Gold, Juno, Sword",
+            "Juin – Août — Bataille de Normandie, percée d'Avranches (Patton)",
+            "15 août — Débarquement de Provence (opération Dragoon)",
+            "19–25 août — Insurrection parisienne ; libération de Paris par la 2e DB (Leclerc)",
+            "26 août 1944 — Défilé de de Gaulle sur les Champs-Élysées"
+          ]
+        },
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Soldats J-1", "value": "156K" },
+            { "label": "Navires alliés", "value": "6 939" },
+            { "label": "Morts alliés J-1", "value": "~10K" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chapitre 9 — La fin de la guerre et le bilan",
+      "subtitle": "1945",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "steps",
+          "heading": "Les derniers mois",
+          "style": "number",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "Janv.–Avril 1945 — Avancée alliée sur deux fronts (Ouest et Est)",
+            "30 avril 1945 — Suicide de Hitler dans son bunker à Berlin",
+            "8 mai 1945 — Capitulation allemande sans conditions — V-E Day",
+            "6 & 9 août 1945 — Bombes atomiques sur Hiroshima et Nagasaki",
+            "2 sept. 1945 — Capitulation japonaise — fin officielle de la WWII"
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Bilan humain et matériel",
+          "accentColor": "#8B1A1A",
+          "columns": ["Catégorie", "Estimation"],
+          "rows": [
+            ["Morts totaux (monde)", "60 à 85 millions"],
+            ["Civils tués", "~55 % des victimes"],
+            ["URSS (pertes totales)", "27 millions"],
+            ["France (pertes totales)", "600 000"],
+            ["Déplacés en Europe 1945", "40 millions"]
+          ]
+        },
+        {
+          "type": "note",
+          "text": "La guerre ouvre l'ère nucléaire, provoque la décolonisation et fonde un nouvel ordre mondial autour de l'ONU (1945) et de la Guerre froide.",
+          "accentColor": "#1A3A5C"
+        }
+      ]
+    },
+    {
+      "title": "Révision — Notions clés",
+      "subtitle": "À retenir pour le bac",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "table",
+          "heading": "Vocabulaire essentiel",
+          "accentColor": "#1A3A5C",
+          "columns": ["Terme", "Définition"],
+          "rows": [
+            ["Totalitarisme", "Régime qui contrôle tous les aspects de la vie publique et privée"],
+            ["Collaboration", "Coopération active d'un gouvernement avec l'occupant ennemi"],
+            ["Résistance", "Opposition organisée à l'occupant par des moyens clandestins ou armés"],
+            ["Génocide", "Destruction systématique et intentionnelle d'un groupe ethnique ou religieux"],
+            ["Blitzkrieg", "Guerre éclair : offensive rapide combinant blindés, aviation et infanterie"],
+            ["Solution finale", "Euphémisme nazi désignant l'extermination systématique des Juifs d'Europe"]
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Dates incontournables",
+          "style": "bullet",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "1933 — Hitler chancelier",
+            "1er sept. 1939 — Début de la guerre",
+            "22 juin 1940 — Armistice franco-allemand",
+            "18 juin 1940 — Appel de de Gaulle",
+            "Jan. 1942 — Conférence de Wannsee",
+            "6 juin 1944 — Débarquement en Normandie",
+            "8 mai 1945 — Victoire en Europe"
+          ]
+        }
+      ]
+    }
+  ]
+}

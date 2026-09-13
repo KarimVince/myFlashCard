@@ -1,0 +1,213 @@
+{
+  "deckTitle": "Top 3 Songs 2024",
+  "accentColor": "#7C3AED",
+  "cards": [
+    {
+      "title": "APT.",
+      "subtitle": "ROSÉ & Bruno Mars · 2024",
+      "accentColor": "#C026D3",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Artist", "value": "ROSÉ & Bruno Mars" },
+            { "label": "Released", "value": "Oct 2024" },
+            { "label": "Genre", "value": "K-Pop / Pop" }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "A playful drinking-game song built around the Korean party game 'Apartment', mixing K-pop and Bruno Mars' retro-pop style.",
+          "accentColor": "#C026D3"
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 1",
+          "style": "bullet",
+          "accentColor": "#C026D3",
+          "items": [
+            "Boy, you make me feel so good",
+            "I don't wanna stop, I think we should",
+            "Keep playing this game all night",
+            "You and me, we got this right"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎤 Refrain (Chorus)",
+          "style": "bullet",
+          "accentColor": "#9A12B3",
+          "items": [
+            "A-P-T, apartment",
+            "That's where I wanna be",
+            "With you, just you and me",
+            "Playing A-P-T"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 2",
+          "style": "bullet",
+          "accentColor": "#C026D3",
+          "items": [
+            "Pour another round tonight",
+            "We're doing fine, we're feeling right",
+            "Don't want this moment to end",
+            "Stay here with me, my friend"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Bridge",
+          "style": "bullet",
+          "accentColor": "#7C3AED",
+          "items": [
+            "Every time we play this game",
+            "Nothing ever feels the same",
+            "You got me under your spell",
+            "And that feeling I know so well"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Die with a Smile",
+      "subtitle": "Lady Gaga & Bruno Mars · 2024",
+      "accentColor": "#B45309",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Artist", "value": "Gaga & Bruno Mars" },
+            { "label": "Released", "value": "Aug 2024" },
+            { "label": "Genre", "value": "Pop / Ballad" }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "An emotional power ballad about finding joy and love even in the darkest moments — written and recorded in a single night.",
+          "accentColor": "#B45309"
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 1",
+          "style": "bullet",
+          "accentColor": "#B45309",
+          "items": [
+            "I wake up in the middle of the night",
+            "And everything is alright",
+            "As long as I'm holding you",
+            "Nothing can go wrong"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎤 Chorus",
+          "style": "bullet",
+          "accentColor": "#92400E",
+          "items": [
+            "If the world was ending",
+            "I'd want to be next to you",
+            "If the skies are falling down",
+            "I know that your love is true",
+            "And I, I don't wanna die",
+            "I just wanna die with a smile"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 2",
+          "style": "bullet",
+          "accentColor": "#B45309",
+          "items": [
+            "I've been running from my fears",
+            "For what feels like a million years",
+            "But every time I look at you",
+            "I know just what I'm fighting for"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Bridge",
+          "style": "bullet",
+          "accentColor": "#7C3AED",
+          "items": [
+            "So hold my hand, don't let me go",
+            "Together we will face it all",
+            "And when it's our time to leave",
+            "We'll go out in a blaze of love"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Espresso",
+      "subtitle": "Sabrina Carpenter · 2024",
+      "accentColor": "#B45309",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Artist", "value": "Sabrina Carpenter" },
+            { "label": "Released", "value": "Apr 2024" },
+            { "label": "Genre", "value": "Pop / Dance-Pop" }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "A witty, self-confident pop song about being irresistibly addictive — like a shot of espresso. Summer anthem of 2024.",
+          "accentColor": "#B45309"
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 1",
+          "style": "bullet",
+          "accentColor": "#B45309",
+          "items": [
+            "I can't relate to desperation",
+            "No, my give-a-damn's vacating",
+            "And I just need some sweet sensation",
+            "Some stimulation, some new temptation"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎤 Chorus",
+          "style": "bullet",
+          "accentColor": "#92400E",
+          "items": [
+            "That's that me espresso",
+            "And I'm bored — call it making moves",
+            "I'm that girl, I'm that girl",
+            "He said he can't stop thinking about me",
+            "I guess I'm just that girl"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 2",
+          "style": "bullet",
+          "accentColor": "#B45309",
+          "items": [
+            "I'm too busy for your love games",
+            "Got my own thing in the fast lane",
+            "You're just another new flame",
+            "But I like you, you're not the same"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Bridge",
+          "style": "bullet",
+          "accentColor": "#7C3AED",
+          "items": [
+            "Said you can't stop thinking about me",
+            "I guess I'm just that girl",
+            "Guess I make it look easy",
+            "Being this unforgettable"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -75,12 +75,255 @@ The AI will produce a JSON file following this structure:
 
 | Type | Description |
 |------|-------------|
-| `note` | Bold centred text — goals, warnings, tips |
+| `note` | Bold centred text — goals, warnings, key concept |
 | `stats` | Row of stat tiles (e.g. Prep time · Serves · Calories) |
 | `table` | Table with coloured header and striped rows |
 | `steps` | Numbered or bulleted list |
 | `text` | Plain paragraph |
 | `image` | Placeholder (local files not yet supported) |
+
+---
+
+## 📚 Card Deck Categories
+
+Each category below shows the recommended JSON structure and links to a ready-made example file you can load directly into the app or use as a template.
+
+---
+
+### 🍳 Recipe
+
+Use `stats` for cook time / servings, `steps` for ingredient list and method, `note` for a tip.
+
+<details>
+<summary>JSON template</summary>
+
+```json
+{
+  "deckTitle": "My Recipe Book",
+  "accentColor": "#A6543C",
+  "cards": [
+    {
+      "title": "Pasta Carbonara",
+      "subtitle": "Classic Italian",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Prep", "value": "10 min" },
+            { "label": "Cook", "value": "20 min" },
+            { "label": "Serves", "value": "2" }
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Ingredients",
+          "style": "bullet",
+          "items": ["200g spaghetti", "100g guanciale", "2 eggs", "50g Pecorino Romano", "Black pepper"]
+        },
+        {
+          "type": "steps",
+          "heading": "Method",
+          "style": "number",
+          "items": [
+            "Cook pasta in salted water until al dente.",
+            "Fry guanciale in a dry pan until crispy.",
+            "Mix eggs and cheese in a bowl.",
+            "Combine hot pasta with guanciale off the heat.",
+            "Add egg mixture, toss quickly. Serve immediately."
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Never add cream! The creaminess comes only from eggs and cheese."
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+**Example file:** [`design-reference/examples/`](design-reference/examples/)
+
+---
+
+### 🏋️ Training Plan
+
+Use `table` for weekly sessions, `note` for the goal, `stats` for duration / sets / reps.
+
+<details>
+<summary>JSON template</summary>
+
+```json
+{
+  "deckTitle": "4-Week Running Plan",
+  "accentColor": "#2E5E2E",
+  "cards": [
+    {
+      "title": "Week 1 — Foundation",
+      "subtitle": "Build the base",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Goal: run 3× this week, keep a conversational pace. No speed work yet.",
+          "accentColor": "#2E5E2E"
+        },
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Sessions", "value": "3" },
+            { "label": "Long run", "value": "5 km" },
+            { "label": "Total km", "value": "12 km" }
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Weekly schedule",
+          "accentColor": "#2E5E2E",
+          "columns": ["#", "Session"],
+          "rows": [
+            ["1", "Easy run 3 km — Monday"],
+            ["2", "Easy run 4 km — Wednesday"],
+            ["3", "Long run 5 km — Saturday"]
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+**Example file:** [`design-reference/soobahkdo_v4.json`](design-reference/soobahkdo_v4.json)
+
+---
+
+### 📖 Study — Class Notes
+
+Use one card per chapter. `note` for the key concept, `table` for dates/facts, `steps` for chronology or bullet points. Ideal for history, geography, sciences.
+
+<details>
+<summary>JSON template</summary>
+
+```json
+{
+  "deckTitle": "La Seconde Guerre mondiale",
+  "accentColor": "#1A3A5C",
+  "cards": [
+    {
+      "title": "Chapitre 1 — Les origines",
+      "subtitle": "1918 – 1933",
+      "accentColor": "#1A3A5C",
+      "blocks": [
+        {
+          "type": "note",
+          "text": "Le traité de Versailles humilie l'Allemagne et prépare le terrain à la montée des extrêmes.",
+          "accentColor": "#1A3A5C"
+        },
+        {
+          "type": "table",
+          "heading": "Causes principales",
+          "accentColor": "#1A3A5C",
+          "columns": ["Facteur", "Conséquence"],
+          "rows": [
+            ["Traité de Versailles", "Réparations lourdes, humiliation nationale"],
+            ["Crise de 1929", "Chômage massif, montée des extrêmes"],
+            ["Faiblesse de la SDN", "Incapacité à maintenir la paix"]
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Dates clés",
+          "style": "number",
+          "accentColor": "#1A3A5C",
+          "items": [
+            "1919 — Traité de Versailles",
+            "1929 — Crise économique mondiale",
+            "1933 — Hitler chancelier"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+**Full example (10 chapters — Terminale):** [`design-reference/examples/history-ww2-terminale.json`](design-reference/examples/history-ww2-terminale.json)
+
+---
+
+### 🎵 Song Lyrics
+
+One card per song. `stats` for artist / year / genre, `note` for the song description, `steps` with `"style": "bullet"` for each section (verse, chorus, bridge). Use the `heading` field to label each section.
+
+<details>
+<summary>JSON template</summary>
+
+```json
+{
+  "deckTitle": "My Playlist",
+  "accentColor": "#7C3AED",
+  "cards": [
+    {
+      "title": "Song Title",
+      "subtitle": "Artist · Year",
+      "accentColor": "#7C3AED",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Artist", "value": "Artist Name" },
+            { "label": "Released", "value": "2024" },
+            { "label": "Genre", "value": "Pop" }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Brief description of the song's theme or story.",
+          "accentColor": "#7C3AED"
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 1",
+          "style": "bullet",
+          "accentColor": "#7C3AED",
+          "items": [
+            "Line 1 of verse",
+            "Line 2 of verse",
+            "Line 3 of verse",
+            "Line 4 of verse"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎤 Chorus",
+          "style": "bullet",
+          "accentColor": "#5B21B6",
+          "items": [
+            "Chorus line 1",
+            "Chorus line 2",
+            "Chorus line 3"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Bridge",
+          "style": "bullet",
+          "accentColor": "#6D28D9",
+          "items": [
+            "Bridge line 1",
+            "Bridge line 2"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+**Example file (APT · Die with a Smile · Espresso):** [`design-reference/examples/songs-top3.json`](design-reference/examples/songs-top3.json)
 
 ---
 
