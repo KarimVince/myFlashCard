@@ -1,5 +1,6 @@
 package com.example.myflashcard.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,10 +10,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myflashcard.R
 
 @Composable
 fun PickerScreen(
@@ -27,17 +32,31 @@ fun PickerScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .padding(horizontal = 40.dp)
                 .widthIn(max = 400.dp)
         ) {
-            Text(
-                text = "Cards",
-                fontFamily = FontFamily.Serif,
-                fontSize = 48.sp,
-                color = PrimaryText
+            // ── App banner: icon + name ──────────────────────────────────
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "myFlashCard logo",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(22.dp))
             )
+
+            Text(
+                text = "myFlashCard",
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Bold,
+                fontSize = 34.sp,
+                color = PrimaryText,
+                letterSpacing = (-0.5).sp
+            )
+            // ─────────────────────────────────────────────────────────────
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "Load a JSON card file from your storage to get started.",
