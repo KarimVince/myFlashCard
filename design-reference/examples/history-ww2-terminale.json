@@ -35,6 +35,10 @@
             "1929 — Krach boursier de Wall Street",
             "1933 — Hitler nommé chancelier (30 janvier)"
           ]
+        },
+        {
+          "type": "text",
+          "text": "Le traité de Versailles impose à l'Allemagne la clause de « culpabilité de guerre » (article 231), des réparations colossales (132 milliards de marks-or) et la perte de 13 % de son territoire et de 10 % de sa population. Cette humiliation nourrit un sentiment de revanche intense au sein de la société allemande et offre une base idéologique aux mouvements nationalistes extrémistes. La crise économique de 1929 amplifie le mécontentement : en 1932, 6 millions d'Allemands sont au chômage, soit un tiers de la population active. C'est dans ce contexte que le NSDAP (Parti national-socialiste d'Hitler) passe de 2,6 % des voix en 1928 à 37,4 % en juillet 1932."
         }
       ]
     },
@@ -232,6 +236,10 @@
             ["Bataille de Stalingrad", "Fév. 1943", "Capitulation allemande — 300 000 soldats perdus"],
             ["El-Alamein", "Nov. 1942", "Victoire britannique — fin de l'avancée en Afrique du Nord"]
           ]
+        },
+        {
+          "type": "text",
+          "text": "La bataille de Stalingrad (août 1942 – fév. 1943) est le véritable tournant de la guerre à l'Est. La 6e armée allemande du maréchal Paulus, encerclée par l'opération Uranus soviétique, capitule avec 91 000 survivants sur 300 000 engagés. C'est la première grande défaite allemande et un choc psychologique pour le Reich. À l'Ouest, le débarquement allié en Afrique du Nord (nov. 1942) puis en Sicile (juil. 1943) ouvre un deuxième front. En Asie-Pacifique, la bataille de Midway (juin 1942) stoppe l'expansion japonaise. Après ces trois revers simultanés, l'Axe passe définitivement sur la défensive."
         }
       ]
     },

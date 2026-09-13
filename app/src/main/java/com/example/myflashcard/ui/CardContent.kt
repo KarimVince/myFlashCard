@@ -171,12 +171,13 @@ fun StepsBlock(block: Block.Steps, accent: Color) {
 
 @Composable
 fun TableBlock(block: Block.Table, accent: Color) {
-    val stripeTint = blendTowardWhite(accent, 0.78f)
-    val totalCols  = block.columns.size
+    val stripeTint  = blendTowardWhite(accent, 0.78f)
+    val totalCols   = block.columns.size
 
-    // First column gets a fixed compact width (fits "#" + single/double digits).
-    // All other columns share the remaining space equally via weight.
-    val firstColWidth = if (totalCols > 1) 36.dp else 0.dp   // 0 = not used for 1-col tables
+    // Narrow fixed width ONLY when the first column is the index "#".
+    // All other tables give every column equal space via weight(1f).
+    val indexColumn = totalCols > 1 && block.columns.firstOrNull()?.trim() == "#"
+    val indexWidth  = 36.dp
 
     Column(modifier = Modifier.fillMaxWidth()) {
 
@@ -201,17 +202,15 @@ fun TableBlock(block: Block.Table, accent: Color) {
                     .padding(horizontal = 10.dp, vertical = 8.dp)
             ) {
                 block.columns.forEachIndexed { colIdx, col ->
-                    val mod = if (colIdx == 0 && totalCols > 1)
-                        Modifier.width(firstColWidth)
-                    else
-                        Modifier.weight(1f)
+                    val isIdx = indexColumn && colIdx == 0
+                    val mod   = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(1f)
                     Text(
-                        text = col,
-                        fontSize = 13.sp,
+                        text       = col,
+                        fontSize   = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
-                        textAlign = if (colIdx == 0 && totalCols > 1) TextAlign.Center else TextAlign.Start,
-                        modifier = mod
+                        color      = Color.White,
+                        textAlign  = if (isIdx) TextAlign.Center else TextAlign.Start,
+                        modifier   = mod
                     )
                 }
             }
@@ -227,19 +226,16 @@ fun TableBlock(block: Block.Table, accent: Color) {
                         .padding(horizontal = 10.dp, vertical = 8.dp)
                 ) {
                     row.forEachIndexed { colIdx, cell ->
-                        val isFirst = colIdx == 0 && totalCols > 1
-                        val mod = if (isFirst)
-                            Modifier.width(firstColWidth)
-                        else
-                            Modifier.weight(1f)
+                        val isIdx = indexColumn && colIdx == 0
+                        val mod   = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(1f)
                         Text(
-                            text = cell,
-                            fontSize = 15.sp,
+                            text       = cell,
+                            fontSize   = 15.sp,
                             lineHeight = 21.sp,
-                            fontWeight = if (isFirst) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isFirst) accent else PrimaryText,
-                            textAlign = if (isFirst) TextAlign.Center else TextAlign.Start,
-                            modifier = mod
+                            fontWeight = if (isIdx) FontWeight.SemiBold else FontWeight.Normal,
+                            color      = if (isIdx) accent else PrimaryText,
+                            textAlign  = if (isIdx) TextAlign.Center else TextAlign.Start,
+                            modifier   = mod
                         )
                     }
                 }
@@ -251,17 +247,33 @@ fun TableBlock(block: Block.Table, accent: Color) {
     }
 }
 
-// ── Plain text ─────────────────────────────────────────────────────────────────
+// ── Plain text / detail section ────────────────────────────────────────────────
 
 @Composable
-fun TextBlockView(block: Block.TextBlock) {
-    Text(
-        text = block.text,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        color = PrimaryText,
-        modifier = Modifier.fillMaxWidth()
-    )
+fun TextBlockView(block: Block.TextBlock, accent: Color) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .background(DividerColor.copy(alpha = 0.25f))
+    ) {
+        // Left accent bar
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(accent)
+        )
+        Text(
+            text       = block.text,
+            fontSize   = 15.sp,
+            lineHeight = 23.sp,
+            color      = PrimaryText,
+            modifier   = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+        )
+    }
 }
 
 // ── Image placeholder ──────────────────────────────────────────────────────────
@@ -316,7 +328,7 @@ fun BlockView(block: Block, card: Card, deck: CardDeck) {
             is Block.Stats     -> StatsBlock(block)
             is Block.Steps     -> StepsBlock(block, accent)
             is Block.Table     -> TableBlock(block, accent)
-            is Block.TextBlock -> TextBlockView(block)
+            is Block.TextBlock -> TextBlockView(block, accent)
             is Block.Image     -> ImageBlockView(block)
         }
     }
