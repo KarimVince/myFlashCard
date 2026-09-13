@@ -12,7 +12,12 @@ val PrimaryText     = Color(0xFF2B2620)
 val DimText         = Color(0xFF8A8175)
 val DividerColor    = Color(0xFFE4DCCC)
 val DefaultAccent   = Color(0xFFA6543C)
-val StatTileBg      = Color(0xFFDFF2ED)   // light teal — consistent across all stat blocks
+// Stat tile palette — 3 distinct pastels cycled by position (same code on every card)
+val StatTileColors  = listOf(
+    Color(0xFFDFF2ED),   // 1st tile — light teal
+    Color(0xFFFDE8D8),   // 2nd tile — light peach
+    Color(0xFFE8EAF8)    // 3rd tile — light lavender
+)
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

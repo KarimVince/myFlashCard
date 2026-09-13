@@ -78,12 +78,13 @@ fun StatsBlock(block: Block.Stats) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        block.items.forEach { item ->
+        block.items.forEachIndexed { index, item ->
+            val tileBg = StatTileColors[index % StatTileColors.size]
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
-                    .background(StatTileBg, RoundedCornerShape(10.dp))
+                    .background(tileBg, RoundedCornerShape(10.dp))
                     .padding(vertical = 10.dp, horizontal = 8.dp)
             ) {
                 Text(
