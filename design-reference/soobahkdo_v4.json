@@ -1,0 +1,83 @@
+{
+  "deckTitle": "Soo Bahk Do Restart Plan",
+  "accentColor": "#7A2E3A",
+  "cards": [
+    {
+      "title": "Block A · Days 1–5",
+      "subtitle": "Stance & two basics only",
+      "blocks": [
+        {"type": "note", "text": "Goal: stances stop being effortful and become your default posture.", "accentColor": "#7A2E3A"},
+        {
+          "type": "table",
+          "heading": "Warm-up · 0–3 min",
+          "accentColor": "#3E7CB1",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Ankle circles, hip circles, arm swings"],
+            ["2", "10x rise onto toes"],
+            ["3", "Hold Ju Choom Sogi (horse stance): 3x 20 sec, reset each time"]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Basics · 3–10 min",
+          "accentColor": "#4C9A6A",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Step into Jun Kul Sogi (long front stance) — footwork only, 10 reps/side"],
+            ["2", "Add Ha Dan Makgi (low block) to the step, 10 reps/side"]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Forms · 10–15 min",
+          "accentColor": "#C1483C",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Jung Kwon Jirugi (middle punch) with the same step, 10 reps/side"],
+            ["2", "Finish: 5 slow exaggerated reps of block + punch — form over speed"]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Block B · Days 6–10",
+      "subtitle": "Combine block + punch, add Kibon Il Bu",
+      "blocks": [
+        {"type": "note", "text": "Goal: link block and punch into one rhythm; start the first form.", "accentColor": "#7A2E3A"},
+        {
+          "type": "table",
+          "heading": "Warm-up · 0–3 min",
+          "accentColor": "#3E7CB1",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Mobility as Block A"],
+            ["2", "Stance holds"]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Basics · 3–10 min",
+          "accentColor": "#4C9A6A",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Step forward, long front stance + low block"],
+            ["2", "From same stance, punch (no stepping) — 8 reps/side"]
+          ]
+        },
+        {
+          "type": "table",
+          "heading": "Forms · 10–15 min",
+          "accentColor": "#C1483C",
+          "columns": ["#", "Drill"],
+          "rows": [
+            ["1", "Begin Ki Cho Hyung Il Bu (Basic Form 1)"],
+            ["2", "Traces an \"I\" shape: left first, return, then centre line"],
+            ["3", "Learn movements 1–8 (first half) only this block"],
+            ["4", "Walk through slowly, check stance + hands each step"]
+          ]
+        }
+      ]
+    }
+  ]
+}

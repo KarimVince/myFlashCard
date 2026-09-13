@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cards</title>
+<style>
+  :root{
+    --bg:#F6F1E8;
+    --bg-raised:#FFFFFF;
+    --text:#2B2620;
+    --text-dim:#8A8175;
+    --line:#E4DCCC;
+    --accent:#A6543C;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow:hidden;
+  }
+  #app{
+    position:relative;
+    height:100vh; height:100dvh;
+    display:flex; flex-direction:column;
+  }
+
+  .topbar{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:18px 22px 10px;
+    flex-shrink:0;
+  }
+  .deck-name{ font-size:13px; color:var(--text-dim); }
+  .progress{ font-size:13px; color:var(--text-dim); font-variant-numeric: tabular-nums; }
+
+  #viewer{
+    display:flex; flex-direction:column;
+    flex:1; min-height:0; width:100%;
+  }
+  #viewer.hidden{ display:none !important; }
+
+  .card-wrap{
+    flex:1; min-height:0;
+    position:relative;
+    padding:0 22px;
+    overflow:hidden;
+  }
+  .card{
+    position:absolute; top:0; bottom:0; left:22px; right:22px;
+    display:flex; flex-direction:column;
+    overflow-y:auto;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .card.leaving-left{ transform:translateX(-24px); opacity:0; }
+  .card.leaving-right{ transform:translateX(24px); opacity:0; }
+
+  .card-title{
+    font-family: Georgia, "Times New Roman", serif;
+    font-size:27px;
+    line-height:1.22;
+    margin:2px 0 4px;
+    color:var(--accent-c, var(--accent));
+    text-align:center;
+  }
+  .card-subtitle{
+    font-size:14px;
+    color:var(--text-dim);
+    margin:0 0 16px;
+    text-align:center;
+  }
+
+  /* ---- blocks ---- */
+  .block{ margin-bottom:22px; }
+  .block:last-child{ margin-bottom:8px; }
+
+  .block-note{
+    font-size:15.5px; line-height:1.5;
+    font-weight:600;
+    text-align:center;
+    color:var(--accent-c, var(--accent));
+    padding:2px 4px 0;
+    margin-bottom:18px;
+  }
+
+  .block-stats{
+    display:flex;
+    gap:10px;
+  }
+  .stat{
+    flex:1;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .stat-value{
+    font-size:19px;
+    font-weight:600;
+    color:var(--accent-c, var(--accent));
+  }
+  .stat-label{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:2px;
+  }
+
+  .block-heading{
+    font-size:12px;
+    color:var(--accent-c, var(--accent));
+    margin:0 0 10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .block ul, .block ol{
+    list-style:none; margin:0; padding:0; counter-reset:step;
+  }
+  .block li{
+    font-size:16.5px;
+    line-height:1.5;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    display:flex; gap:12px;
+  }
+  .block li:last-child{ border-bottom:none; }
+  .bullet-list li::before{
+    content:"";
+    width:6px; height:6px; border-radius:50%;
+    background:var(--text-dim);
+    flex-shrink:0; margin-top:9px;
+  }
+  .number-list{ counter-reset:step; }
+  .number-list li::before{
+    counter-increment:step;
+    content:counter(step);
+    flex-shrink:0;
+    width:22px; height:22px;
+    border-radius:50%;
+    background:var(--accent-c, var(--accent));
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    margin-top:1px;
+  }
+
+  .block-text{
+    font-size:15.5px; line-height:1.6; color:var(--text);
+  }
+
+  .block-image{
+    width:100%;
+    aspect-ratio:16/10;
+    border-radius:10px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim);
+    font-size:13px;
+    overflow:hidden;
+  }
+  .block-image img{ width:100%; height:100%; object-fit:cover; }
+
+  .block-table{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:10px;
+    border:1px solid var(--line);
+  }
+  .block-table th{
+    background:var(--accent-c, var(--accent));
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+    text-align:left;
+    padding:9px 12px;
+  }
+  .block-table td{
+    font-size:15px;
+    line-height:1.4;
+    padding:10px 12px;
+    border-top:1px solid var(--line);
+    background:var(--bg-raised);
+    vertical-align:top;
+  }
+  .block-table tr:nth-child(even) td{
+    background: rgba(0,0,0,0.015);
+  }
+  .block-table td:first-child{
+    font-weight:600;
+    white-space:nowrap;
+    color:var(--accent-c, var(--accent));
+  }
+
+  .tapzone{ position:absolute; top:0; bottom:0; width:26%; z-index:2; }
+  .tapzone.left{ left:0; }
+  .tapzone.right{ right:0; }
+
+  .bottombar{
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px 22px;
+    gap:14px;
+  }
+  .navbtn{
+    background:var(--bg-raised);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 18px;
+    font-size:15px;
+    flex:1;
+  }
+  .navbtn:active{ background:var(--line); }
+  .navbtn:disabled{ opacity:0.3; }
+  .dots{ display:flex; gap:6px; flex-shrink:0; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .dot.active{ background:var(--accent-c, var(--accent)); width:16px; border-radius:3px; }
+
+  #picker{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px; text-align:center;
+    background:var(--bg);
+    z-index:10;
+  }
+  #picker h1{ font-family:Georgia,serif; font-weight:400; font-size:22px; margin:0 0 8px; }
+  #picker p{ color:var(--text-dim); font-size:14px; margin:0 0 28px; max-width:280px; line-height:1.5; }
+  #picker input{ display:none; }
+  .picker-btn{ background:var(--accent); color:#fff; border:none; border-radius:10px; padding:14px 28px; font-size:15px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="picker">
+    <h1>Cards</h1>
+    <p>Choose a card file (.json) to start.</p>
+    <label class="picker-btn">
+      Load card file
+      <input type="file" id="fileInput" accept="application/json">
+    </label>
+  </div>
+
+  <div id="viewer" class="hidden">
+    <div class="topbar">
+      <div class="deck-name" id="deckName"></div>
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="card-wrap">
+      <div class="tapzone left" id="tapLeft"></div>
+      <div class="tapzone right" id="tapRight"></div>
+      <div class="card" id="cardEl"></div>
+    </div>
+    <div class="bottombar">
+      <button class="navbtn" id="prevBtn">Prev</button>
+      <div class="dots" id="dots"></div>
+      <button class="navbtn" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let deck = null;
+let idx = 0;
+
+const picker = document.getElementById('picker');
+const viewer = document.getElementById('viewer');
+const fileInput = document.getElementById('fileInput');
+const cardEl = document.getElementById('cardEl');
+const deckName = document.getElementById('deckName');
+const progress = document.getElementById('progress');
+const dotsEl = document.getElementById('dots');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      deck = JSON.parse(evt.target.result);
+      idx = 0;
+      picker.classList.add('hidden');
+      viewer.classList.remove('hidden');
+      if (deck.accentColor) {
+        document.documentElement.style.setProperty('--accent-c', deck.accentColor);
+      }
+      renderCard();
+    } catch (err) {
+      alert('Could not read that file — make sure it is a valid card JSON.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+function esc(str){
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex, 16);
+  return { r: (num>>16)&255, g: (num>>8)&255, b: num&255 };
+}
+function lightTint(hex, amount){
+  // amount: 0 = full color, 1 = full white. Blends toward white for a true light tint.
+  const {r,g,b} = hexToRgb(hex);
+  const mix = (c) => Math.round(c + (255 - c) * amount);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+
+function renderBlock(block){
+  const accentStyle = block.accentColor ? ` style="--accent-c:${esc(block.accentColor)}"` : '';
+  switch(block.type){
+    case 'note': {
+      const noteStyle = block.accentColor ? ` style="color:${esc(block.accentColor)}"` : '';
+      return `<div class="block block-note"${noteStyle}>${esc(block.text)}</div>`;
+    }
+    case 'stats':
+      return `<div class="block block-stats"${accentStyle}>${
+        (block.items||[]).map(s => `
+          <div class="stat">
+            <div class="stat-value">${esc(s.value)}</div>
+            <div class="stat-label">${esc(s.label)}</div>
+          </div>`).join('')
+      }</div>`;
+    case 'steps': {
+      const listClass = block.style === 'number' ? 'number-list' : 'bullet-list';
+      const tag = block.style === 'number' ? 'ol' : 'ul';
+      return `<div class="block">
+        ${block.heading ? `<p class="block-heading"${accentStyle}>${esc(block.heading)}</p>` : ''}
+        <${tag} class="${listClass}"${accentStyle}>
+          ${(block.items||[]).map(i => `<li>${esc(i)}</li>`).join('')}
+        </${tag}>
+      </div>`;
+    }
+    case 'text':
+      return `<div class="block block-text">${esc(block.text)}</div>`;
+    case 'table': {
+      const cols = block.columns || [];
+      const thStyle = block.accentColor ? ` style="background:${esc(block.accentColor)}"` : '';
+      const numStyle = block.accentColor ? ` style="color:${esc(block.accentColor)}"` : '';
+      const stripeStyle = block.accentColor ? ` style="background:${lightTint(block.accentColor, 0.78)}"` : '';
+      return `<div class="block">
+        ${block.heading ? `<p class="block-heading"${accentStyle}>${esc(block.heading)}</p>` : ''}
+        <table class="block-table">
+          <thead><tr>${cols.map(c => `<th${thStyle}>${esc(c)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${(block.rows||[]).map((row,r) => `<tr${r % 2 === 1 ? stripeStyle : ''}>${row.map((cell,i) => i===0 ? `<td${numStyle}>${esc(cell)}</td>` : `<td>${esc(cell)}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }
+    case 'image':
+      return `<div class="block block-image">${block.url ? `<img src="${esc(block.url)}">` : '(image)'}</div>`;
+    default:
+      return '';
+  }
+}
+
+function renderCard(){
+  const c = deck.cards[idx];
+  deckName.textContent = deck.deckTitle || '';
+  progress.textContent = (idx+1) + ' / ' + deck.cards.length;
+
+  const cardAccentStyle = c.accentColor ? ` style="color:${esc(c.accentColor)}"` : '';
+
+  let html = `<div>`;
+  html += `<h1 class="card-title"${cardAccentStyle}>${esc(c.title || '')}</h1>`;
+  if (c.subtitle) html += `<p class="card-subtitle">${esc(c.subtitle)}</p>`;
+  (c.blocks || []).forEach(b => { html += renderBlock(b); });
+  html += `<div class="card-spacer"></div>`;
+  html += `</div>`;
+
+  cardEl.innerHTML = html;
+  cardEl.scrollTop = 0;
+  renderDots();
+  prevBtn.disabled = idx === 0;
+  nextBtn.disabled = idx === deck.cards.length - 1;
+}
+
+function renderDots(){
+  dotsEl.innerHTML = '';
+  deck.cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === idx ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
+}
+
+function go(delta){
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= deck.cards.length) return;
+  const dir = delta > 0 ? 'leaving-left' : 'leaving-right';
+  cardEl.classList.add(dir);
+  setTimeout(() => {
+    idx = newIdx;
+    cardEl.classList.remove(dir);
+    renderCard();
+  }, 160);
+}
+
+prevBtn.addEventListener('click', () => go(-1));
+nextBtn.addEventListener('click', () => go(1));
+document.getElementById('tapLeft').addEventListener('click', () => go(-1));
+document.getElementById('tapRight').addEventListener('click', () => go(1));
+
+let touchStartX = null;
+cardEl.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, {passive:true});
+cardEl.addEventListener('touchend', (e) => {
+  if (touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) go(dx < 0 ? 1 : -1);
+  touchStartX = null;
+}, {passive:true});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') go(1);
+  if (e.key === 'ArrowLeft') go(-1);
+});
+</script>
+</body>
+</html>

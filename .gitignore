@@ -1,0 +1,23 @@
+# Android build output
+build/
+app/build/
+.gradle/
+
+# Local configuration — SDK path and keystore credentials
+local.properties
+
+# Keystore — never commit signing keys to git
+*.keystore
+*.jks
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Gradle wrapper jar (keep the scripts, ignore the binary)
+gradle/wrapper/gradle-wrapper.jar

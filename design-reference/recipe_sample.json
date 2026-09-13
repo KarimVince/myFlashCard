@@ -1,0 +1,48 @@
+{
+  "deckTitle": "Weeknight Recipes",
+  "accentColor": "#C98A3B",
+  "cards": [
+    {
+      "title": "Garlic Butter Shrimp Pasta",
+      "subtitle": "20 min · Serves 2",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            {"label": "Prep", "value": "10 min"},
+            {"label": "Cook", "value": "10 min"},
+            {"label": "Serves", "value": "2"}
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Ingredients",
+          "style": "bullet",
+          "items": [
+            "200g linguine",
+            "300g shrimp, peeled",
+            "4 cloves garlic, minced",
+            "3 tbsp butter",
+            "Chili flakes, parsley, lemon"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "Method",
+          "style": "number",
+          "items": [
+            "Boil pasta until al dente, reserve 1 cup water",
+            "Melt butter, sauté garlic 30 sec until fragrant",
+            "Add shrimp, cook 2 min per side until pink",
+            "Toss in pasta + splash of pasta water, chili flakes",
+            "Finish with parsley and a squeeze of lemon"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Don't overcook the shrimp — pull them the moment they turn pink and curl."
+        }
+      ]
+    }
+  ]
+}
