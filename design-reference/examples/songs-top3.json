@@ -1,5 +1,5 @@
 {
-  "deckTitle": "Top 3 Songs 2024",
+  "deckTitle": "My Playlist",
   "accentColor": "#7C3AED",
   "cards": [
     {
@@ -205,6 +205,71 @@
             "I guess I'm just that girl",
             "Guess I make it look easy",
             "Being this unforgettable"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Poker Face",
+      "subtitle": "Lady Gaga · 2008",
+      "accentColor": "#1D1D1D",
+      "blocks": [
+        {
+          "type": "stats",
+          "items": [
+            { "label": "Artist", "value": "Lady Gaga" },
+            { "label": "Released", "value": "2008" },
+            { "label": "Genre", "value": "Dance-Pop / Electropop" }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Poker Face is about hiding your true feelings during a romantic encounter — keeping a 'poker face' so the other person can't read your emotions.",
+          "accentColor": "#1D1D1D"
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 1",
+          "style": "bullet",
+          "accentColor": "#1D1D1D",
+          "items": [
+            "← paste verse 1 lines here →"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Pre-Chorus",
+          "style": "bullet",
+          "accentColor": "#3D1A6E",
+          "items": [
+            "← paste pre-chorus lines here →"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎤 Chorus",
+          "style": "bullet",
+          "accentColor": "#6B21A8",
+          "items": [
+            "← paste chorus lines here →"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Verse 2",
+          "style": "bullet",
+          "accentColor": "#1D1D1D",
+          "items": [
+            "← paste verse 2 lines here →"
+          ]
+        },
+        {
+          "type": "steps",
+          "heading": "🎵 Bridge",
+          "style": "bullet",
+          "accentColor": "#3D1A6E",
+          "items": [
+            "← paste bridge lines here →"
           ]
         }
       ]
