@@ -83,7 +83,7 @@ fun StatsBlock(block: Block.Stats) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
-                    .background(DividerColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                    .background(StatTileBg, RoundedCornerShape(10.dp))
                     .padding(vertical = 10.dp, horizontal = 8.dp)
             ) {
                 Text(

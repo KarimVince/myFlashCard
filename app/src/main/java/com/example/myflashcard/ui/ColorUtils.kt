@@ -12,6 +12,7 @@ val PrimaryText     = Color(0xFF2B2620)
 val DimText         = Color(0xFF8A8175)
 val DividerColor    = Color(0xFFE4DCCC)
 val DefaultAccent   = Color(0xFFA6543C)
+val StatTileBg      = Color(0xFFDFF2ED)   // light teal — consistent across all stat blocks
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
