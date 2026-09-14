@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>myFlashCard Privacy Policy</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root {
+    --bg:        #F8F9FA;
+    --surface:   #FFFFFF;
+    --border:    #E2E6EA;
+    --text:      #111827;
+    --muted:     #4B5563;
+    --faint:     #9CA3AF;
+    --accent:    #0D6B5E;
+    --accent-bg: #EAF5F3;
+    --head: 'Outfit', system-ui, sans-serif;
+    --body: 'Source Serif 4', Georgia, serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0C1117;
+      --surface:   #151D27;
+      --border:    #1F2D3D;
+      --text:      #E5EAF0;
+      --muted:     #8B9AB0;
+      --faint:     #4A5668;
+      --accent:    #2AB5A0;
+      --accent-bg: #0D2B27;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 1rem;
+    line-height: 1.75;
+    padding: 0 20px 80px;
+  }
+  .wrap { max-width: 660px; margin: 0 auto; }
+
+  /* Header */
+  header { padding: 48px 0 36px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+  .app-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-bg); border: 1px solid var(--accent);
+    border-radius: 100px; padding: 4px 12px 4px 8px; margin-bottom: 20px;
+  }
+  .app-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .app-badge span {
+    font-family: var(--head); font-size: .75rem; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--accent);
+  }
+  header h1 {
+    font-family: var(--head); font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 700; color: var(--text); line-height: 1.2;
+    text-wrap: balance; margin-bottom: 12px;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--head); font-size: .82rem; color: var(--muted); }
+  .meta span::before {
+    content: ''; display: inline-block; width: 4px; height: 4px;
+    border-radius: 50%; background: var(--faint); margin-right: 8px;
+    vertical-align: middle; position: relative; top: -1px;
+  }
+  .meta span:first-child::before { display: none; }
+
+  /* Sections */
+  section { margin-bottom: 36px; }
+  section h2 {
+    font-family: var(--head); font-size: 1.05rem; font-weight: 600;
+    color: var(--text); margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  p { color: var(--muted); font-size: .97rem; margin-bottom: 12px; max-width: 62ch; }
+  p:last-child { margin-bottom: 0; }
+  p strong { color: var(--text); font-weight: 600; }
+
+  /* Key claim box */
+  .claim {
+    background: var(--accent-bg); border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0; padding: 14px 16px; margin: 24px 0 28px;
+  }
+  .claim p {
+    color: var(--accent); font-family: var(--head); font-size: .92rem;
+    font-weight: 500; line-height: 1.55; margin: 0; max-width: none;
+  }
+
+  /* Data table */
+  .data-row { display: grid; grid-template-columns: 200px 1fr; border-bottom: 1px solid var(--border); align-items: start; }
+  .data-row:first-of-type { border-top: 1px solid var(--border); }
+  .data-row > div { padding: 10px 12px; font-size: .88rem; line-height: 1.5; }
+  .data-row .label { font-family: var(--head); font-size: .82rem; font-weight: 600; color: var(--text); background: var(--bg); }
+  .data-row .value { color: var(--muted); }
+
+  /* Contact */
+  .contact-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .contact-box .co { font-family: var(--head); font-size: .95rem; font-weight: 600; color: var(--text); }
+  .contact-box .addr { font-size: .88rem; color: var(--muted); font-family: var(--head); }
+
+  /* Footer */
+  footer {
+    margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-family: var(--head); font-size: .78rem; color: var(--faint);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .data-row { grid-template-columns: 1fr; }
+    .data-row .label { padding-bottom: 2px; background: none; }
+    .data-row .value { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="app-badge"><div class="dot"></div><span>myFlashCard · WillYGO</span></div>
+    <h1>Privacy Policy</h1>
+    <div class="meta">
+      <span>Effective date: September 14, 2025</span>
+      <span>Last updated: September 14, 2025</span>
+      <span>Version 1.0</span>
+    </div>
+  </header>
+
+  <div class="claim">
+    <p>myFlashCard does not collect, store, or transmit any personal data. Everything stays on your device.</p>
+  </div>
+
+  <section>
+    <h2>What this policy covers</h2>
+    <p>This Privacy Policy describes how WillYGO Incorporation ("we", "our", or "us") handles information in connection with the <strong>myFlashCard</strong> mobile application for Android ("the app").</p>
+    <p>By using the app you confirm that you have read and understood this policy.</p>
+  </section>
+
+  <section>
+    <h2>Information we collect</h2>
+    <p>We collect <strong>no personal information</strong> of any kind. Specifically:</p>
+    <div class="data-row"><div class="label">Account or identity data</div><div class="value">Not collected. The app requires no account, login, or registration.</div></div>
+    <div class="data-row"><div class="label">Device identifiers</div><div class="value">Not collected. We do not read your device ID, advertising ID, or any hardware identifier.</div></div>
+    <div class="data-row"><div class="label">Location data</div><div class="value">Not collected. The app does not request or use location permissions.</div></div>
+    <div class="data-row"><div class="label">Usage analytics</div><div class="value">Not collected. There is no analytics SDK, crash reporter, or telemetry in the app.</div></div>
+    <div class="data-row"><div class="label">Flashcard content</div><div class="value">JSON deck files you load are read locally on your device and never sent anywhere.</div></div>
+    <div class="data-row"><div class="label">Network requests</div><div class="value">The app makes no network requests. It operates fully offline.</div></div>
+  </section>
+
+  <section>
+    <h2>How your data is stored</h2>
+    <p>Flashcard decks are JSON files that you select from your own device storage. The app reads them into memory to display your cards. No data is written to external storage or transmitted over the network.</p>
+    <p>When you close the app, no residual data is retained beyond what Android's standard app lifecycle manages on your device.</p>
+  </section>
+
+  <section>
+    <h2>Third-party services</h2>
+    <p>The app uses <strong>no third-party SDKs, advertising networks, analytics services, or cloud platforms</strong>. There is nothing to share with any third party because no data is collected in the first place.</p>
+  </section>
+
+  <section>
+    <h2>Children's privacy</h2>
+    <p>The app does not knowingly collect information from anyone, including children under the age of 13. Because we collect no data at all, the app is safe for users of any age in this respect.</p>
+  </section>
+
+  <section>
+    <h2>Changes to this policy</h2>
+    <p>If we update this policy, we will revise the "Last updated" date at the top. We will notify users of material changes through an in-app notice or an updated listing on Google Play. Continued use of the app after changes are posted constitutes acceptance of the revised policy.</p>
+  </section>
+
+  <section>
+    <h2>Contact us</h2>
+    <p>Questions about this privacy policy? Reach us at:</p>
+    <div class="contact-box">
+      <div class="co">WillYGO Incorporation</div>
+      <div class="addr">Email: privacy@willygo.app</div>
+      <div class="addr">App: myFlashCard for Android</div>
+      <div class="addr">Package: com.willygo.myflashcard</div>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2025 WillYGO Incorporation. All rights reserved.</span>
+    <span>myFlashCard v1.0 · Android</span>
+  </footer>
+
+</div>
+</body>
+</html>
