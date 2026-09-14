@@ -27,7 +27,8 @@ android {
         applicationId = "com.willygo.myflashcard"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
+        // CI injects VERSION_CODE via env var (github.run_number); local builds default to 1
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = appVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -70,6 +71,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // org.json is bundled on Android but not on the JVM host — required for unit tests
+    testImplementation("org.json:json:20240303")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

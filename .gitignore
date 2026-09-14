@@ -1,23 +1,39 @@
-# Android build output
-build/
-app/build/
-.gradle/
+# ── Android build output ───────────────────────────────────────────────────
+android/build/
+android/app/build/
+android/.gradle/
 
-# Local configuration — SDK path and keystore credentials
-local.properties
+# ── Local configuration — SDK path and keystore credentials ───────────────
+# Never committed; recreated locally from your own keystore + local.properties
+android/local.properties
 
-# Keystore — never commit signing keys to git
+# ── Keystore — never commit signing keys ──────────────────────────────────
+android/*.keystore
+android/*.jks
 *.keystore
 *.jks
 
-# Android Studio / IntelliJ
+# ── Android Studio / IntelliJ ─────────────────────────────────────────────
 .idea/
 *.iml
 *.iws
-.DS_Store
-captures/
-.externalNativeBuild/
-.cxx/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
 
-# Gradle wrapper jar (keep the scripts, ignore the binary)
-gradle/wrapper/gradle-wrapper.jar
+# ── Gradle wrapper jar (keep scripts, ignore the binary) ──────────────────
+android/gradle/wrapper/gradle-wrapper.jar
+
+# ── macOS ─────────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Stage 2 (added when backend/frontend land) ────────────────────────────
+backend/.env
+backend/__pycache__/
+backend/**/*.pyc
+frontend/.env.local
+frontend/.next/
+frontend/node_modules/
+
+# Gradle configuration cache (local only)
+.gradle/

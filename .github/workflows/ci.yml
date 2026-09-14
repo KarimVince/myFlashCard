@@ -1,0 +1,48 @@
+name: CI
+
+# Runs on every pull request to develop or main.
+# Purpose: verify the build compiles and all unit tests pass.
+# This workflow NEVER deploys anything.
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  android-tests:
+    name: Android — unit tests & debug build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android/**/*.gradle.kts', 'android/gradle/libs.versions.toml') }}
+          restore-keys: gradle-
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew test --no-daemon
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: android/app/build/reports/tests/
+
+      - name: Compile debug build
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon

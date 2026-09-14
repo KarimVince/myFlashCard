@@ -1,0 +1,153 @@
+name: Deploy
+
+# MANUAL TRIGGER ONLY — never runs automatically on push or merge.
+# Select target and environment in the GitHub Actions UI → "Run workflow".
+#
+# Targets:
+#   android  — build signed AAB → upload to Play Store
+#   backend  — Docker build → Render (Stage 2, not yet implemented)
+#   frontend — Next.js build → Render Static Site (Stage 2, not yet implemented)
+#   all      — all of the above
+#
+# Environments:
+#   staging    → Play Store Internal Testing track
+#   production → Play Store Production track
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'What to deploy'
+        required: true
+        type: choice
+        options:
+          - android
+          - backend
+          - frontend
+          - all
+        default: android
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+jobs:
+  # ── Step 0: Run full test suite before anything deploys ───────────────────
+  test:
+    name: Run all tests (pre-deploy gate)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android/**/*.gradle.kts', 'android/gradle/libs.versions.toml') }}
+          restore-keys: gradle-
+
+      - name: Android unit tests
+        working-directory: android
+        run: ./gradlew test --no-daemon
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-deploy
+          path: android/app/build/reports/tests/
+
+  # ── Step 1: Build signed AAB and upload to Play Store ────────────────────
+  deploy-android:
+    name: Build AAB → Play Store (${{ inputs.environment }})
+    needs: test
+    if: inputs.target == 'android' || inputs.target == 'all'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('android/**/*.gradle.kts', 'android/gradle/libs.versions.toml') }}
+          restore-keys: gradle-
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/willygo-release.keystore
+
+      - name: Write local.properties (CI credentials only — no sdk.dir needed)
+        run: |
+          printf 'KEYSTORE_PASSWORD=%s\nKEY_PASSWORD=%s\n' \
+            "${{ secrets.KEYSTORE_PASSWORD }}" \
+            "${{ secrets.KEY_PASSWORD }}" \
+            > android/local.properties
+
+      - name: Build signed release AAB
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB artifact (for inspection)
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+
+      - name: Upload to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          packageName: com.willygo.myflashcard
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          # staging → Internal Testing track; production → Production track
+          track: ${{ inputs.environment == 'production' && 'production' || 'internal' }}
+          status: completed
+          whatsNewDirectory: android/whatsnew
+
+  # ── Step 2 (Stage 2): Backend deploy — placeholder ───────────────────────
+  deploy-backend:
+    name: Backend → Render (Stage 2)
+    needs: test
+    if: (inputs.target == 'backend' || inputs.target == 'all') && false
+    # Remove "&& false" when backend is implemented in Stage 2
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Backend deploy not yet implemented (Stage 2)"
+
+  # ── Step 3 (Stage 2): Frontend deploy — placeholder ──────────────────────
+  deploy-frontend:
+    name: Frontend → Render Static Site (Stage 2)
+    needs: test
+    if: (inputs.target == 'frontend' || inputs.target == 'all') && false
+    # Remove "&& false" when frontend is implemented in Stage 2
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Frontend deploy not yet implemented (Stage 2)"
