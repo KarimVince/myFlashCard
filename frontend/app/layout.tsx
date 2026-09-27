@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "myFlashCard — Study anything, offline",
   description:
     "Free offline flashcard app for Android. Browse the public deck library or create your own JSON decks with AI.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
