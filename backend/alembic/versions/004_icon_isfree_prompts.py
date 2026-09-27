@@ -188,7 +188,7 @@ def upgrade() -> None:
             "is_free",
             sa.Boolean(),
             nullable=False,
-            server_default=sa.text("1"),
+            server_default=sa.text("true"),
         ),
     )
 
