@@ -30,7 +30,12 @@ android/gradle/wrapper/gradle-wrapper.jar
 # ── Stage 2 (added when backend/frontend land) ────────────────────────────
 backend/.env
 backend/__pycache__/
+backend/**/__pycache__/
 backend/**/*.pyc
+backend/.venv/
+backend/test.db
+backend/myflashcard.db
+backend/local_storage/
 frontend/.env.local
 frontend/.next/
 frontend/node_modules/
