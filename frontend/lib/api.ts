@@ -67,6 +67,10 @@ export function downloadUrl(id: number): string {
   return `${BASE}/decks/${id}/download`;
 }
 
+export async function getBuilds(): Promise<{ filename: string; url: string; size_mb: number }[]> {
+  return request<{ filename: string; url: string; size_mb: number }[]>("/builds");
+}
+
 // ── Admin endpoints ───────────────────────────────────────────────────────
 
 export async function adminListDecks(token: string): Promise<Deck[]> {

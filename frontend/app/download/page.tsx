@@ -1,6 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getBuilds } from "@/lib/api";
+
+type Build = { filename: string; url: string; size_mb: number };
+
+function fileIcon(filename: string) {
+  if (filename.endsWith(".aab")) return "📦";
+  if (filename.endsWith(".ipa")) return "🍎";
+  return "🤖";
+}
+
+function fileLabel(filename: string) {
+  if (filename.endsWith(".aab")) return "AAB · Google Play bundle";
+  if (filename.endsWith(".ipa")) return "IPA · iOS";
+  return "APK · Android sideload";
+}
 
 export default function DownloadPage() {
+  const [builds, setBuilds] = useState<Build[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getBuilds()
+      .then(setBuilds)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const apkBuilds = builds.filter((b) => b.filename.endsWith(".apk"));
+  const otherBuilds = builds.filter((b) => !b.filename.endsWith(".apk"));
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-20">
       <div className="text-center mb-16">
@@ -19,20 +49,38 @@ export default function DownloadPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">Android</h2>
-              <p className="text-sm text-gray-500">Android 8.0 and above · APK sideload</p>
+              <p className="text-sm text-gray-500">Android 8.0 and above</p>
             </div>
           </div>
 
-          <a
-            href={process.env.NEXT_PUBLIC_APK_URL ?? "/downloads/myflashcard.apk"}
-            download
-            className="flex items-center justify-center gap-3 bg-teal-600 text-white font-semibold px-6 py-3.5 rounded-xl hover:bg-teal-700 transition-colors shadow-sm w-full"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
-              <path d="M5 20h14v-2H5v2zm7-18L5.33 8h3.84v5h5.66V8h3.84L12 2z"/>
-            </svg>
-            Download APK
-          </a>
+          {loading && (
+            <div className="text-sm text-gray-400 text-center py-4">Loading…</div>
+          )}
+
+          {!loading && apkBuilds.length === 0 && (
+            <div className="text-sm text-gray-400 text-center py-4">No APK available yet.</div>
+          )}
+
+          {!loading && apkBuilds.length > 0 && (
+            <div className="space-y-3">
+              {apkBuilds.map((b) => (
+                <a
+                  key={b.filename}
+                  href={b.url}
+                  download
+                  className="flex items-center justify-between gap-3 bg-teal-600 text-white font-semibold px-6 py-3.5 rounded-xl hover:bg-teal-700 transition-colors shadow-sm w-full"
+                >
+                  <span className="flex items-center gap-3">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current shrink-0" aria-hidden="true">
+                      <path d="M5 20h14v-2H5v2zm7-18L5.33 8h3.84v5h5.66V8h3.84L12 2z"/>
+                    </svg>
+                    <span className="truncate">{b.filename}</span>
+                  </span>
+                  <span className="text-teal-200 text-sm shrink-0">{b.size_mb} MB</span>
+                </a>
+              ))}
+            </div>
+          )}
 
           <div className="mt-5 bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-2">
             <p className="font-semibold text-gray-800">How to install:</p>
@@ -48,6 +96,30 @@ export default function DownloadPage() {
             Google Play Store submission pending approval
           </p>
         </div>
+
+        {/* Other builds (AAB, IPA) if any */}
+        {!loading && otherBuilds.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Other builds</h2>
+            <div className="space-y-3">
+              {otherBuilds.map((b) => (
+                <a
+                  key={b.filename}
+                  href={b.url}
+                  download
+                  className="flex items-center justify-between gap-3 bg-gray-800 text-white font-semibold px-6 py-3.5 rounded-xl hover:bg-gray-700 transition-colors shadow-sm w-full"
+                >
+                  <span className="flex items-center gap-3">
+                    <span>{fileIcon(b.filename)}</span>
+                    <span className="truncate">{b.filename}</span>
+                    <span className="text-xs text-gray-400 hidden sm:inline">{fileLabel(b.filename)}</span>
+                  </span>
+                  <span className="text-gray-400 text-sm shrink-0">{b.size_mb} MB</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* iOS — coming soon */}
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 opacity-50 select-none">
