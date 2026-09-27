@@ -8,7 +8,7 @@ from app.auth import verify_admin_token
 from app.db import get_db
 from app.models import Category, Deck
 from app.schemas import CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate, VisibilityUpdate
-from app.storage import delete_deck, replace_deck, upload_build, upload_deck
+from app.storage import delete_deck, delete_build, list_builds, replace_deck, upload_build, upload_deck
 
 router = APIRouter(
     prefix="/admin",
@@ -248,6 +248,12 @@ ALLOWED_BUILD_TYPES = {
     "application/octet-stream": None,  # generic — allow, infer from filename
 }
 
+@router.get("/builds")
+async def list_app_builds():
+    """List all files in the downloads/ prefix."""
+    return list_builds()
+
+
 @router.post("/upload-build")
 async def upload_app_build(file: UploadFile = File(...)):
     """Upload an APK, AAB or IPA to R2 downloads/. Always overwrites the same filename."""
@@ -259,3 +265,10 @@ async def upload_app_build(file: UploadFile = File(...)):
     url = upload_build(filename, content, content_type)
     size_mb = round(len(content) / 1_048_576, 2)
     return {"filename": filename, "url": url, "size_mb": size_mb}
+
+
+@router.delete("/builds/{filename}")
+async def delete_app_build(filename: str):
+    """Delete a file from downloads/."""
+    delete_build(filename)
+    return {"deleted": filename}

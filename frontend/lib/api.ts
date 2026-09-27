@@ -209,6 +209,16 @@ export async function adminUpdateCategory(
   );
 }
 
+export async function adminListBuilds(
+  token: string,
+): Promise<{ filename: string; url: string; size_mb: number }[]> {
+  return request<{ filename: string; url: string; size_mb: number }[]>("/admin/builds", {}, token);
+}
+
+export async function adminDeleteBuild(token: string, filename: string): Promise<void> {
+  return request<void>(`/admin/builds/${encodeURIComponent(filename)}`, { method: "DELETE" }, token);
+}
+
 export async function adminUploadBuild(
   token: string,
   file: File,

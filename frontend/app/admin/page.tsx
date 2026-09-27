@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { adminListDecks, adminUploadBuild, getToken } from "@/lib/api";
+import { adminDeleteBuild, adminListBuilds, adminListDecks, adminUploadBuild, getToken } from "@/lib/api";
 import { Deck } from "@/lib/types";
 import Link from "next/link";
 
@@ -9,11 +9,24 @@ export default function AdminDashboard() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Build upload state
+  // Build upload / list state
   const fileRef = useRef<HTMLInputElement>(null);
   const [buildUploading, setBuildUploading] = useState(false);
   const [buildResult, setBuildResult] = useState<{ filename: string; url: string; size_mb: number } | null>(null);
   const [buildError, setBuildError] = useState<string | null>(null);
+  const [builds, setBuilds] = useState<{ filename: string; url: string; size_mb: number }[]>([]);
+  const [deletingBuild, setDeletingBuild] = useState<string | null>(null);
+
+  async function loadBuilds() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const list = await adminListBuilds(token);
+      setBuilds(list);
+    } catch {
+      // non-critical
+    }
+  }
 
   async function handleBuildUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -26,11 +39,28 @@ export default function AdminDashboard() {
     try {
       const result = await adminUploadBuild(token, file);
       setBuildResult(result);
+      await loadBuilds();
     } catch (err: unknown) {
       setBuildError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setBuildUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function handleDeleteBuild(filename: string) {
+    if (!confirm(`Delete "${filename}"?`)) return;
+    const token = getToken();
+    if (!token) return;
+    setDeletingBuild(filename);
+    try {
+      await adminDeleteBuild(token, filename);
+      setBuilds((prev) => prev.filter((b) => b.filename !== filename));
+      if (buildResult?.filename === filename) setBuildResult(null);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeletingBuild(null);
     }
   }
 
@@ -40,6 +70,7 @@ export default function AdminDashboard() {
     adminListDecks(token)
       .then(setDecks)
       .finally(() => setLoading(false));
+    loadBuilds();
   }, []);
 
   const publicCount = decks.filter((d) => d.is_public).length;
@@ -133,7 +164,7 @@ export default function AdminDashboard() {
         <h2 className="font-semibold text-gray-900 mb-4">App builds</h2>
         <div className="bg-white border border-gray-200 rounded-xl p-6">
           <p className="text-sm text-gray-500 mb-4">
-            Upload a new APK or AAB to replace the current build on R2. The download link on the website stays the same.
+            Upload a new APK or AAB to R2. Each filename is stored separately — upload with the same name to overwrite.
           </p>
 
           <label className={`inline-flex items-center gap-2 cursor-pointer font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm
@@ -158,6 +189,36 @@ export default function AdminDashboard() {
               <a href={buildResult.url} target="_blank" rel="noopener noreferrer"
                 className="text-green-800 underline break-all">{buildResult.url}</a>
             </div>
+          )}
+
+          {/* Build list */}
+          {builds.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Stored builds</p>
+              <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+                {builds.map((b) => (
+                  <div key={b.filename} className="flex items-center justify-between px-4 py-3 gap-3">
+                    <div className="min-w-0">
+                      <a href={b.url} target="_blank" rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-700 hover:underline truncate block">
+                        {b.filename}
+                      </a>
+                      <p className="text-xs text-gray-400">{b.size_mb} MB</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteBuild(b.filename)}
+                      disabled={deletingBuild === b.filename}
+                      className="shrink-0 text-xs text-red-500 hover:text-red-700 disabled:opacity-40 font-medium"
+                    >
+                      {deletingBuild === b.filename ? "Deleting…" : "Delete"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {builds.length === 0 && (
+            <p className="mt-4 text-sm text-gray-400">No builds uploaded yet.</p>
           )}
         </div>
       </section>

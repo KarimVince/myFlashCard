@@ -92,6 +92,47 @@ def upload_build(filename: str, content: bytes, content_type: str) -> str:
     return _public_url(path)
 
 
+def list_builds() -> list[dict]:
+    """Return [{filename, size_mb, url}] for all files in downloads/."""
+    prefix = "downloads/"
+    if _is_local():
+        folder = _LOCAL_ROOT / settings.r2_bucket / "downloads"
+        if not folder.exists():
+            return []
+        items = []
+        for p in sorted(folder.iterdir()):
+            if p.is_file():
+                items.append({
+                    "filename": p.name,
+                    "size_mb": round(p.stat().st_size / 1_048_576, 2),
+                    "url": _local_url(f"downloads/{p.name}"),
+                })
+        return items
+    r2 = _get_r2()
+    resp = r2.list_objects_v2(Bucket=settings.r2_bucket, Prefix=prefix)
+    items = []
+    for obj in resp.get("Contents", []):
+        key: str = obj["Key"]
+        filename = key[len(prefix):]
+        if not filename:
+            continue
+        items.append({
+            "filename": filename,
+            "size_mb": round(obj["Size"] / 1_048_576, 2),
+            "url": _public_url(key),
+        })
+    return items
+
+
+def delete_build(filename: str) -> None:
+    """Remove a file from downloads/."""
+    path = f"downloads/{filename}"
+    if _is_local():
+        _local_path(path).unlink(missing_ok=True)
+        return
+    _get_r2().delete_object(Bucket=settings.r2_bucket, Key=path)
+
+
 def replace_deck(storage_path: str, content: bytes) -> str:
     """Replace an existing file and return its public URL."""
     if _is_local():
