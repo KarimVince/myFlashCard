@@ -18,10 +18,16 @@ export default function LibraryTab({ onOpenDeck }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getCategories().then((cats) => {
-      setCategories(cats);
-      setActiveCat(cats[0]?.slug ?? null);
-    });
+    getCategories()
+      .then((cats) => {
+        setCategories(cats);
+        setActiveCat(cats[0]?.slug ?? null);
+        if (cats.length === 0) setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        setError("Could not connect to the server. Check your connection or try again later.");
+      });
   }, []);
 
   useEffect(() => {

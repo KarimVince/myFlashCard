@@ -2,5 +2,5 @@
 import AppShell from "@/components/app/AppShell";
 
 export default function AppPage() {
-  return <AppShell initialTab="library" />;
+  return <AppShell initialTab="decks" />;
 }
