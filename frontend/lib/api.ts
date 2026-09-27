@@ -208,3 +208,16 @@ export async function adminUpdateCategory(
     token,
   );
 }
+
+export async function adminUploadBuild(
+  token: string,
+  file: File,
+): Promise<{ filename: string; url: string; size_mb: number }> {
+  const form = new FormData();
+  form.append("file", file);
+  return request<{ filename: string; url: string; size_mb: number }>(
+    "/admin/upload-build",
+    { method: "POST", body: form },
+    token,
+  );
+}

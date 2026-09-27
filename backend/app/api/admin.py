@@ -8,7 +8,7 @@ from app.auth import verify_admin_token
 from app.db import get_db
 from app.models import Category, Deck
 from app.schemas import CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate, VisibilityUpdate
-from app.storage import delete_deck, replace_deck, upload_deck
+from app.storage import delete_deck, replace_deck, upload_build, upload_deck
 
 router = APIRouter(
     prefix="/admin",
@@ -239,3 +239,23 @@ def update_category(category_id: int, body: CategoryUpdate, db: Session = Depend
     out = CategoryOut.model_validate(cat)
     out.deck_count = count
     return out
+
+
+# ── App build upload ──────────────────────────────────────────────────────────
+
+ALLOWED_BUILD_TYPES = {
+    "application/vnd.android.package-archive": "apk",
+    "application/octet-stream": None,  # generic — allow, infer from filename
+}
+
+@router.post("/upload-build")
+async def upload_app_build(file: UploadFile = File(...)):
+    """Upload an APK, AAB or IPA to R2 downloads/. Always overwrites the same filename."""
+    filename = file.filename or "myflashcard.apk"
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty")
+    content_type = file.content_type or "application/octet-stream"
+    url = upload_build(filename, content, content_type)
+    size_mb = round(len(content) / 1_048_576, 2)
+    return {"filename": filename, "url": url, "size_mb": size_mb}

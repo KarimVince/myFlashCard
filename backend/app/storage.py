@@ -77,6 +77,21 @@ def delete_deck(storage_path: str) -> None:
     _get_r2().delete_object(Bucket=settings.r2_bucket, Key=storage_path)
 
 
+def upload_build(filename: str, content: bytes, content_type: str) -> str:
+    """Upload an app build (APK, AAB, IPA) to downloads/. Returns public URL."""
+    path = f"downloads/{filename}"
+    if _is_local():
+        _local_path(path).write_bytes(content)
+        return _local_url(path)
+    _get_r2().put_object(
+        Bucket=settings.r2_bucket,
+        Key=path,
+        Body=content,
+        ContentType=content_type,
+    )
+    return _public_url(path)
+
+
 def replace_deck(storage_path: str, content: bytes) -> str:
     """Replace an existing file and return its public URL."""
     if _is_local():

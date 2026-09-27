@@ -1,13 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { adminListDecks, getToken } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import { adminListDecks, adminUploadBuild, getToken } from "@/lib/api";
 import { Deck } from "@/lib/types";
 import Link from "next/link";
 
 export default function AdminDashboard() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Build upload state
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [buildUploading, setBuildUploading] = useState(false);
+  const [buildResult, setBuildResult] = useState<{ filename: string; url: string; size_mb: number } | null>(null);
+  const [buildError, setBuildError] = useState<string | null>(null);
+
+  async function handleBuildUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const token = getToken();
+    if (!token) return;
+    setBuildUploading(true);
+    setBuildError(null);
+    setBuildResult(null);
+    try {
+      const result = await adminUploadBuild(token, file);
+      setBuildResult(result);
+    } catch (err: unknown) {
+      setBuildError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBuildUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   useEffect(() => {
     const token = getToken();
@@ -103,7 +128,41 @@ export default function AdminDashboard() {
         )}
       </section>
 
-      <div className="mt-10">
+      {/* App build upload */}
+      <section className="mt-10">
+        <h2 className="font-semibold text-gray-900 mb-4">App builds</h2>
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <p className="text-sm text-gray-500 mb-4">
+            Upload a new APK or AAB to replace the current build on R2. The download link on the website stays the same.
+          </p>
+
+          <label className={`inline-flex items-center gap-2 cursor-pointer font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm
+            ${buildUploading ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-blue-900 text-white hover:bg-blue-800"}`}>
+            {buildUploading ? "Uploading…" : "⬆ Upload APK / AAB"}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".apk,.aab,.ipa"
+              className="hidden"
+              disabled={buildUploading}
+              onChange={handleBuildUpload}
+            />
+          </label>
+
+          {buildError && (
+            <p className="mt-3 text-sm text-red-600">{buildError}</p>
+          )}
+          {buildResult && (
+            <div className="mt-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <p className="font-semibold">✓ Uploaded {buildResult.filename} ({buildResult.size_mb} MB)</p>
+              <a href={buildResult.url} target="_blank" rel="noopener noreferrer"
+                className="text-green-800 underline break-all">{buildResult.url}</a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="mt-8">
         <Link
           href="/admin/upload"
           className="inline-flex items-center gap-2 bg-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-teal-700 transition-colors"
