@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Deck } from "@/lib/types";
 import { CardData, DeckJson } from "./AppShell";
 import BlockRenderer from "./BlockRenderer";
-import { saveDeck, hasDeck } from "@/lib/deckStorage";
 
 interface Props {
   deck: Deck;
@@ -14,17 +13,11 @@ interface Props {
 
 export default function CardViewer({ deck, json, onClose }: Props) {
   const [index, setIndex] = useState(0);
-  const [saved, setSaved] = useState(false);
   const total = json.cards.length;
   const card: CardData = json.cards[index];
   const accent = card.accentColor ?? json.accentColor ?? "#0d9488";
 
-  // Touch swipe
   const touchStart = useRef<number | null>(null);
-
-  useEffect(() => {
-    hasDeck(deck.id).then(setSaved);
-  }, [deck.id]);
 
   function prev() { setIndex((i) => Math.max(0, i - 1)); }
   function next() { setIndex((i) => Math.min(total - 1, i + 1)); }
@@ -38,11 +31,6 @@ export default function CardViewer({ deck, json, onClose }: Props) {
     if (delta > 50) next();
     else if (delta < -50) prev();
     touchStart.current = null;
-  }
-
-  async function handleSave() {
-    await saveDeck({ deck, cards: json, savedAt: Date.now() });
-    setSaved(true);
   }
 
   return (
@@ -65,19 +53,7 @@ export default function CardViewer({ deck, json, onClose }: Props) {
           <p className="text-sm font-semibold truncate opacity-90">{json.deckTitle}</p>
           <p className="text-xs opacity-70">{index + 1} / {total}</p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saved}
-          className="p-1 -mr-1 rounded-lg active:bg-white/20 disabled:opacity-40"
-          title={saved ? "Saved" : "Save to My Decks"}
-        >
-          <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden>
-            {saved
-              ? <path fill="currentColor" d="M17 3H5a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
-              : <path fill="none" stroke="currentColor" strokeWidth="2" d="M17 3H5a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
-            }
-          </svg>
-        </button>
+        <div className="w-8" />
       </div>
 
       {/* Progress bar */}

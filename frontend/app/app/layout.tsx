@@ -12,7 +12,7 @@ export const viewport: Viewport = { themeColor: "#0d9488" };
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 font-sans antialiased">
+      <body className="bg-gray-50 text-gray-900 font-sans antialiased h-[100dvh] overflow-hidden">
         <ServiceWorkerRegistration />
         {children}
       </body>
