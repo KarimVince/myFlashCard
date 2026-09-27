@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Deck } from "@/lib/types";
 import { CardData, DeckJson } from "./AppShell";
 import BlockRenderer from "./BlockRenderer";
+import { hasDeck, saveDeck } from "@/lib/deckStorage";
 
 interface Props {
   deck: Deck;
@@ -13,14 +14,28 @@ interface Props {
 
 export default function CardViewer({ deck, json, onClose }: Props) {
   const [index, setIndex] = useState(0);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const total = json.cards.length;
   const card: CardData = json.cards[index];
   const accent = card.accentColor ?? json.accentColor ?? "#0d9488";
 
   const touchStart = useRef<number | null>(null);
 
+  useEffect(() => {
+    hasDeck(deck.id).then(setSaved);
+  }, [deck.id]);
+
   function prev() { setIndex((i) => Math.max(0, i - 1)); }
   function next() { setIndex((i) => Math.min(total - 1, i + 1)); }
+
+  async function handleSave() {
+    if (saved || saving) return;
+    setSaving(true);
+    await saveDeck({ deck, cards: json, savedAt: Date.now() });
+    setSaved(true);
+    setSaving(false);
+  }
 
   function onTouchStart(e: React.TouchEvent) {
     touchStart.current = e.touches[0].clientX;
@@ -35,14 +50,13 @@ export default function CardViewer({ deck, json, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-gray-100"
-      style={{ display: "grid", gridTemplateRows: "auto 4px 1fr auto" }}
+      className="fixed inset-0 bg-gray-100 flex flex-col"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Top bar */}
+      {/* Top bar — shrink-0 so it never collapses */}
       <div
-        className="flex items-center justify-between px-4 pt-safe-top pb-3 text-white"
+        className="shrink-0 flex items-center justify-between px-4 pt-safe-top pb-3 text-white"
         style={{ backgroundColor: accent }}
       >
         <button onClick={onClose} className="p-1 -ml-1 rounded-lg active:bg-white/20">
@@ -50,23 +64,43 @@ export default function CardViewer({ deck, json, onClose }: Props) {
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
         </button>
-        <div className="text-center flex-1 px-4 min-w-0">
+
+        <div className="text-center flex-1 px-3 min-w-0">
           <p className="text-sm font-semibold truncate opacity-90">{json.deckTitle}</p>
           <p className="text-xs opacity-70">{index + 1} / {total}</p>
         </div>
-        <div className="w-8" />
+
+        {/* Save to My Decks */}
+        <button
+          onClick={handleSave}
+          disabled={saved || saving}
+          className="p-1 -mr-1 rounded-lg active:bg-white/20 disabled:opacity-60"
+          title={saved ? "Saved to My Decks" : "Save to My Decks"}
+        >
+          {saved ? (
+            /* filled bookmark */
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
+              <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
+            </svg>
+          ) : (
+            /* outline bookmark */
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current opacity-80" aria-hidden>
+              <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2zm0 14.82l-5-2.14-5 2.14V5h10v12.82z"/>
+            </svg>
+          )}
+        </button>
       </div>
 
-      {/* Progress bar */}
-      <div style={{ backgroundColor: `${accent}33` }}>
+      {/* Progress bar — shrink-0 */}
+      <div className="shrink-0 h-1" style={{ backgroundColor: `${accent}33` }}>
         <div
           className="h-full transition-all duration-300"
           style={{ width: `${((index + 1) / total) * 100}%`, backgroundColor: accent }}
         />
       </div>
 
-      {/* Card content — scrollable middle row */}
-      <div className="overflow-y-auto px-4 py-4">
+      {/* Card content — flex-1 + min-h-0 is the critical pair for flex scroll */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
           <div className="px-5 pt-5 pb-4" style={{ borderLeftWidth: 4, borderLeftColor: accent }}>
             <h2 className="text-lg font-bold text-gray-900 leading-snug">{card.title}</h2>
@@ -85,23 +119,25 @@ export default function CardViewer({ deck, json, onClose }: Props) {
         )}
       </div>
 
-      {/* Bottom nav — always visible last grid row */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200 safe-bottom">
+      {/* Bottom nav — shrink-0 so it's always visible */}
+      <div className="shrink-0 flex items-center justify-between px-4 bg-white border-t border-gray-200 safe-bottom" style={{ minHeight: 56 }}>
         <button
           onClick={prev}
           disabled={index === 0}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
+          className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden>
             <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
           </svg>
           Previous
         </button>
-        <span className="text-sm text-gray-400">{index + 1} / {total}</span>
+
+        <span className="text-sm text-gray-400 tabular-nums">{index + 1} / {total}</span>
+
         <button
           onClick={next}
           disabled={index === total - 1}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
+          className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
         >
           Next
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden>
