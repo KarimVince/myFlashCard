@@ -37,7 +37,8 @@ export default function LibraryTab({ onOpenDeck }: Props) {
     setLoadingDeck(deck.id);
     setError(null);
     try {
-      const res = await fetch(deck.public_url);
+      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const res = await fetch(`${base}/decks/${deck.id}/content`);
       if (!res.ok) throw new Error("Failed to load deck");
       const json: DeckJson = await res.json();
       onOpenDeck({ deck, json });
@@ -50,11 +51,9 @@ export default function LibraryTab({ onOpenDeck }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 pt-safe-top pb-0">
-        <h1 className="text-lg font-bold text-gray-900 py-3">Library</h1>
-        {/* Category pills */}
-        <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar">
+      {/* Category pills */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {categories.map((cat) => (
             <button
               key={cat.slug}
@@ -69,6 +68,7 @@ export default function LibraryTab({ onOpenDeck }: Props) {
           ))}
         </div>
       </div>
+
 
       {/* Deck list */}
       <div className="flex-1 px-4 py-3 space-y-3">

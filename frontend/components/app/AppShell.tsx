@@ -53,14 +53,8 @@ export default function AppShell({ initialTab = "library" }: Props) {
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden">
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {tab === "library" && <LibraryTab onOpenDeck={setViewing} />}
-        {tab === "decks" && <MyDecksTab onOpenDeck={setViewing} />}
-      </div>
-
-      {/* Bottom tab bar */}
-      <nav className="shrink-0 border-t border-gray-200 bg-white flex safe-bottom">
+      {/* Top tab bar */}
+      <nav className="shrink-0 border-b border-gray-200 bg-white flex pt-safe-top">
         <TabBtn
           label="My Decks"
           icon={
@@ -84,6 +78,12 @@ export default function AppShell({ initialTab = "library" }: Props) {
           onClick={() => setTab("library")}
         />
       </nav>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {tab === "library" && <LibraryTab onOpenDeck={setViewing} />}
+        {tab === "decks" && <MyDecksTab onOpenDeck={setViewing} />}
+      </div>
     </div>
   );
 }

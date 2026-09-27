@@ -1,5 +1,6 @@
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -42,6 +43,19 @@ def list_decks(
 def get_deck(deck_id: int, db: Session = Depends(get_db)):
     """Return metadata for a single public deck."""
     return _public_deck_or_404(deck_id, db)
+
+
+@router.get("/{deck_id}/content")
+async def deck_content(deck_id: int, db: Session = Depends(get_db)):
+    """Fetch and return deck JSON server-side — avoids R2 CORS restrictions."""
+    deck = _public_deck_or_404(deck_id, db)
+    if not deck.is_free:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Free decks only")
+    async with httpx.AsyncClient() as client:
+        r = await client.get(deck.public_url, timeout=10)
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not fetch deck file")
+    return Response(content=r.content, media_type="application/json")
 
 
 @router.get("/{deck_id}/download")

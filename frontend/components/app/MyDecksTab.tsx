@@ -27,9 +27,6 @@ export default function MyDecksTab({ onOpenDeck }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 pt-safe-top">
-        <h1 className="text-lg font-bold text-gray-900 py-3">My Decks</h1>
-      </div>
 
       <div className="flex-1 px-4 py-3 space-y-3">
         {!loaded && (
