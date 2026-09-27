@@ -6,7 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "myFlashCard",
     description:
       "Free offline flashcard app. Browse the public deck library or create your own with AI.",
-    start_url: "/",
+    start_url: "/app",
+    scope: "/app",
     display: "standalone",
     background_color: "#f9fafb",
     theme_color: "#0d9488",
