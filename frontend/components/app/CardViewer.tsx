@@ -35,13 +35,14 @@ export default function CardViewer({ deck, json, onClose }: Props) {
 
   return (
     <div
-      className="flex flex-col h-[100dvh] bg-gray-100"
+      className="fixed inset-0 bg-gray-100"
+      style={{ display: "grid", gridTemplateRows: "auto 4px 1fr auto" }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
       {/* Top bar */}
       <div
-        className="shrink-0 flex items-center justify-between px-4 pt-safe-top pb-3 text-white"
+        className="flex items-center justify-between px-4 pt-safe-top pb-3 text-white"
         style={{ backgroundColor: accent }}
       >
         <button onClick={onClose} className="p-1 -ml-1 rounded-lg active:bg-white/20">
@@ -57,59 +58,50 @@ export default function CardViewer({ deck, json, onClose }: Props) {
       </div>
 
       {/* Progress bar */}
-      <div className="shrink-0 h-1 bg-white/30" style={{ backgroundColor: `${accent}44` }}>
+      <div style={{ backgroundColor: `${accent}33` }}>
         <div
           className="h-full transition-all duration-300"
           style={{ width: `${((index + 1) / total) * 100}%`, backgroundColor: accent }}
         />
       </div>
 
-      {/* Card content */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+      {/* Card content — scrollable middle row */}
+      <div className="overflow-y-auto px-4 py-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
-          {/* Card header */}
           <div className="px-5 pt-5 pb-4" style={{ borderLeftWidth: 4, borderLeftColor: accent }}>
             <h2 className="text-lg font-bold text-gray-900 leading-snug">{card.title}</h2>
             {card.subtitle && (
               <p className="text-sm text-gray-500 mt-1">{card.subtitle}</p>
             )}
           </div>
-
-          {/* Blocks */}
           <div className="px-5 pb-5 space-y-4">
             {card.blocks.map((block, i) => (
               <BlockRenderer key={i} block={block} accent={accent} />
             ))}
           </div>
         </div>
-
-        {/* Swipe hint on first card */}
         {index === 0 && total > 1 && (
-          <p className="text-center text-xs text-gray-400 mb-4">Swipe left/right to navigate cards</p>
+          <p className="text-center text-xs text-gray-400 mb-4">Swipe left / right to navigate</p>
         )}
       </div>
 
-      {/* Bottom nav */}
-      <div className="shrink-0 flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200 safe-bottom">
+      {/* Bottom nav — always visible last grid row */}
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200 safe-bottom">
         <button
           onClick={prev}
           disabled={index === 0}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm
-            disabled:opacity-30 active:bg-gray-100 text-gray-700"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden>
             <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
           </svg>
           Previous
         </button>
-
-        <span className="text-sm text-gray-400">{index + 1}/{total}</span>
-
+        <span className="text-sm text-gray-400">{index + 1} / {total}</span>
         <button
           onClick={next}
           disabled={index === total - 1}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm
-            disabled:opacity-30 active:bg-gray-100 text-gray-700"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-medium text-sm disabled:opacity-30 active:bg-gray-100 text-gray-700"
         >
           Next
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden>

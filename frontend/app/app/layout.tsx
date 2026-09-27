@@ -1,21 +1,7 @@
-import type { Metadata, Viewport } from "next";
-import "../globals.css";
-import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
-
-export const metadata: Metadata = {
-  title: "myFlashCard",
-  appleWebApp: { capable: true, title: "myFlashCard", statusBarStyle: "default" },
-};
-
-export const viewport: Viewport = { themeColor: "#0d9488" };
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900 font-sans antialiased h-[100dvh] overflow-hidden">
-        <ServiceWorkerRegistration />
-        {children}
-      </body>
-    </html>
+    <div className="fixed inset-0 bg-gray-50 overflow-hidden">
+      {children}
+    </div>
   );
 }

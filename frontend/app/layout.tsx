@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Nav from "@/components/Nav";
+import { ConditionalNav, ConditionalFooter } from "@/components/ConditionalShell";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 export const metadata: Metadata = {
@@ -31,11 +31,13 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
         <ServiceWorkerRegistration />
-        <Nav />
+        <ConditionalNav />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
-          © 2025 WillYGO Incorporation · myFlashCard
-        </footer>
+        <ConditionalFooter>
+          <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
+            © 2025 WillYGO Incorporation · myFlashCard
+          </footer>
+        </ConditionalFooter>
       </body>
     </html>
   );

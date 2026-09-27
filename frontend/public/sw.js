@@ -1,4 +1,4 @@
-const CACHE = "mfc-v1";
+const CACHE = "mfc-v2";
 const OFFLINE_URL = "/offline";
 
 // On install: cache the offline fallback page
