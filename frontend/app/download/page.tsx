@@ -138,7 +138,7 @@ export default function DownloadPage() {
             <ol className="space-y-3 text-blue-700">
               <li className="flex gap-3">
                 <span className="font-bold shrink-0">1.</span>
-                <span>Open <strong>Safari</strong> on your iPhone and go to <strong>myflashcard-web.onrender.com</strong></span>
+                <span>Open <strong>Safari</strong> on your iPhone and go to <strong>myflashcard-web.onrender.com/app</strong></span>
               </li>
               <li className="flex gap-3">
                 <span className="font-bold shrink-0">2.</span>
