@@ -62,17 +62,6 @@ export default function AppShell({ initialTab = "library" }: Props) {
       {/* Bottom tab bar */}
       <nav className="shrink-0 border-t border-gray-200 bg-white flex safe-bottom">
         <TabBtn
-          label="Library"
-          icon={
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
-              <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-            </svg>
-          }
-          active={tab === "library"}
-          color="text-teal-600"
-          onClick={() => setTab("library")}
-        />
-        <TabBtn
           label="My Decks"
           icon={
             <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
@@ -82,6 +71,17 @@ export default function AppShell({ initialTab = "library" }: Props) {
           active={tab === "decks"}
           color="text-blue-600"
           onClick={() => setTab("decks")}
+        />
+        <TabBtn
+          label="Library"
+          icon={
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
+              <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+            </svg>
+          }
+          active={tab === "library"}
+          color="text-teal-600"
+          onClick={() => setTab("library")}
         />
       </nav>
     </div>
