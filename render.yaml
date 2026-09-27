@@ -5,6 +5,7 @@ services:
     runtime: docker
     rootDir: backend
     dockerfilePath: ./Dockerfile
+    plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -33,6 +34,7 @@ services:
     name: myflashcard-web
     runtime: node
     rootDir: frontend
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: node .next/standalone/server.js
     envVars:
