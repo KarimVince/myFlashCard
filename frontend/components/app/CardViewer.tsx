@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Deck } from "@/lib/types";
 import { CardData, DeckJson } from "./AppShell";
 import BlockRenderer from "./BlockRenderer";
-import { hasDeck, saveDeck } from "@/lib/deckStorage";
+import { saveDeck } from "@/lib/deckStorage";
 
 interface Props {
   deck: Deck;
@@ -14,8 +14,6 @@ interface Props {
 
 export default function CardViewer({ deck, json, onClose }: Props) {
   const [index, setIndex] = useState(0);
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
   const total = json.cards.length;
   const card: CardData = json.cards[index];
   const accent = card.accentColor ?? json.accentColor ?? "#0d9488";
@@ -23,19 +21,11 @@ export default function CardViewer({ deck, json, onClose }: Props) {
   const touchStart = useRef<number | null>(null);
 
   useEffect(() => {
-    hasDeck(deck.id).then(setSaved);
+    saveDeck({ deck, cards: json, savedAt: Date.now() });
   }, [deck.id]);
 
   function prev() { setIndex((i) => Math.max(0, i - 1)); }
   function next() { setIndex((i) => Math.min(total - 1, i + 1)); }
-
-  async function handleSave() {
-    if (saved || saving) return;
-    setSaving(true);
-    await saveDeck({ deck, cards: json, savedAt: Date.now() });
-    setSaved(true);
-    setSaving(false);
-  }
 
   function onTouchStart(e: React.TouchEvent) {
     touchStart.current = e.touches[0].clientX;
@@ -70,25 +60,7 @@ export default function CardViewer({ deck, json, onClose }: Props) {
           <p className="text-xs opacity-70">{index + 1} / {total}</p>
         </div>
 
-        {/* Save to My Decks */}
-        <button
-          onClick={handleSave}
-          disabled={saved || saving}
-          className="p-1 -mr-1 rounded-lg active:bg-white/20 disabled:opacity-60"
-          title={saved ? "Saved to My Decks" : "Save to My Decks"}
-        >
-          {saved ? (
-            /* filled bookmark */
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
-              <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2z"/>
-            </svg>
-          ) : (
-            /* outline bookmark */
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current opacity-80" aria-hidden>
-              <path d="M17 3H7a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2zm0 14.82l-5-2.14-5 2.14V5h10v12.82z"/>
-            </svg>
-          )}
-        </button>
+        <div className="w-8" />
       </div>
 
       {/* Progress bar — shrink-0 */}
