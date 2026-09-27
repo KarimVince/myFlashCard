@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>body{margin:0;background:#111;}</style></head>
+<body>
+<canvas id="c" width="1024" height="500"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 1024, H = 500;
+
+// ── Background gradient ──────────────────────────────────────────────────
+const bg = ctx.createLinearGradient(0, 0, W * 0.7, H);
+bg.addColorStop(0,   '#073530');
+bg.addColorStop(0.6, '#0D6B5E');
+bg.addColorStop(1,   '#0A8070');
+ctx.fillStyle = bg;
+ctx.fillRect(0, 0, W, H);
+
+// ── Subtle circles ───────────────────────────────────────────────────────
+ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+ctx.lineWidth = 1;
+[[760, -80, 380], [760, 100, 220], [500, 440, 120]].forEach(([x,y,r]) => {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.stroke();
+});
+
+// ── Helper: rounded rect ─────────────────────────────────────────────────
+function rr(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
+  ctx.closePath();
+  if (fill)   { ctx.fillStyle = fill;   ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+}
+
+// ── Card stack (right side) ──────────────────────────────────────────────
+const cx = 760, cy = 248;
+const cw = 268, ch = 340;
+
+// Card 3 (back)
+ctx.save(); ctx.translate(cx, cy); ctx.rotate(0.11);
+rr(-cw/2, -ch/2, cw, ch, 14, '#B8DDD8'); ctx.restore();
+
+// Card 2 (middle)
+ctx.save(); ctx.translate(cx, cy); ctx.rotate(0.055);
+rr(-cw/2, -ch/2, cw, ch, 14, '#D4EDE9'); ctx.restore();
+
+// Card 1 (front)
+ctx.save(); ctx.translate(cx, cy);
+rr(-cw/2, -ch/2, cw, ch, 14, '#F7F3ED');
+
+// Accent bar
+rr(-cw/2+18, -ch/2+18, cw-36, 5, 2, '#0D6B5E');
+
+// Title placeholder
+rr(-cw/2+18, -ch/2+38, (cw-36)*0.72, 12, 3, '#2B2620');
+
+// Stat tiles
+const tileW = (cw-36-12)/3; const ty = -ch/2+68;
+[['#DFF2ED'],['#FDE8D8'],['#E8EAF8']].forEach(([col], i) => {
+  rr(-cw/2+18 + i*(tileW+6), ty, tileW, 38, 7, col);
+  rr(-cw/2+18+8 + i*(tileW+6), ty+8, tileW-16, 9, 2, 'rgba(0,0,0,0.15)');
+  rr(-cw/2+18+4 + i*(tileW+6), ty+23, tileW-8, 7, 2, 'rgba(0,0,0,0.10)');
+});
+
+// Divider
+ctx.strokeStyle = '#E4DCCC'; ctx.lineWidth = 1;
+ctx.beginPath(); ctx.moveTo(-cw/2+18, -ch/2+120); ctx.lineTo(cw/2-18, -ch/2+120); ctx.stroke();
+
+// Content lines
+[[0.88,'#D4CEC5'],[0.72,'#D4CEC5'],[0.82,'#D4CEC5']].forEach(([w,col],i) => {
+  rr(-cw/2+18, -ch/2+132+i*18, (cw-36)*w, 7, 2, col);
+});
+
+// Steps
+[0.78, 0.62].forEach((w, i) => {
+  const sy = -ch/2+210+i*28;
+  // circle
+  ctx.beginPath(); ctx.arc(-cw/2+28, sy+8, 9, 0, Math.PI*2);
+  ctx.fillStyle = '#0D6B5E'; ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(i+1, -cw/2+28, sy+8);
+  rr(-cw/2+46, sy+4, (cw-72)*w, 7, 2, '#D4CEC5');
+});
+
+ctx.restore();
+
+// ── Left text ────────────────────────────────────────────────────────────
+ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+// Brand label
+ctx.font = '600 11px system-ui'; ctx.fillStyle = 'rgba(255,255,255,0.42)';
+ctx.letterSpacing = '0.16em';
+ctx.fillText('WILLYGŌ  ·  SINCE 2025', 64, 168);
+
+// App name line 1
+ctx.font = 'bold 74px system-ui'; ctx.fillStyle = '#ffffff';
+ctx.fillText('myFlash', 64, 255);
+
+// App name line 2 (dimmed)
+ctx.font = '300 74px system-ui'; ctx.fillStyle = 'rgba(255,255,255,0.52)';
+ctx.fillText('Card', 64, 335);
+
+// Tagline
+ctx.font = '400 21px system-ui'; ctx.fillStyle = 'rgba(255,255,255,0.70)';
+ctx.fillText('Study anything. Offline. Always.', 64, 375);
+
+// Pills
+const pills = ['📚 Study','🍳 Recipe','🏋 Training','🎵 Song'];
+let px = 64;
+ctx.font = '500 12px system-ui';
+pills.forEach(p => {
+  const tw = ctx.measureText(p).width;
+  rr(px, 395, tw+22, 26, 13, 'rgba(255,255,255,0.12)');
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+  rr(px, 395, tw+22, 26, 13, null, 'rgba(255,255,255,0.2)');
+  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.fillText(p, px+11, 412);
+  px += tw + 34;
+});
+
+// Bottom note
+ctx.font = '500 12px system-ui'; ctx.fillStyle = 'rgba(255,255,255,0.28)';
+ctx.fillText('No account required  ·  Fully offline  ·  Free', 64, 468);
+
+// Android badge
+const badgeText = 'Android';
+ctx.font = '600 11px system-ui';
+const bw = ctx.measureText(badgeText).width + 28;
+rr(W-64-bw, 462, bw, 24, 12, 'rgba(255,255,255,0.10)');
+ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1;
+rr(W-64-bw, 462, bw, 24, 12, null, 'rgba(255,255,255,0.18)');
+ctx.fillStyle = 'rgba(255,255,255,0.45)';
+ctx.fillText(badgeText, W-64-bw+14, 478);
+</script>
+</body>
+</html>

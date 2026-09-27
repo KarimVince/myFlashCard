@@ -142,7 +142,7 @@ fun PickerScreen(
 // ── Guide step row ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun GuideStep(number: String, title: String, description: String) {
+internal fun GuideStep(number: String, title: String, description: String) {
     Row(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(16.dp),

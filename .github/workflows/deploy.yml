@@ -132,22 +132,34 @@ jobs:
           status: completed
           whatsNewDirectory: android/whatsnew
 
-  # ── Step 2 (Stage 2): Backend deploy — placeholder ───────────────────────
+  # ── Step 2: Backend deploy → Render ──────────────────────────────────────
   deploy-backend:
-    name: Backend → Render (Stage 2)
+    name: Backend → Render
     needs: test
-    if: (inputs.target == 'backend' || inputs.target == 'all') && false
-    # Remove "&& false" when backend is implemented in Stage 2
+    if: inputs.target == 'backend' || inputs.target == 'all'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Backend deploy not yet implemented (Stage 2)"
+      - name: Trigger Render deploy
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}" \
+            -o /dev/null -w "HTTP %{http_code}\n"
 
-  # ── Step 3 (Stage 2): Frontend deploy — placeholder ──────────────────────
+      - name: Wait for deploy to finish
+        run: |
+          echo "Deploy triggered — check https://dashboard.render.com for status."
+
+  # ── Step 3: Frontend deploy → Render ─────────────────────────────────────
   deploy-frontend:
-    name: Frontend → Render Static Site (Stage 2)
+    name: Frontend → Render
     needs: test
-    if: (inputs.target == 'frontend' || inputs.target == 'all') && false
-    # Remove "&& false" when frontend is implemented in Stage 2
+    if: inputs.target == 'frontend' || inputs.target == 'all'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Frontend deploy not yet implemented (Stage 2)"
+      - name: Trigger Render deploy
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}" \
+            -o /dev/null -w "HTTP %{http_code}\n"
+
+      - name: Wait for deploy to finish
+        run: |
+          echo "Deploy triggered — check https://dashboard.render.com for status."

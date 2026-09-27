@@ -44,11 +44,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Real device on same Wi-Fi: use your Mac's LAN IP (run: ipconfig getifaddr en0)
+            // Emulator: use http://10.0.2.2:8000
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.100:8000\"")
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = true
             }
+            // Update this after Render deployment
+            buildConfigField("String", "API_BASE_URL", "\"https://myflashcard-api.onrender.com\"")
         }
     }
 
@@ -59,6 +66,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -71,6 +79,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.compose.material.icons)
     // org.json is bundled on Android but not on the JVM host — required for unit tests
     testImplementation("org.json:json:20240303")
     testImplementation(libs.junit)
