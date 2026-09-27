@@ -65,7 +65,7 @@ export default function CardViewer({ deck, json, onClose }: Props) {
       </div>
 
       {/* Card content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
           {/* Card header */}
           <div className="px-5 pt-5 pb-4" style={{ borderLeftWidth: 4, borderLeftColor: accent }}>

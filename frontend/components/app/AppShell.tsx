@@ -80,7 +80,7 @@ export default function AppShell({ initialTab = "library" }: Props) {
       </nav>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {tab === "library" && <LibraryTab onOpenDeck={setViewing} />}
         {tab === "decks" && <MyDecksTab onOpenDeck={setViewing} />}
       </div>
