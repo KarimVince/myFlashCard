@@ -217,10 +217,15 @@ class UserOut(BaseModel):
 
 class AdminUserOut(UserOut):
     last_login_at: datetime | None = None
+    tokens_used_month: int = 0
 
     @classmethod
-    def of(cls, user) -> "AdminUserOut":
-        return cls(**UserOut.of(user).model_dump(), last_login_at=user.last_login_at)
+    def of(cls, user, tokens_used_month: int = 0) -> "AdminUserOut":
+        return cls(
+            **UserOut.of(user).model_dump(),
+            last_login_at=user.last_login_at,
+            tokens_used_month=tokens_used_month,
+        )
 
 
 class AuthOut(BaseModel):
@@ -230,3 +235,155 @@ class AuthOut(BaseModel):
 
 class ServiceUpdate(BaseModel):
     enabled: bool
+
+
+# ── AI generation ─────────────────────────────────────────────────────────
+
+MAX_DESCRIPTION = 1000
+
+
+class BalanceOut(BaseModel):
+    monthly_allowance: int
+    monthly_used: int
+    monthly_left: int
+    extra: int
+    total: int
+    resets_on: str  # ISO date of the next monthly reset
+
+
+class ProviderOption(BaseModel):
+    id: str
+    label: str
+    token_cost: int
+    is_default: bool
+    available: bool
+    reason: str | None = None
+
+
+class AIOptionsOut(BaseModel):
+    email_verified: bool
+    balance: BalanceOut
+    providers: list[ProviderOption]
+    max_description: int = MAX_DESCRIPTION
+
+
+class GenerateIn(BaseModel):
+    category_slug: str
+    description: str
+    provider: str | None = None
+
+    @field_validator("description")
+    @classmethod
+    def _desc(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 10:
+            raise ValueError("Describe your deck in at least 10 characters")
+        if len(v) > MAX_DESCRIPTION:
+            raise ValueError(f"Keep the description under {MAX_DESCRIPTION} characters")
+        return v
+
+
+class GenerationSummary(BaseModel):
+    id: int
+    title: str | None
+    category_slug: str | None
+    category_label: str | None
+    provider: str
+    card_count: int | None
+    tokens_spent: int
+    created_at: datetime
+
+    @classmethod
+    def of(cls, g) -> "GenerationSummary":
+        return cls(
+            id=g.id,
+            title=g.title,
+            category_slug=g.category.slug if g.category else None,
+            category_label=g.category.label if g.category else None,
+            provider=g.provider,
+            card_count=g.card_count,
+            tokens_spent=g.tokens_spent,
+            created_at=g.created_at,
+        )
+
+
+class GenerationOut(GenerationSummary):
+    description: str
+    deck: dict
+
+    @classmethod
+    def of(cls, g) -> "GenerationOut":
+        return cls(**GenerationSummary.of(g).model_dump(), description=g.description, deck=g.deck_json or {})
+
+
+class GenerateOut(BaseModel):
+    generation: GenerationOut
+    balance: BalanceOut
+
+
+class AdminProviderOut(BaseModel):
+    id: str
+    label: str
+    enabled: bool
+    is_default: bool
+    model: str
+    token_cost: int
+    requires_service: str | None
+    has_key: bool
+    key_hint: str | None
+
+
+class AdminAIOut(BaseModel):
+    providers: list[AdminProviderOut]
+    free_monthly: int
+    premium_monthly: int
+    secrets_key_configured: bool
+
+
+class ProviderUpdate(BaseModel):
+    enabled: bool | None = None
+    is_default: bool | None = None
+    model: str | None = None
+    token_cost: int | None = None
+    api_key: str | None = None  # "" removes the key
+
+    @field_validator("token_cost")
+    @classmethod
+    def _cost(cls, v: int | None) -> int | None:
+        if v is not None and not 1 <= v <= 100:
+            raise ValueError("Token cost must be between 1 and 100")
+        return v
+
+
+class AllowancesUpdate(BaseModel):
+    free_monthly: int
+    premium_monthly: int
+
+    @field_validator("free_monthly", "premium_monthly")
+    @classmethod
+    def _range(cls, v: int) -> int:
+        if not 0 <= v <= 1000:
+            raise ValueError("Allowances must be between 0 and 1000")
+        return v
+
+
+class ProviderTestOut(BaseModel):
+    ok: bool
+    message: str
+    duration_ms: int
+
+
+class AdminGenerationOut(BaseModel):
+    id: int
+    user_alias: str
+    user_email: str
+    category_label: str | None
+    provider: str
+    model: str
+    description: str
+    status: str
+    title: str | None
+    error: str | None
+    tokens_spent: int
+    duration_ms: int | None
+    created_at: datetime

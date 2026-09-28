@@ -1,4 +1,15 @@
-import { Category, Deck, User } from "./types";
+import {
+  AdminAI,
+  AdminGeneration,
+  AdminProvider,
+  AIOptions,
+  Balance,
+  Category,
+  Deck,
+  Generation,
+  GenerationSummary,
+  User,
+} from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -161,6 +172,33 @@ export async function resetPassword(token: string, password: string): Promise<vo
   return request<void>("/auth/reset-password", { method: "POST", ...json({ token, password }) });
 }
 
+// ── AI generation ─────────────────────────────────────────────────────────
+
+export async function getAIOptions(token: string): Promise<AIOptions> {
+  return request<AIOptions>("/ai/options", {}, token);
+}
+
+export async function generateDeck(
+  token: string,
+  category_slug: string,
+  description: string,
+  provider?: string,
+): Promise<{ generation: Generation; balance: Balance }> {
+  return request("/ai/generate", { method: "POST", ...json({ category_slug, description, provider }) }, token);
+}
+
+export async function listGenerations(token: string): Promise<GenerationSummary[]> {
+  return request<GenerationSummary[]>("/me/generations", {}, token);
+}
+
+export async function getGeneration(token: string, id: number): Promise<Generation> {
+  return request<Generation>(`/me/generations/${id}`, {}, token);
+}
+
+export async function deleteGeneration(token: string, id: number): Promise<void> {
+  return request<void>(`/me/generations/${id}`, { method: "DELETE" }, token);
+}
+
 /** Strip the "422: " status prefix and pydantic noise for display. */
 export function errorMessage(e: unknown): string {
   const raw = e instanceof Error ? e.message : String(e);
@@ -176,6 +214,30 @@ export async function adminListUsers(token: string, q?: string): Promise<User[]>
 
 export async function adminSetService(token: string, userId: number, service: string, enabled: boolean): Promise<User> {
   return request<User>(`/admin/users/${userId}/services/${service}`, { method: "PUT", ...json({ enabled }) }, token);
+}
+
+export async function adminGetAI(token: string): Promise<AdminAI> {
+  return request<AdminAI>("/admin/ai", {}, token);
+}
+
+export async function adminUpdateProvider(
+  token: string,
+  id: string,
+  data: Partial<{ enabled: boolean; is_default: boolean; model: string; token_cost: number; api_key: string }>,
+): Promise<AdminProvider> {
+  return request<AdminProvider>(`/admin/ai/providers/${id}`, { method: "PATCH", ...json(data) }, token);
+}
+
+export async function adminTestProvider(token: string, id: string): Promise<{ ok: boolean; message: string; duration_ms: number }> {
+  return request(`/admin/ai/providers/${id}/test`, { method: "POST" }, token);
+}
+
+export async function adminSetAllowances(token: string, free_monthly: number, premium_monthly: number): Promise<AdminAI> {
+  return request<AdminAI>("/admin/ai/allowances", { method: "PUT", ...json({ free_monthly, premium_monthly }) }, token);
+}
+
+export async function adminListGenerations(token: string, status?: string): Promise<AdminGeneration[]> {
+  return request<AdminGeneration[]>(`/admin/ai/generations${status ? `?status=${status}` : ""}`, {}, token);
 }
 
 export async function adminDeleteUser(token: string, userId: number): Promise<void> {

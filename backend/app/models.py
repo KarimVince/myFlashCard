@@ -8,7 +8,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy import DateTime, JSON
+from sqlalchemy import DateTime, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -65,6 +65,7 @@ class AppSetting(Base):
 
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     value: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    number: Mapped[int | None] = mapped_column(Integer)  # for numeric settings (e.g. token allowances)
 
 
 # ── Accounts ─────────────────────────────────────────────────────────────
@@ -92,6 +93,10 @@ class User(Base):
         "UserSession", cascade="all, delete-orphan", back_populates="user"
     )
     email_tokens: Mapped[list["EmailToken"]] = relationship("EmailToken", cascade="all, delete-orphan")
+    generations: Mapped[list["Generation"]] = relationship(
+        "Generation", cascade="all, delete-orphan", back_populates="user"
+    )
+    ledger: Mapped[list["TokenLedger"]] = relationship("TokenLedger", cascade="all, delete-orphan")
 
     @property
     def service_names(self) -> list[str]:
@@ -144,3 +149,65 @@ class EmailToken(Base):
     token_hash: Mapped[str] = mapped_column(Text, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# ── AI generation ────────────────────────────────────────────────────────
+
+class AIProvider(Base):
+    """An AI provider (gemini, claude). The API key is stored encrypted."""
+    __tablename__ = "ai_providers"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    label: Mapped[str] = mapped_column(Text, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    model: Mapped[str] = mapped_column(Text, nullable=False)
+    api_key_enc: Mapped[str | None] = mapped_column(Text)
+    token_cost: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    requires_service: Mapped[str | None] = mapped_column(Text)  # e.g. "ai_claude"
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class Generation(Base):
+    """One AI deck generation attempt, kept for the user's history and for moderation."""
+    __tablename__ = "generations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    category_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("categories.id", ondelete="SET NULL"))
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    model: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False)  # "success" | "failed"
+    title: Mapped[str | None] = mapped_column(Text)
+    card_count: Mapped[int | None] = mapped_column(Integer)
+    deck_json: Mapped[dict | None] = mapped_column(JSON)
+    error: Mapped[str | None] = mapped_column(Text)
+    tokens_spent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    category: Mapped[Category | None] = relationship("Category")
+    user: Mapped["User"] = relationship("User", back_populates="generations")
+
+
+class TokenLedger(Base):
+    """Token movements. Spends are negative. source "monthly" draws from the monthly allowance;
+    other sources (future: "purchase", "bonus") are extra tokens that don't expire."""
+    __tablename__ = "token_ledger"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    period: Mapped[str] = mapped_column(String(7), nullable=False)  # "YYYY-MM"
+    generation_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("generations.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

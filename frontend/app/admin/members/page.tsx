@@ -90,6 +90,7 @@ export default function MembersPage() {
                 <th className="px-4 py-3 font-semibold">Member</th>
                 <th className="px-4 py-3 font-semibold">Joined</th>
                 <th className="px-4 py-3 font-semibold">Last login</th>
+                <th className="px-4 py-3 font-semibold" title="AI tokens used this month">Tokens</th>
                 <th className="px-4 py-3 font-semibold">Access</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -113,6 +114,7 @@ export default function MembersPage() {
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                     {u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : "—"}
                   </td>
+                  <td className="px-4 py-3 text-gray-500">{u.tokens_used_month ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2 flex-wrap">
                       {SERVICES.map((s) => {

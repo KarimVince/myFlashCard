@@ -12,6 +12,10 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - Admin access through an admin user account (the `ADMIN_EMAIL` account becomes admin once verified); the old admin password still works during the transition
 - Admin Members page: search members, grant or remove Premium and Claude AI access, delete members
 - Privacy policy rewritten for accounts and AI generation
+- AI deck generation backend (2.0 Phase B): Gemini (REST) and Claude (Anthropic SDK, `claude-opus-5` by default with structured JSON output and Anthropic's refusal fallback); every result is validated against the deck format and the category schema, with one automatic retry
+- Monthly AI tokens: 5 for free members, 15 for premium (configurable); spent only when a valid deck comes back; ledger ready for purchased tokens later
+- `/ai/options`, `/ai/generate`, `/me/generations` (history, view, delete)
+- Admin AI Card page: API keys (stored encrypted with `SECRETS_KEY`, shown masked), model, tokens per deck, enable/default, a Test button, monthly allowances, and recent generations for moderation; Members page shows tokens used this month
 - `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
 
 ### Fixed

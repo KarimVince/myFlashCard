@@ -468,12 +468,12 @@ Agreed 2026-09-28. Built on a branch; merged to `main` (which auto-deploys) only
 - AI API keys live in the DB, encrypted with `SECRETS_KEY` (env only), managed from admin → AI Card, never returned in full.
 - AI generation works for free accounts even while the global Premium toggle is Inactif.
 
-### Phase A — Accounts
+### Phase A — Accounts ✅ built
 Tables `users`, `user_services` (premium, ai_claude, …), `sessions` (hashed opaque tokens, 30 days), `email_tokens` (verify / reset).
 Endpoints: `/auth/register|login|logout|verify-email|resend-verification|forgot-password|reset-password`, `GET|PATCH|DELETE /me`, `POST /me/password`, `GET /admin/users`, `PUT /admin/users/{id}/services/{service}`, `DELETE /admin/users/{id}`.
 Web: login, register, verify, forgot/reset, account (incl. delete account — required by Google Play), admin Members page, admin login by account, privacy policy update. Basic rate limiting on auth endpoints.
 
-### Phase B — AI backend
+### Phase B — AI backend ✅ built
 Tables `ai_providers` (key encrypted, model, enabled, token cost), `token_ledger`, `generations` (user, category, description, provider, JSON, status). Settings for monthly allowances. `POST /ai/generate` → category `ai_prompt` + description → provider → extract + validate JSON (one retry) → save + spend token. `GET /me/tokens`, `GET /me/generations`. Admin AI Card page: keys, models, enable, costs, allowances.
 
 ### Phase C — Web + iPhone web app

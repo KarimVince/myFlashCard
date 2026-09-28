@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, builds, categories, decks, settings as settings_api
+from app.api import admin, admin_ai, ai, auth, builds, categories, decks, settings as settings_api
 from app.config import settings
 
 app = FastAPI(
@@ -26,7 +26,9 @@ app.include_router(categories.router)
 app.include_router(builds.router)
 app.include_router(settings_api.router)
 app.include_router(auth.router)
+app.include_router(ai.router)
 app.include_router(admin.router)
+app.include_router(admin_ai.router)
 
 
 @app.get("/health")

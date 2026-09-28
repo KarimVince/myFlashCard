@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     resend_api_key: str = ""                  # empty → emails are printed to the log (dev)
     email_from: str = "myFlashCard <noreply@myflashcard.app>"
 
+    # Fernet key encrypting API keys stored in the DB. Generate with:
+    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    secrets_key: str = ""
+
     # Cloudflare R2 (S3-compatible)
     r2_account_id: str = ""
     r2_access_key_id: str = "local"

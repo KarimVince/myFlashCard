@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth import verify_admin_token
 from app.db import get_db
 from app.accounts import SERVICES
-from app.models import Category, Deck, User, UserService
+from app.models import Category, Deck, TokenLedger, User, UserService
 from app.schemas import (
     AdminUserOut, CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
     PremiumUpdate, PublicSettingsOut, ServiceUpdate, VisibilityUpdate,
@@ -205,11 +205,21 @@ def _user_or_404(user_id: int, db: Session) -> User:
 @router.get("/users", response_model=list[AdminUserOut])
 def admin_list_users(q: str | None = None, db: Session = Depends(get_db)):
     """List all members, newest first, optionally filtered by alias or email."""
+    from sqlalchemy import func
+
+    from app.ai.service import current_period
+
     query = db.query(User)
     if q:
         like = f"%{q.strip().lower()}%"
         query = query.filter((User.email.like(like)) | (User.alias_key.like(like)))
-    return [AdminUserOut.of(u) for u in query.order_by(User.created_at.desc()).all()]
+    used = dict(
+        db.query(TokenLedger.user_id, (-func.sum(TokenLedger.delta)).label("used"))
+        .filter(TokenLedger.period == current_period(), TokenLedger.delta < 0)
+        .group_by(TokenLedger.user_id)
+        .all()
+    )
+    return [AdminUserOut.of(u, used.get(u.id, 0)) for u in query.order_by(User.created_at.desc()).all()]
 
 
 @router.put("/users/{user_id}/services/{service}", response_model=AdminUserOut)
