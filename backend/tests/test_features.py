@@ -26,6 +26,16 @@ def test_registration_closed_when_accounts_off(client, monkeypatch):
     assert resp.status_code == 403 and "closed" in resp.json()["detail"]
 
 
+def test_admin_email_can_register_when_accounts_off(client, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(auth_api, "send_verification", lambda *a: None)
+    monkeypatch.setattr(settings, "admin_email", "Boss@Example.com")
+    _set("accounts_enabled", False)
+    resp = client.post("/auth/register", json={"alias": "Boss", "email": "boss@example.com", "password": "secret123"})
+    assert resp.status_code == 201
+
+
 def test_login_still_works_when_accounts_off(client, monkeypatch):
     monkeypatch.setattr(auth_api, "send_verification", lambda *a: None)
     client.post("/auth/register", json={"alias": "Boss", "email": "boss@example.com", "password": "secret123"})
