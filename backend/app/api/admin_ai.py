@@ -28,7 +28,7 @@ def _provider_out(p: AIProvider) -> AdminProviderOut:
     plain = decrypt(p.api_key_enc) if p.api_key_enc else None
     return AdminProviderOut(
         id=p.id, label=p.label, enabled=p.enabled, is_default=p.is_default, model=p.model,
-        token_cost=p.token_cost, requires_service=p.requires_service,
+        token_cost=p.token_cost, requires_service=p.requires_service, base_url=p.base_url,
         has_key=bool(plain), key_hint=mask(plain) if plain else None,
     )
 
@@ -71,6 +71,12 @@ def admin_update_provider(provider_id: str, body: ProviderUpdate, db: Session = 
         p.model = body.model.strip()
     if body.token_cost is not None:
         p.token_cost = body.token_cost
+    if body.base_url is not None:
+        if not p.base_url:
+            raise HTTPException(status_code=422, detail="This provider has a fixed address")
+        if not body.base_url.strip().startswith("https://"):
+            raise HTTPException(status_code=422, detail="The API address must start with https://")
+        p.base_url = body.base_url.strip().rstrip("/")
     if body.enabled is not None:
         p.enabled = body.enabled
     if body.is_default:
@@ -103,6 +109,7 @@ async def admin_test_provider(provider_id: str, db: Session = Depends(get_db)):
         text = await call_provider(
             p.id, key, p.model, build_system_prompt(category),
             [Turn("user", "Create a tiny test deck with exactly 1 card containing 1 note about the colour blue.")],
+            p.base_url,
         )
         deck = validate_deck(extract_json(text))
     except ProviderError as exc:

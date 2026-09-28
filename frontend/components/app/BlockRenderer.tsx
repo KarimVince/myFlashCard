@@ -22,7 +22,7 @@ export default function BlockRenderer({ block, accent }: Props) {
     case "note":
       return (
         <div
-          className="rounded-xl px-4 py-3 text-sm leading-relaxed"
+          className="relative overflow-hidden rounded-xl pl-5 pr-4 py-3 text-sm leading-relaxed"
           style={{ backgroundColor: `${block.accentColor ?? accent}18`, color: "#374151" }}
         >
           <div

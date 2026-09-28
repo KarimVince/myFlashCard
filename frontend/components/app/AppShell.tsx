@@ -4,9 +4,10 @@ import { useState } from "react";
 import LibraryTab from "./LibraryTab";
 import MyDecksTab from "./MyDecksTab";
 import CardViewer from "./CardViewer";
+import CreateTab from "./CreateTab";
 import { Deck } from "@/lib/types";
 
-export type Tab = "library" | "decks";
+export type Tab = "library" | "decks" | "create";
 
 export interface SavedDeck {
   deck: Deck;
@@ -77,12 +78,24 @@ export default function AppShell({ initialTab = "library" }: Props) {
           color="text-teal-600"
           onClick={() => setTab("library")}
         />
+        <TabBtn
+          label="Create"
+          icon={
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
+              <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/>
+            </svg>
+          }
+          active={tab === "create"}
+          color="text-rose-500"
+          onClick={() => setTab("create")}
+        />
       </nav>
 
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {tab === "library" && <LibraryTab onOpenDeck={setViewing} />}
         {tab === "decks" && <MyDecksTab onOpenDeck={setViewing} />}
+        {tab === "create" && <CreateTab onOpenDeck={setViewing} />}
       </div>
     </div>
   );

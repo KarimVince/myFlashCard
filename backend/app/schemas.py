@@ -329,6 +329,7 @@ class AdminProviderOut(BaseModel):
     model: str
     token_cost: int
     requires_service: str | None
+    base_url: str | None = None
     has_key: bool
     key_hint: str | None
 
@@ -345,6 +346,7 @@ class ProviderUpdate(BaseModel):
     is_default: bool | None = None
     model: str | None = None
     token_cost: int | None = None
+    base_url: str | None = None  # only for OpenAI-compatible providers
     api_key: str | None = None  # "" removes the key
 
     @field_validator("token_cost")

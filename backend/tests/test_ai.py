@@ -29,6 +29,9 @@ def providers():
                    api_key_enc=encrypt("gemini-secret-key-1234"), token_cost=1, sort_order=1),
         AIProvider(id="claude", label="Claude", enabled=True, is_default=False, model="claude-opus-5",
                    api_key_enc=encrypt("claude-secret-key-5678"), token_cost=2, requires_service="ai_claude", sort_order=2),
+        AIProvider(id="mistral", label="Mistral", enabled=True, is_default=False, model="mistral-small-latest",
+                   api_key_enc=encrypt("mistral-secret-key-4321"), token_cost=1, sort_order=3,
+                   base_url="https://api.mistral.ai/v1"),
     ])
     db.commit()
     db.close()
@@ -39,8 +42,9 @@ def ai_reply(monkeypatch):
     """Queue of fake provider replies (str = model text, Exception = raised). Records calls."""
     state = {"replies": [], "calls": []}
 
-    async def fake_call(provider_id, api_key, model, system, turns):
-        state["calls"].append({"provider": provider_id, "key": api_key, "model": model, "system": system, "turns": turns})
+    async def fake_call(provider_id, api_key, model, system, turns, base_url=None):
+        state["calls"].append({"provider": provider_id, "key": api_key, "model": model, "system": system,
+                               "turns": turns, "base_url": base_url})
         reply = state["replies"].pop(0)
         if isinstance(reply, Exception):
             raise reply
@@ -209,7 +213,22 @@ def test_disabled_provider(client, user, auth_headers):
     headers, _ = user
     client.patch("/admin/ai/providers/gemini", json={"enabled": False}, headers=auth_headers)
     assert _generate(client, headers, provider="gemini").status_code == 403
+
+
+def test_no_provider_usable(client, user, auth_headers):
+    headers, _ = user
+    for pid in ("gemini", "mistral"):
+        client.patch(f"/admin/ai/providers/{pid}", json={"enabled": False}, headers=auth_headers)
+    # Claude is enabled but this user lacks access
     assert _generate(client, headers).status_code == 503
+
+
+def test_default_falls_back_to_another_usable_provider(client, user, ai_reply, auth_headers):
+    headers, _ = user
+    client.patch("/admin/ai/providers/gemini", json={"enabled": False}, headers=auth_headers)
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    assert _generate(client, headers).status_code == 200
+    assert ai_reply["calls"][0]["provider"] == "mistral"
 
 
 def test_history_is_private_and_deletable(client, user, ai_reply, monkeypatch):
@@ -276,3 +295,75 @@ def test_admin_test_provider(client, auth_headers, ai_reply):
     assert ok["ok"] is True and "Carbonara" in ok["message"]
     bad = client.post("/admin/ai/providers/claude/test", headers=auth_headers).json()
     assert bad["ok"] is False and bad["message"] == "Claude rejected the API key"
+
+
+# ── Mistral / OpenAI-compatible ───────────────────────────────────────────
+
+def test_mistral_generation_passes_base_url(client, user, ai_reply):
+    headers, _ = user
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    assert _generate(client, headers, provider="mistral").status_code == 200
+    call = ai_reply["calls"][0]
+    assert call["base_url"] == "https://api.mistral.ai/v1" and call["key"] == "mistral-secret-key-4321"
+
+
+def test_admin_base_url_rules(client, auth_headers):
+    ok = client.patch("/admin/ai/providers/mistral", json={"base_url": "https://api.mistral.ai/v1/"}, headers=auth_headers)
+    assert ok.status_code == 200 and ok.json()["base_url"] == "https://api.mistral.ai/v1"
+    assert client.patch("/admin/ai/providers/mistral", json={"base_url": "http://evil.example"}, headers=auth_headers).status_code == 422
+    assert client.patch("/admin/ai/providers/claude", json={"base_url": "https://x.example"}, headers=auth_headers).status_code == 422
+
+
+def _patch_transport(monkeypatch, handler):
+    import httpx
+
+    import app.ai.providers as providers
+
+    real = httpx.AsyncClient
+
+    class Client(real):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, transport=httpx.MockTransport(handler), **kw)
+
+    monkeypatch.setattr(providers.httpx, "AsyncClient", Client)
+
+
+@pytest.mark.anyio
+async def test_openai_compatible_request_and_parse(monkeypatch):
+    import httpx
+
+    from app.ai.providers import Turn, call_provider
+
+    seen = {}
+
+    def handler(request: httpx.Request):
+        seen["url"] = str(request.url)
+        seen["auth"] = request.headers["authorization"]
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{\"ok\": 1}"}, "finish_reason": "stop"}]})
+
+    _patch_transport(monkeypatch, handler)
+    text = await call_provider("mistral", "k-123", "mistral-small-latest", "SYS", [Turn("user", "hi")], "https://api.mistral.ai/v1")
+    assert text == '{"ok": 1}'
+    assert seen["url"] == "https://api.mistral.ai/v1/chat/completions"
+    assert seen["auth"] == "Bearer k-123"
+    assert seen["body"]["messages"][0] == {"role": "system", "content": "SYS"}
+    assert seen["body"]["response_format"] == {"type": "json_object"}
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("status,expected", [
+    (401, "rejected the API key"),
+    (429, "rate limit"),
+    (404, "not found"),
+    (500, "HTTP 500"),
+])
+async def test_openai_compatible_errors(monkeypatch, status, expected):
+    import httpx
+
+    from app.ai.providers import Turn, call_provider
+
+    _patch_transport(monkeypatch, lambda request: httpx.Response(status, json={"message": "nope"}))
+    with pytest.raises(ProviderError) as exc:
+        await call_provider("mistral", "k", "m", "S", [Turn("user", "hi")], "https://api.mistral.ai/v1")
+    assert expected in exc.value.admin_detail

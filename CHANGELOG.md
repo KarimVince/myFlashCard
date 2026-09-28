@@ -15,10 +15,15 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - AI deck generation backend (2.0 Phase B): Gemini (REST) and Claude (Anthropic SDK, `claude-opus-5` by default with structured JSON output and Anthropic's refusal fallback); every result is validated against the deck format and the category schema, with one automatic retry
 - Monthly AI tokens: 5 for free members, 15 for premium (configurable); spent only when a valid deck comes back; ledger ready for purchased tokens later
 - `/ai/options`, `/ai/generate`, `/me/generations` (history, view, delete)
+- Mistral as a third AI provider, through a generic OpenAI-compatible adapter (API address editable in AI Card)
+- Create page on the website (2.0 Phase C): pick a deck type, describe it, choose the AI, see tokens left; preview the result, download the JSON, add it to My Decks; history of your AI decks
+- Create tab in the iPhone web app: generated decks open in the card viewer and are saved to My Decks
+- How-to page reworked into "Generate with AI" and "Do it manually"; "Create" in the site nav
 - Admin AI Card page: API keys (stored encrypted with `SECRETS_KEY`, shown masked), model, tokens per deck, enable/default, a Test button, monthly allowances, and recent generations for moderation; Members page shows tokens used this month
 - `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
 
 ### Fixed
+- Note blocks: the coloured side bar was positioned against the wrong element
 - Admin "Sign out" now actually signs out (it cleared the wrong storage)
 - Migration 005 no longer fails when the Game category already exists, which would have stopped the backend from starting
 

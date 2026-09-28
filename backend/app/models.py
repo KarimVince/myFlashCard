@@ -165,6 +165,8 @@ class AIProvider(Base):
     api_key_enc: Mapped[str | None] = mapped_column(Text)
     token_cost: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     requires_service: Mapped[str | None] = mapped_column(Text)  # e.g. "ai_claude"
+    # Set for OpenAI-compatible providers (Mistral, …): the API base URL, e.g. https://api.mistral.ai/v1
+    base_url: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 

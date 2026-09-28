@@ -92,6 +92,7 @@ export interface AdminProvider {
   model: string;
   token_cost: number;
   requires_service: string | null;
+  base_url: string | null;
   has_key: boolean;
   key_hint: string | null;
 }

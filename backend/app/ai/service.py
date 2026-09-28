@@ -126,7 +126,7 @@ async def generate_deck(
     error: str | None = None
     for attempt in range(MAX_ATTEMPTS):
         try:
-            text = await call_provider(provider.id, api_key, provider.model, system, turns)
+            text = await call_provider(provider.id, api_key, provider.model, system, turns, provider.base_url)
         except ProviderError as exc:
             error = exc.message
             gen.error = exc.admin_detail

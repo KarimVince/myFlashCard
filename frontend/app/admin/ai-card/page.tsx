@@ -15,6 +15,7 @@ import { AdminAI, AdminGeneration, AdminProvider } from "@/lib/types";
 const KEY_LINKS: Record<string, { href: string; label: string }> = {
   gemini: { href: "https://aistudio.google.com/apikey", label: "Google AI Studio" },
   claude: { href: "https://console.anthropic.com/settings/keys", label: "Anthropic Console" },
+  mistral: { href: "https://console.mistral.ai/api-keys", label: "Mistral console" },
 };
 
 export default function AiCardPage() {
@@ -72,6 +73,7 @@ export default function AiCardPage() {
 function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved: (p: AdminProvider) => void }) {
   const [model, setModel] = useState(provider.model);
   const [cost, setCost] = useState(String(provider.token_cost));
+  const [baseUrl, setBaseUrl] = useState(provider.base_url ?? "");
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -180,6 +182,18 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
         </label>
       </div>
 
+      {provider.base_url !== null && (
+        <label className="block">
+          <span className="block text-xs font-medium text-gray-600 mb-1">API address</span>
+          <input
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+          <span className="block text-xs text-gray-400 mt-1">OpenAI-compatible chat completions endpoint base.</span>
+        </label>
+      )}
+
       {msg && (
         <p className={`text-xs rounded-lg px-3 py-2 ${msg.ok ? "bg-teal-50 text-teal-800" : "bg-red-50 text-red-700"}`}>{msg.text}</p>
       )}
@@ -187,7 +201,12 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
       <div className="flex flex-wrap gap-2">
         <button
           disabled={busy}
-          onClick={() => save({ model, token_cost: Number(cost), ...(apiKey.trim() ? { api_key: apiKey } : {}) })}
+          onClick={() => save({
+            model,
+            token_cost: Number(cost),
+            ...(apiKey.trim() ? { api_key: apiKey } : {}),
+            ...(provider.base_url !== null ? { base_url: baseUrl } : {}),
+          })}
           className="text-sm px-4 py-1.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors disabled:opacity-50"
         >
           Save

@@ -223,7 +223,7 @@ export async function adminGetAI(token: string): Promise<AdminAI> {
 export async function adminUpdateProvider(
   token: string,
   id: string,
-  data: Partial<{ enabled: boolean; is_default: boolean; model: string; token_cost: number; api_key: string }>,
+  data: Partial<{ enabled: boolean; is_default: boolean; model: string; token_cost: number; api_key: string; base_url: string }>,
 ): Promise<AdminProvider> {
   return request<AdminProvider>(`/admin/ai/providers/${id}`, { method: "PATCH", ...json(data) }, token);
 }

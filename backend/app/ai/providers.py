@@ -31,11 +31,15 @@ class Turn:
     text: str
 
 
-async def call_provider(provider_id: str, api_key: str, model: str, system: str, turns: list[Turn]) -> str:
+async def call_provider(
+    provider_id: str, api_key: str, model: str, system: str, turns: list[Turn], base_url: str | None = None
+) -> str:
     if provider_id == "gemini":
         return await _gemini(api_key, model, system, turns)
     if provider_id == "claude":
         return await _claude(api_key, model, system, turns)
+    if base_url:
+        return await _openai_compatible(provider_id, base_url, api_key, model, system, turns)
     raise ProviderError("This AI provider isn't supported.", admin_detail=f"Unknown provider {provider_id!r}")
 
 
@@ -126,3 +130,48 @@ async def _claude(api_key: str, model: str, system: str, turns: list[Turn]) -> s
     if response.stop_reason == "max_tokens":
         log.warning("Claude hit max tokens (request %s)", response._request_id)
     return "".join(b.text for b in response.content if b.type == "text")
+
+
+# ── OpenAI-compatible chat completions (Mistral, Groq, OpenAI, …) ──────────
+
+OPENAI_COMPAT_MAX_TOKENS = 8000
+
+
+async def _openai_compatible(
+    provider_id: str, base_url: str, api_key: str, model: str, system: str, turns: list[Turn]
+) -> str:
+    name = provider_id.capitalize()
+    url = f"{base_url.rstrip('/')}/chat/completions"
+    body = {
+        "model": model,
+        "messages": [{"role": "system", "content": system}]
+        + [{"role": t.role, "content": t.text} for t in turns],
+        "response_format": {"type": "json_object"},
+        "max_tokens": OPENAI_COMPAT_MAX_TOKENS,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
+            r = await client.post(url, json=body, headers={"Authorization": f"Bearer {api_key}"})
+    except httpx.TimeoutException:
+        raise ProviderError("The AI took too long to answer. Please try again.")
+    except httpx.HTTPError as exc:
+        raise ProviderError("Could not reach the AI service. Please try again.", admin_detail=f"{name}: {exc}")
+
+    if r.status_code != 200:
+        detail = r.text[:500]
+        if r.status_code in (401, 403):
+            raise ProviderError("The AI service is not configured correctly.", admin_detail=f"{name} rejected the API key: {detail}")
+        if r.status_code == 404:
+            raise ProviderError("The AI service is not configured correctly.", admin_detail=f"{name} model {model!r} or URL not found: {detail}")
+        if r.status_code == 429:
+            raise ProviderError("The AI service is busy right now. Please try again in a minute.", admin_detail=f"{name} rate limit: {detail}")
+        raise ProviderError("The AI service returned an error. Please try again.", admin_detail=f"{name} HTTP {r.status_code}: {detail}")
+
+    try:
+        choice = r.json()["choices"][0]
+        text = choice["message"]["content"] or ""
+    except (ValueError, KeyError, IndexError, TypeError):
+        raise ProviderError("The AI returned no answer. Please try again.", admin_detail=f"{name} unexpected response: {r.text[:300]}")
+    if choice.get("finish_reason") == "length":
+        log.warning("%s hit max tokens", name)
+    return text

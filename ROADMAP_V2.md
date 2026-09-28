@@ -462,7 +462,7 @@ Agreed 2026-09-28. Built on a branch; merged to `main` (which auto-deploys) only
 - Admin becomes a user account with `role = admin` (superuser). The legacy `ADMIN_PASSWORD_HASH` bearer keeps working during the switch, then is removed. The first admin is whoever registers **and verifies** the email in `ADMIN_EMAIL`.
 - Email via **Resend** (`RESEND_API_KEY`, `EMAIL_FROM`). Without a key (local dev) emails are printed to the backend log.
 - Email verification is required before using AI tokens (registration and login work without it).
-- AI providers at launch: **Gemini** (free tier) and **Claude** (needs per-user `ai_claude` access). Grok deferred — no free API.
+- AI providers at launch: **Gemini** (free tier), **Claude** (needs per-user `ai_claude` access) and **Mistral** (added in Phase C — Gemini/AI Studio isn't available in every country). Grok deferred — no free API.
 - Generated decks stay private (download / save to device / history). No public publishing in 2.0.
 - Tokens: monthly allowance (free 5, premium 15 — configurable), resets on the 1st, no rollover; cost per provider configurable (default 1); a token is only spent on a valid deck. Ledger table so paid top-ups can be added later.
 - AI API keys live in the DB, encrypted with `SECRETS_KEY` (env only), managed from admin → AI Card, never returned in full.
@@ -476,7 +476,7 @@ Web: login, register, verify, forgot/reset, account (incl. delete account — re
 ### Phase B — AI backend ✅ built
 Tables `ai_providers` (key encrypted, model, enabled, token cost), `token_ledger`, `generations` (user, category, description, provider, JSON, status). Settings for monthly allowances. `POST /ai/generate` → category `ai_prompt` + description → provider → extract + validate JSON (one retry) → save + spend token. `GET /me/tokens`, `GET /me/generations`. Admin AI Card page: keys, models, enable, costs, allowances.
 
-### Phase C — Web + iPhone web app
+### Phase C — Web + iPhone web app ✅ built (+ Mistral provider via OpenAI-compatible adapter)
 Create page (category, description, provider, balance → preview → download / history). How-to reworked into "Generate with AI" and "Do it manually". `/app` gets a 3rd **Create** tab (save to My Decks).
 
 ### Phase D — Android
