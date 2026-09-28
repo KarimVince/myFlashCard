@@ -352,6 +352,27 @@ async def test_openai_compatible_request_and_parse(monkeypatch):
 
 
 @pytest.mark.anyio
+async def test_rate_limit_is_retried_once(monkeypatch):
+    import httpx
+
+    import app.ai.providers as providers
+    from app.ai.providers import Turn, call_provider
+
+    monkeypatch.setattr(providers.asyncio, "sleep", lambda s: _noop())
+    responses = [
+        httpx.Response(429, headers={"retry-after": "1"}, json={"message": "Rate limit exceeded"}),
+        httpx.Response(200, json={"choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}),
+    ]
+    _patch_transport(monkeypatch, lambda request: responses.pop(0))
+    assert await call_provider("mistral", "k", "m", "S", [Turn("user", "hi")], "https://api.mistral.ai/v1") == "{}"
+    assert responses == []
+
+
+async def _noop():
+    return None
+
+
+@pytest.mark.anyio
 @pytest.mark.parametrize("status,expected", [
     (401, "rejected the API key"),
     (429, "rate limit"),

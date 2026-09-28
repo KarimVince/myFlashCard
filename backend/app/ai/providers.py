@@ -1,4 +1,5 @@
 """Calls to AI providers. Each returns the model's raw text; parsing/validation happens in deck.py."""
+import asyncio
 import logging
 from dataclasses import dataclass
 
@@ -14,6 +15,25 @@ MAX_OUTPUT_TOKENS = 16000
 
 # Models that accept Anthropic's server-side refusal fallback (`fallbacks: "default"`).
 _CLAUDE_FALLBACK_MODELS = {"claude-opus-5", "claude-fable-5", "claude-fable-5-1"}
+
+
+RATE_LIMIT_RETRY_MAX_WAIT_S = 5.0
+
+
+async def _post_with_rate_limit_retry(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
+    """POST, and on a 429 wait briefly (Retry-After, capped) and try once more.
+    Free tiers allow very few requests per second, so a short wait often succeeds."""
+    r = await client.post(url, **kwargs)
+    if r.status_code != 429:
+        return r
+    try:
+        wait = float(r.headers.get("retry-after", "2"))
+    except ValueError:
+        wait = 2.0
+    if wait > RATE_LIMIT_RETRY_MAX_WAIT_S:
+        return r
+    await asyncio.sleep(wait)
+    return await client.post(url, **kwargs)
 
 
 class ProviderError(Exception):
@@ -56,7 +76,7 @@ async def _gemini(api_key: str, model: str, system: str, turns: list[Turn]) -> s
     }
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
-            r = await client.post(url, json=body, headers={"x-goog-api-key": api_key})
+            r = await _post_with_rate_limit_retry(client, url, json=body, headers={"x-goog-api-key": api_key})
     except httpx.TimeoutException:
         raise ProviderError("The AI took too long to answer. Please try again.")
     except httpx.HTTPError as exc:
@@ -151,7 +171,7 @@ async def _openai_compatible(
     }
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
-            r = await client.post(url, json=body, headers={"Authorization": f"Bearer {api_key}"})
+            r = await _post_with_rate_limit_retry(client, url, json=body, headers={"Authorization": f"Bearer {api_key}"})
     except httpx.TimeoutException:
         raise ProviderError("The AI took too long to answer. Please try again.")
     except httpx.HTTPError as exc:
