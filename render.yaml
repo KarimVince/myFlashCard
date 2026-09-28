@@ -6,6 +6,7 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free
+    autoDeploy: false        # deployed by .github/workflows/auto-deploy.yml after tests pass
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -35,6 +36,7 @@ services:
     runtime: node
     rootDir: frontend
     plan: free
+    autoDeploy: false        # deployed by .github/workflows/auto-deploy.yml after tests pass
     buildCommand: npm install && npm run build && cp -r .next/static .next/standalone/.next/static && mkdir -p .next/standalone/public && cp -r public/. .next/standalone/public/
     startCommand: node .next/standalone/server.js
     envVars:

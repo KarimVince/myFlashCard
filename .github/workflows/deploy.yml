@@ -1,12 +1,13 @@
 name: Deploy
 
-# MANUAL TRIGGER ONLY — never runs automatically on push or merge.
-# Select target and environment in the GitHub Actions UI → "Run workflow".
+# MANUAL TRIGGER — select target and environment in the GitHub Actions UI → "Run workflow".
+# Backend and frontend also deploy automatically on push to main via auto-deploy.yml;
+# use this workflow for Android releases and for manual redeploys.
 #
 # Targets:
 #   android  — build signed AAB → upload to Play Store
-#   backend  — Docker build → Render (Stage 2, not yet implemented)
-#   frontend — Next.js build → Render Static Site (Stage 2, not yet implemented)
+#   backend  — trigger Render deploy hook
+#   frontend — trigger Render deploy hook
 #   all      — all of the above
 #
 # Environments:

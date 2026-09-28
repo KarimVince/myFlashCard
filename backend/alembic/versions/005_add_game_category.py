@@ -73,6 +73,14 @@ Rules:
 
 
 def upgrade() -> None:
+    # Skip if the category was already created by hand (e.g. from the admin),
+    # otherwise the unique slug constraint fails and blocks every later migration.
+    exists = op.get_bind().execute(
+        sa.text("SELECT 1 FROM categories WHERE slug = 'game'")
+    ).first()
+    if exists:
+        return
+
     categories_table = sa.table(
         "categories",
         sa.column("slug", sa.Text),

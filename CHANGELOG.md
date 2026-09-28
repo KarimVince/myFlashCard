@@ -7,6 +7,12 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 
 ## [Unreleased]
 
+### Added
+- `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
+
+### Fixed
+- Migration 005 no longer fails when the Game category already exists, which would have stopped the backend from starting
+
 ---
 
 ## [1.0.0] — 2026-09-28

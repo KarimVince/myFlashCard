@@ -1,6 +1,6 @@
 # myFlashCard — v2 Implementation Roadmap
 
-> **For code agents:** This file is the single source of truth for the v2 architecture. Read it before starting any implementation work. Implementation happens stage by stage — only one stage is in scope at a time. GitHub deployment is **manual only** (no auto-deploy on push).
+> **For code agents:** This file is the single source of truth for the v2 architecture. Read it before starting any implementation work. Implementation happens stage by stage — only one stage is in scope at a time. Backend and frontend auto-deploy to Render on push to `main` once their tests pass; Android releases are **manual only**.
 
 ---
 
@@ -43,7 +43,8 @@ myFlashCard/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                  # Runs tests on every PR — never deploys
-│       └── deploy.yml              # workflow_dispatch only — no auto-deploy
+│       ├── auto-deploy.yml         # push to main → tests → Render deploy (backend/frontend)
+│       └── deploy.yml              # workflow_dispatch only — Android + manual redeploys
 │
 ├── android/                        # Existing Kotlin app (moved from root)
 │   ├── app/
@@ -184,7 +185,7 @@ jobs:
 
 ### 1.5 Deploy workflow — `deploy.yml`
 
-**Triggered manually only** — `workflow_dispatch` in the GitHub Actions UI. No auto-deploy on any push or merge.
+**Triggered manually** — `workflow_dispatch` in the GitHub Actions UI. Used for Android releases and manual redeploys; backend and frontend also deploy automatically via `auto-deploy.yml` (see Deployment rules).
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -455,8 +456,8 @@ Deferred to a future version:
 
 ## Deployment rules (enforced)
 
-1. **No auto-deploy.** The `deploy.yml` workflow is `workflow_dispatch` only. Nothing deploys on push to any branch.
+1. **Auto-deploy only after tests.** On push to `main`, `auto-deploy.yml` deploys the backend and/or frontend (whichever folder changed) to Render, only if that part's tests pass. Render's own auto-deploy is off (`autoDeploy: false`). Android is never auto-deployed — use `deploy.yml`.
 2. **Tests must pass before any deploy.** The deploy workflow runs the full test suite as its first step and exits on failure.
-3. **Staging first.** Every deploy targets staging unless the operator explicitly selects `production` in the dispatch form.
+3. **Staging first (Android).** Every Play Store deploy targets staging unless the operator explicitly selects `production` in the dispatch form.
 4. **Keystore never in git.** `willygo-release.keystore` and `local.properties` remain in `.gitignore`. The keystore is stored only in the GitHub Secret `KEYSTORE_BASE64`.
 5. **Admin password never in source.** Only the bcrypt hash is stored in env/secrets; the plaintext is never committed or logged.

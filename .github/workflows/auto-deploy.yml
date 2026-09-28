@@ -1,0 +1,109 @@
+name: Auto-deploy
+
+# Runs on every push to main.
+# Backend and frontend each deploy to Render only if their folder changed
+# AND their tests pass. Android is never deployed from here — use deploy.yml.
+#
+# Requires GitHub secrets RENDER_BACKEND_DEPLOY_HOOK and RENDER_FRONTEND_DEPLOY_HOOK
+# (Render dashboard → service → Settings → Deploy Hook).
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: auto-deploy
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend — tests
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Run tests
+        working-directory: backend
+        run: pytest -q
+
+  deploy-backend:
+    name: Backend → Render
+    needs: backend-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Secret RENDER_BACKEND_DEPLOY_HOOK is not set"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null -w "HTTP %{http_code}\n"
+          echo "Deploy triggered — migrations run on container start. Check https://dashboard.render.com"
+
+  # ── Frontend ─────────────────────────────────────────────────────────────
+  frontend-tests:
+    name: Frontend — tests & build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Run tests
+        working-directory: frontend
+        run: npm test -- --watchAll=false
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  deploy-frontend:
+    name: Frontend → Render
+    needs: frontend-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Secret RENDER_FRONTEND_DEPLOY_HOOK is not set"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null -w "HTTP %{http_code}\n"
+          echo "Deploy triggered — check https://dashboard.render.com"
