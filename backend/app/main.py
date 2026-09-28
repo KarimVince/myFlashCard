@@ -10,7 +10,7 @@ from app.config import settings
 app = FastAPI(
     title="myFlashCard API",
     description="Public deck library and admin API for myFlashCard",
-    version="2.0.0",
+    version="1.0.0",
 )
 
 app.add_middleware(

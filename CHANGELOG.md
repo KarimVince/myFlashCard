@@ -7,7 +7,17 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] — 2026-09-28
+
+First public release: Android app, website, iPhone web app and admin.
+
 ### Added
+- Public website: home, deck library with JSON download, AI how-to guide, schema docs, privacy policy, app download page
+- iPhone web app (PWA) at `/app`: Library and My Decks tabs, card viewer, decks saved on device
+- FastAPI backend with PostgreSQL and object storage for deck JSON
+- Admin: dashboard, upload, edit, manage, categories, app build uploads
 - Global Premium toggle (Actif/Inactif) in admin, stored in new `app_settings` table (migration 006, inactive by default). While inactive, premium decks are hidden from the public API, website, web app and Android app, and all premium wording is removed; admins can still mark decks as premium
 - `GET /settings` public endpoint; `GET /admin/settings` and `PATCH /admin/settings/premium` admin endpoints
 - Admin sections: Premium, and AI Card placeholder (coming later)
@@ -17,11 +27,7 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - Unit test suite: `JsonParserTest`, `ColumnWeightsTest`, `AccentColorTest`, `DeckParseTest`
 - `android/whatsnew/` directory for Play Store release notes
 
----
-
-## [1.0.0] — 2025-09-14
-
-### Added
+#### Android app
 - Load any JSON flashcard deck from device storage
 - Card viewer with swipe navigation and animated transitions
 - Block types: note, stats (3-colour tiles), steps (bullet/numbered), table, text, image placeholder
