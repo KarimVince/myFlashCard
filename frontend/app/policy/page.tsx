@@ -10,13 +10,13 @@ export default function PolicyPage() {
 
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
       <p className="text-sm text-gray-400 mb-10">
-        Effective date: September 14, 2025 · Version 1.0
+        Effective date: October 2026 · Version 2.0
       </p>
 
       <div className="bg-teal-50 border-l-4 border-teal-600 rounded-r-xl px-5 py-4 mb-10">
         <p className="text-teal-800 font-medium text-sm">
-          myFlashCard does not collect, store, or transmit any personal data.
-          Everything stays on your device.
+          You can use myFlashCard without an account. If you create one, we keep only an alias,
+          your email and what&apos;s needed to run the service. We never sell your data.
         </p>
       </div>
 
@@ -24,32 +24,42 @@ export default function PolicyPage() {
         {
           title: "What this policy covers",
           content:
-            'This Privacy Policy describes how WillYGO Incorporation ("we", "our", or "us") handles information in connection with the myFlashCard mobile application for Android ("the app"). By using the app you confirm that you have read and understood this policy.',
+            'This Privacy Policy describes how WillYGO Incorporation ("we", "our", or "us") handles information in connection with myFlashCard: the Android app, the iPhone web app and the myFlashCard website (together, "the service").',
         },
         {
-          title: "Information we collect",
+          title: "Using myFlashCard without an account",
           content:
-            "We collect no personal information of any kind. The app requires no account, login, or registration. We do not read your device ID, advertising ID, or any hardware identifier. The app does not request or use location permissions. There is no analytics SDK, crash reporter, or telemetry in the app. JSON deck files you load are read locally on your device and never sent anywhere. The app makes no network requests and operates fully offline.",
+            "Browsing the library, downloading decks and viewing your own deck files need no account. Decks you load or save are stored on your device only. To show the library, the app and website request the deck list and deck files from our server; our hosting provider keeps standard technical logs (such as IP address and time of request) for security and troubleshooting. There is no advertising or analytics tracking.",
         },
         {
-          title: "How your data is stored",
+          title: "Information we collect when you create an account",
           content:
-            "Flashcard decks are JSON files that you select from your own device storage. The app reads them into memory to display your cards. No data is written to external storage or transmitted over the network. When you close the app, no residual data is retained beyond what Android's standard app lifecycle manages on your device.",
+            "An alias of your choice, your email address and your password (stored only as a secure one-way hash — we cannot read it). We also record when the account was created, when you last logged in, whether your email is confirmed, and any access you've been given (for example Premium). Your email is used to log you in, confirm your address and send password-reset links. It is never shown publicly or used for marketing.",
         },
         {
-          title: "Third-party services",
+          title: "AI deck generation",
           content:
-            "The app uses no third-party SDKs, advertising networks, analytics services, or cloud platforms. There is nothing to share with any third party because no data is collected in the first place.",
+            "If you generate a deck with AI, the category and the description you write are sent to the AI provider you choose — Google (Gemini) or Anthropic (Claude) — to create the deck. Don't include personal or sensitive information in descriptions. Google may use content submitted through the free Gemini service to improve its products. We keep your descriptions, the generated decks and your token usage in your account so you can find your decks again and so we can enforce monthly limits and prevent misuse.",
+        },
+        {
+          title: "Where your data is stored",
+          content:
+            "Account data is stored in our database hosted by Render. Library deck files are stored with Cloudflare. Emails are sent through Resend. These providers process data only on our behalf to run the service. When you're logged in, a login token is kept in your browser or app so you stay signed in; logging out removes it.",
+        },
+        {
+          title: "Deleting your account",
+          content:
+            "You can delete your account at any time from your account page on the website or in the app. This permanently deletes your alias, email, password hash, access rights, AI generation history and tokens. Decks you saved on your device stay on your device.",
         },
         {
           title: "Children's privacy",
           content:
-            "The app does not knowingly collect information from anyone, including children under the age of 13. Because we collect no data at all, the app is safe for users of any age in this respect.",
+            "Accounts are not intended for children under 13, and we don't knowingly collect their information. The app can be used without an account by anyone.",
         },
         {
           title: "Changes to this policy",
           content:
-            'If we update this policy, we will revise the "Last updated" date at the top. We will notify users of material changes through an in-app notice or an updated listing on Google Play.',
+            'If we update this policy, we will revise the date at the top. We will notify users of material changes through a notice in the app or on the website, or an updated listing on Google Play.',
         },
       ].map(({ title, content }) => (
         <section key={title} className="mb-8">
@@ -67,13 +77,13 @@ export default function PolicyPage() {
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-sm space-y-1">
           <p className="font-semibold text-gray-900">WillYGO Incorporation</p>
           <p className="text-gray-500">Email: privacy@willygo.app</p>
-          <p className="text-gray-500">App: myFlashCard for Android</p>
+          <p className="text-gray-500">App: myFlashCard for Android, iPhone (web app) and web</p>
           <p className="text-gray-500">Package: com.willygo.myflashcard</p>
         </div>
       </section>
 
       <footer className="pt-6 border-t border-gray-100 text-xs text-gray-400">
-        © 2025 WillYGO Incorporation. All rights reserved. · myFlashCard v1.0 · Android
+        © 2026 WillYGO Incorporation. All rights reserved. · myFlashCard v2.0
       </footer>
     </div>
   );

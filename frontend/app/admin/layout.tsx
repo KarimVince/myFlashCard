@@ -1,26 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getToken, setToken } from "@/lib/api";
+import { clearToken, setToken } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [token, setTokenState] = useState<string | null>(null);
+  const { user, loading, logout } = useAuth();
+  const [legacyToken, setLegacyToken] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
   const path = usePathname();
 
   useEffect(() => {
-    setTokenState(getToken());
+    setLegacyToken(sessionStorage.getItem("mfc_admin_token"));
     setChecking(false);
   }, []);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleLegacyLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    // Verify the token by making a real API call
+    // Verify the password by making a real API call
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/admin/decks`,
@@ -28,39 +30,65 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       );
       if (!res.ok) throw new Error("Invalid password");
       setToken(input);
-      setTokenState(input);
+      setLegacyToken(input);
     } catch {
       setError("Incorrect admin password");
     }
   }
 
-  if (checking) return null;
+  async function handleSignOut() {
+    if (legacyToken) {
+      clearToken();
+      setLegacyToken(null);
+    } else {
+      await logout();
+    }
+  }
 
-  if (!token) {
+  if (checking || loading) return null;
+
+  const isAdmin = user?.role === "admin" || !!legacyToken;
+
+  if (!isAdmin) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin login</h1>
-          <p className="text-sm text-gray-500 mb-6">
-            Enter your admin password to access the management panel.
-          </p>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Admin password"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              autoFocus
-            />
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <button
-              type="submit"
-              className="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg hover:bg-teal-700 transition-colors"
-            >
-              Sign in
-            </button>
-          </form>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin</h1>
+          {user ? (
+            <p className="text-sm text-gray-500 mb-6">
+              You&apos;re logged in as <strong>{user.alias}</strong>, which doesn&apos;t have admin access.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-6">Log in with your admin account.</p>
+              <Link
+                href="/account/login?next=/admin"
+                className="block text-center w-full bg-teal-600 text-white font-semibold py-2 rounded-lg hover:bg-teal-700 transition-colors"
+              >
+                Log in
+              </Link>
+            </>
+          )}
+
+          <details className="mt-8 text-sm">
+            <summary className="cursor-pointer text-gray-400 hover:text-gray-600">Use the admin password instead</summary>
+            <form onSubmit={handleLegacyLogin} className="space-y-4 mt-4">
+              <input
+                type="password"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Admin password"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <button
+                type="submit"
+                className="w-full border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Sign in with password
+              </button>
+            </form>
+          </details>
         </div>
       </div>
     );
@@ -71,6 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/upload", label: "Upload" },
     { href: "/admin/manage", label: "Manage" },
     { href: "/admin/categories", label: "Categories" },
+    { href: "/admin/members", label: "Members" },
     { href: "/admin/ai-card", label: "AI Card" },
     { href: "/admin/premium", label: "Premium" },
   ];
@@ -94,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <button
-          onClick={() => { localStorage.removeItem("mfc_admin_token"); setTokenState(null); }}
+          onClick={handleSignOut}
           className="text-xs text-gray-400 hover:text-red-500 transition-colors"
         >
           Sign out

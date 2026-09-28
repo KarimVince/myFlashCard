@@ -1,3 +1,15 @@
+export interface User {
+  id: number;
+  alias: string;
+  email: string;
+  role: "user" | "admin";
+  email_verified: boolean;
+  services: string[];
+  created_at: string;
+  // admin list only
+  last_login_at?: string | null;
+}
+
 export interface Category {
   id: number;
   slug: string;

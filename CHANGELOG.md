@@ -8,9 +8,14 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 ## [Unreleased]
 
 ### Added
+- User accounts (2.0 Phase A): register with alias + email, email verification, login, password reset, change password, delete account; account pages on the website; "Log in" / alias in the nav
+- Admin access through an admin user account (the `ADMIN_EMAIL` account becomes admin once verified); the old admin password still works during the transition
+- Admin Members page: search members, grant or remove Premium and Claude AI access, delete members
+- Privacy policy rewritten for accounts and AI generation
 - `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
 
 ### Fixed
+- Admin "Sign out" now actually signs out (it cleared the wrong storage)
 - Migration 005 no longer fails when the Game category already exists, which would have stopped the backend from starting
 
 ---

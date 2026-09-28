@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 
 const links = [
   { href: "/library", label: "Library" },
@@ -12,6 +13,7 @@ const links = [
 
 export default function Nav() {
   const path = usePathname();
+  const { user, loading } = useAuth();
 
   return (
     <header className="bg-teal-600 text-white shadow-md">
@@ -33,16 +35,28 @@ export default function Nav() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/admin"
-            className={`ml-2 px-3 py-1.5 rounded-md border border-white/30 transition-colors text-xs uppercase tracking-wide ${
-              path?.startsWith("/admin")
-                ? "bg-white text-teal-700 font-semibold"
-                : "hover:bg-white/10"
-            }`}
-          >
-            Admin
-          </Link>
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className={`ml-2 px-3 py-1.5 rounded-md border border-white/30 transition-colors text-xs uppercase tracking-wide ${
+                path?.startsWith("/admin")
+                  ? "bg-white text-teal-700 font-semibold"
+                  : "hover:bg-white/10"
+              }`}
+            >
+              Admin
+            </Link>
+          )}
+          {!loading && (
+            <Link
+              href={user ? "/account" : "/account/login"}
+              className={`ml-2 px-3 py-1.5 rounded-md transition-colors max-w-[10rem] truncate ${
+                path?.startsWith("/account") ? "bg-white text-teal-700 font-semibold" : "bg-white/15 hover:bg-white/25"
+              }`}
+            >
+              {user ? user.alias : "Log in"}
+            </Link>
+          )}
         </nav>
       </div>
     </header>

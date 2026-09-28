@@ -1,14 +1,37 @@
-import { Category, Deck } from "./types";
+import { Category, Deck, User } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // ── Auth ─────────────────────────────────────────────────────────────────
 
 const AUTH_KEY = "mfc_admin_token";
+const USER_KEY = "mfc_user_token";
 
+/**
+ * Token for admin API calls: the legacy admin password if one was entered,
+ * otherwise the logged-in user's session (the backend checks the admin role).
+ */
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(AUTH_KEY);
+  return sessionStorage.getItem(AUTH_KEY) ?? getUserToken();
+}
+
+export function getUserToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(USER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setUserToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(USER_KEY, token);
+    else localStorage.removeItem(USER_KEY);
+  } catch {
+    // storage unavailable (private mode) — session lasts until reload
+  }
 }
 
 export function setToken(token: string): void {
@@ -35,7 +58,11 @@ async function request<T>(
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const msg = body?.detail ?? res.statusText;
+    const detail = body?.detail;
+    // FastAPI validation errors are a list of {msg}; show them as text.
+    const msg = Array.isArray(detail)
+      ? detail.map((d: { msg?: string }) => (d.msg ?? "").replace(/^Value error, /, "")).join(". ")
+      : detail ?? res.statusText;
     throw new Error(`${res.status}: ${msg}`);
   }
   if (res.status === 204) return undefined as T;
@@ -79,7 +106,81 @@ export async function getSettings(): Promise<AppSettings> {
   return request<AppSettings>("/settings");
 }
 
+// ── Accounts ──────────────────────────────────────────────────────────────
+
+export interface AuthResult {
+  token: string;
+  user: User;
+}
+
+function json(body: unknown): RequestInit {
+  return { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+}
+
+export async function register(alias: string, email: string, password: string): Promise<AuthResult> {
+  return request<AuthResult>("/auth/register", { method: "POST", ...json({ alias, email, password }) });
+}
+
+export async function login(email: string, password: string): Promise<AuthResult> {
+  return request<AuthResult>("/auth/login", { method: "POST", ...json({ email, password }) });
+}
+
+export async function logout(token: string): Promise<void> {
+  return request<void>("/auth/logout", { method: "POST" }, token);
+}
+
+export async function getMe(token: string): Promise<User> {
+  return request<User>("/me", {}, token);
+}
+
+export async function updateAlias(token: string, alias: string): Promise<User> {
+  return request<User>("/me", { method: "PATCH", ...json({ alias }) }, token);
+}
+
+export async function changePassword(token: string, current_password: string, new_password: string): Promise<void> {
+  return request<void>("/me/password", { method: "POST", ...json({ current_password, new_password }) }, token);
+}
+
+export async function deleteAccount(token: string, password: string): Promise<void> {
+  return request<void>("/me", { method: "DELETE", ...json({ password }) }, token);
+}
+
+export async function verifyEmail(token: string): Promise<User> {
+  return request<User>("/auth/verify-email", { method: "POST", ...json({ token }) });
+}
+
+export async function resendVerification(token: string): Promise<void> {
+  return request<void>("/auth/resend-verification", { method: "POST" }, token);
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  return request<void>("/auth/forgot-password", { method: "POST", ...json({ email }) });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  return request<void>("/auth/reset-password", { method: "POST", ...json({ token, password }) });
+}
+
+/** Strip the "422: " status prefix and pydantic noise for display. */
+export function errorMessage(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  const m = raw.match(/^\d{3}: ([\s\S]*)$/);
+  return m ? m[1] : raw;
+}
+
 // ── Admin endpoints ───────────────────────────────────────────────────────
+
+export async function adminListUsers(token: string, q?: string): Promise<User[]> {
+  return request<User[]>(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, {}, token);
+}
+
+export async function adminSetService(token: string, userId: number, service: string, enabled: boolean): Promise<User> {
+  return request<User>(`/admin/users/${userId}/services/${service}`, { method: "PUT", ...json({ enabled }) }, token);
+}
+
+export async function adminDeleteUser(token: string, userId: number): Promise<void> {
+  return request<void>(`/admin/users/${userId}`, { method: "DELETE" }, token);
+}
 
 export async function adminGetSettings(token: string): Promise<AppSettings> {
   return request<AppSettings>("/admin/settings", {}, token);
