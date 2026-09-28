@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { hasAdminPasswordSession } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFeatures } from "@/lib/features";
 
@@ -19,6 +21,10 @@ export default function Nav() {
   const features = useFeatures();
   // Create only exists while AI generation is switched on.
   const visibleLinks = links.filter((l) => l.href !== "/create" || features.ai);
+  // Admin button while signed in as admin — by admin account or by the admin password.
+  const [passwordAdmin, setPasswordAdmin] = useState(false);
+  useEffect(() => setPasswordAdmin(hasAdminPasswordSession()), [path]);
+  const showAdmin = user?.role === "admin" || passwordAdmin;
 
   return (
     <header className="bg-teal-600 text-white shadow-md">
@@ -40,7 +46,7 @@ export default function Nav() {
               {label}
             </Link>
           ))}
-          {user?.role === "admin" && (
+          {showAdmin && (
             <Link
               href="/admin"
               className={`ml-2 px-3 py-1.5 rounded-md border border-white/30 transition-colors text-xs uppercase tracking-wide ${

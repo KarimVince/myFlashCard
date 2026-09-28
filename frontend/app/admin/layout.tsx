@@ -51,6 +51,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAdmin = user?.role === "admin" || !!legacyToken;
 
+  if (!isAdmin && !features.accounts) {
+    // Member accounts are off: the admin password is the way in, as in v1.
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin login</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            Enter your admin password to access the management panel.
+          </p>
+          <form onSubmit={handleLegacyLogin} className="space-y-4">
+            <input
+              type="password"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Admin password"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              autoFocus
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-teal-600 text-white font-semibold py-2 rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              Sign in
+            </button>
+          </form>
+          <p className="mt-6 text-xs text-center">
+            <Link href="/account/login?next=/admin" className="text-gray-400 hover:text-gray-600">
+              Log in with an admin account instead
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">

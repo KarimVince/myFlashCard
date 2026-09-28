@@ -36,6 +36,19 @@ test("nav shows Create and Log in when switched on", async () => {
   expect(await screen.findByText("Log in")).toBeInTheDocument();
 });
 
+test("nav shows Admin only while signed in as admin with the password", async () => {
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false, accounts_enabled: false, ai_enabled: false });
+  const { unmount } = renderWith(<Nav />);
+  expect(await screen.findByText("Library")).toBeInTheDocument();
+  expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+  unmount();
+
+  sessionStorage.setItem("mfc_admin_token", "the-admin-password");
+  renderWith(<Nav />);
+  expect(await screen.findByText("Admin")).toBeInTheDocument();
+  sessionStorage.clear();
+});
+
 test("how-to shows only the manual method while AI is off", async () => {
   (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false, accounts_enabled: false, ai_enabled: false });
   renderWith(<HowToPage />);

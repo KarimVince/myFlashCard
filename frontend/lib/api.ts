@@ -45,6 +45,12 @@ export function setUserToken(token: string | null): void {
   }
 }
 
+/** True while this tab is signed in to admin with the admin password. */
+export function hasAdminPasswordSession(): boolean {
+  if (typeof window === "undefined") return false;
+  return sessionStorage.getItem(AUTH_KEY) !== null;
+}
+
 export function setToken(token: string): void {
   sessionStorage.setItem(AUTH_KEY, token);
 }
