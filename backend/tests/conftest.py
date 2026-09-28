@@ -59,6 +59,12 @@ _storage_module._client.storage = _mock_storage
 
 
 @pytest.fixture(autouse=True)
+def _reset_rate_limits():
+    import app.ratelimit
+    app.ratelimit.reset()
+
+
+@pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()

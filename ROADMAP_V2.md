@@ -454,6 +454,38 @@ Deferred to a future version:
 
 ---
 
+## Version 2.0 — User accounts + AI deck generation
+
+Agreed 2026-09-28. Built on a branch; merged to `main` (which auto-deploys) only when a phase is ready.
+
+### Decisions
+- Admin becomes a user account with `role = admin` (superuser). The legacy `ADMIN_PASSWORD_HASH` bearer keeps working during the switch, then is removed. The first admin is whoever registers **and verifies** the email in `ADMIN_EMAIL`.
+- Email via **Resend** (`RESEND_API_KEY`, `EMAIL_FROM`). Without a key (local dev) emails are printed to the backend log.
+- Email verification is required before using AI tokens (registration and login work without it).
+- AI providers at launch: **Gemini** (free tier) and **Claude** (needs per-user `ai_claude` access). Grok deferred — no free API.
+- Generated decks stay private (download / save to device / history). No public publishing in 2.0.
+- Tokens: monthly allowance (free 5, premium 15 — configurable), resets on the 1st, no rollover; cost per provider configurable (default 1); a token is only spent on a valid deck. Ledger table so paid top-ups can be added later.
+- AI API keys live in the DB, encrypted with `SECRETS_KEY` (env only), managed from admin → AI Card, never returned in full.
+- AI generation works for free accounts even while the global Premium toggle is Inactif.
+
+### Phase A — Accounts
+Tables `users`, `user_services` (premium, ai_claude, …), `sessions` (hashed opaque tokens, 30 days), `email_tokens` (verify / reset).
+Endpoints: `/auth/register|login|logout|verify-email|resend-verification|forgot-password|reset-password`, `GET|PATCH|DELETE /me`, `POST /me/password`, `GET /admin/users`, `PUT /admin/users/{id}/services/{service}`, `DELETE /admin/users/{id}`.
+Web: login, register, verify, forgot/reset, account (incl. delete account — required by Google Play), admin Members page, admin login by account, privacy policy update. Basic rate limiting on auth endpoints.
+
+### Phase B — AI backend
+Tables `ai_providers` (key encrypted, model, enabled, token cost), `token_ledger`, `generations` (user, category, description, provider, JSON, status). Settings for monthly allowances. `POST /ai/generate` → category `ai_prompt` + description → provider → extract + validate JSON (one retry) → save + spend token. `GET /me/tokens`, `GET /me/generations`. Admin AI Card page: keys, models, enable, costs, allowances.
+
+### Phase C — Web + iPhone web app
+Create page (category, description, provider, balance → preview → download / history). How-to reworked into "Generate with AI" and "Do it manually". `/app` gets a 3rd **Create** tab (save to My Decks).
+
+### Phase D — Android
+Login / register / account screens (token in encrypted storage), "Do My Own" becomes **Create** (AI form + manual guide + load from file). New Play Store build.
+
+### Phase E — Release 2.0.0
+
+---
+
 ## Deployment rules (enforced)
 
 1. **Auto-deploy only after tests.** On push to `main`, `auto-deploy.yml` deploys the backend and/or frontend (whichever folder changed) to Render, only if that part's tests pass. Render's own auto-deploy is off (`autoDeploy: false`). Android is never auto-deployed — use `deploy.yml`.

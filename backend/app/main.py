@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, builds, categories, decks, settings as settings_api
+from app.api import admin, auth, builds, categories, decks, settings as settings_api
 from app.config import settings
 
 app = FastAPI(
@@ -25,6 +25,7 @@ app.include_router(decks.router)
 app.include_router(categories.router)
 app.include_router(builds.router)
 app.include_router(settings_api.router)
+app.include_router(auth.router)
 app.include_router(admin.router)
 
 

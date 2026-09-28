@@ -1,15 +1,16 @@
 import json
 
 import jsonschema
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.auth import verify_admin_token
 from app.db import get_db
-from app.models import Category, Deck
+from app.accounts import SERVICES
+from app.models import Category, Deck, User, UserService
 from app.schemas import (
-    CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
-    PremiumUpdate, PublicSettingsOut, VisibilityUpdate,
+    AdminUserOut, CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
+    PremiumUpdate, PublicSettingsOut, ServiceUpdate, VisibilityUpdate,
 )
 from app.settings_store import PREMIUM_ENABLED, premium_enabled, set_flag
 from app.storage import delete_deck, delete_build, list_builds, replace_deck, upload_build, upload_deck
@@ -190,6 +191,52 @@ def admin_set_premium(body: PremiumUpdate, db: Session = Depends(get_db)):
     """Turn premium on or off. While off, premium decks are hidden from the public."""
     set_flag(db, PREMIUM_ENABLED, body.enabled)
     return PublicSettingsOut(premium_enabled=premium_enabled(db))
+
+
+# ── Admin member endpoints ────────────────────────────────────────────────
+
+def _user_or_404(user_id: int, db: Session) -> User:
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Member not found")
+    return user
+
+
+@router.get("/users", response_model=list[AdminUserOut])
+def admin_list_users(q: str | None = None, db: Session = Depends(get_db)):
+    """List all members, newest first, optionally filtered by alias or email."""
+    query = db.query(User)
+    if q:
+        like = f"%{q.strip().lower()}%"
+        query = query.filter((User.email.like(like)) | (User.alias_key.like(like)))
+    return [AdminUserOut.of(u) for u in query.order_by(User.created_at.desc()).all()]
+
+
+@router.put("/users/{user_id}/services/{service}", response_model=AdminUserOut)
+def admin_set_service(user_id: int, service: str, body: ServiceUpdate, db: Session = Depends(get_db)):
+    """Grant or remove an access (e.g. premium, ai_claude) for a member."""
+    if service not in SERVICES:
+        raise HTTPException(status_code=422, detail=f"Unknown service: {service!r}")
+    user = _user_or_404(user_id, db)
+    existing = next((s for s in user.services if s.service == service), None)
+    if body.enabled and not existing:
+        user.services.append(UserService(service=service))
+    elif not body.enabled and existing:
+        user.services.remove(existing)
+    db.commit()
+    db.refresh(user)
+    return AdminUserOut.of(user)
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def admin_delete_user(user_id: int, request: Request, db: Session = Depends(get_db)):
+    """Delete a member account."""
+    user = _user_or_404(user_id, db)
+    me = getattr(request.state, "admin_user", None)
+    if me and me.id == user.id:
+        raise HTTPException(status_code=400, detail="You can't delete your own account here")
+    db.delete(user)
+    db.commit()
 
 
 # ── Admin category endpoints ──────────────────────────────────────────────

@@ -3,8 +3,14 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str
-    admin_password_hash: str
+    admin_password_hash: str = ""   # legacy shared admin password; remove once admin accounts are in use
     cors_origins: str = "http://localhost:3000"
+
+    # Accounts
+    app_url: str = "http://localhost:3000"   # frontend base URL used in email links
+    admin_email: str = ""                     # this account becomes admin once its email is verified
+    resend_api_key: str = ""                  # empty → emails are printed to the log (dev)
+    email_from: str = "myFlashCard <noreply@myflashcard.app>"
 
     # Cloudflare R2 (S3-compatible)
     r2_account_id: str = ""
