@@ -10,6 +10,7 @@ from app.accounts import (
     current_user,
     hash_password,
     mark_verified,
+    promote_if_admin_email,
     revoke_all_sessions,
     revoke_session,
 )
@@ -73,6 +74,7 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == body.email).first()
     if not user or not check_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Wrong email or password")
+    promote_if_admin_email(user)
     token = create_session(db, user)
     return AuthOut(token=token, user=UserOut.of(user))
 

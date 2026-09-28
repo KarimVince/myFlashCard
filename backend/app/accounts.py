@@ -113,7 +113,17 @@ def consume_email_token(db: Session, token: str, purpose: str) -> User:
 def mark_verified(user: User) -> None:
     if not user.email_verified_at:
         user.email_verified_at = utcnow()
-    if settings.admin_email and user.email == settings.admin_email.strip().lower():
+    promote_if_admin_email(user)
+
+
+def promote_if_admin_email(user: User) -> None:
+    """A verified account whose email is ADMIN_EMAIL becomes admin (also checked at login,
+    in case ADMIN_EMAIL was set after the account was verified)."""
+    if (
+        user.email_verified_at
+        and settings.admin_email
+        and user.email == settings.admin_email.strip().lower()
+    ):
         user.role = "admin"
 
 

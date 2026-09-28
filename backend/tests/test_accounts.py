@@ -113,6 +113,21 @@ def test_admin_email_becomes_admin_only_after_verification(client, outbox, monke
     assert client.get("/admin/decks", headers=_bearer(token)).status_code == 200
 
 
+def test_admin_email_set_after_verification_promotes_at_login(client, outbox, monkeypatch):
+    _register(client, alias="Boss", email="boss@example.com")
+    client.post("/auth/verify-email", json={"token": outbox["verify"][0][1]})
+    monkeypatch.setattr(settings, "admin_email", "boss@example.com")
+    login = client.post("/auth/login", json={"email": "boss@example.com", "password": "secret123"})
+    assert login.json()["user"]["role"] == "admin"
+
+
+def test_unverified_admin_email_not_promoted_at_login(client, outbox, monkeypatch):
+    monkeypatch.setattr(settings, "admin_email", "boss@example.com")
+    _register(client, alias="Boss", email="boss@example.com")
+    login = client.post("/auth/login", json={"email": "boss@example.com", "password": "secret123"})
+    assert login.json()["user"]["role"] == "user"
+
+
 # ── Password reset / change ───────────────────────────────────────────────
 
 def test_forgot_password_does_not_reveal_accounts(client, outbox):
