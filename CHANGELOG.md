@@ -8,6 +8,9 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 ## [Unreleased]
 
 ### Added
+- Global Premium toggle (Actif/Inactif) in admin, stored in new `app_settings` table (migration 006, inactive by default). While inactive, premium decks are hidden from the public API, website, web app and Android app, and all premium wording is removed; admins can still mark decks as premium
+- `GET /settings` public endpoint; `GET /admin/settings` and `PATCH /admin/settings/premium` admin endpoints
+- Admin sections: Premium, and AI Card placeholder (coming later)
 - GitHub Actions CI workflow (`ci.yml`) — unit tests + debug build on every PR
 - GitHub Actions deploy workflow (`deploy.yml`) — manual trigger, signed AAB → Play Store
 - Monorepo structure: Android project moved to `android/` subfolder

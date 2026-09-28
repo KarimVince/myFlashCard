@@ -4,15 +4,17 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getCategories } from "@/lib/api";
 import { Category } from "@/lib/types";
+import { usePremiumEnabled } from "@/lib/usePremium";
 
 const FEATURES = [
   { icon: "📱", title: "Fully offline", desc: "No internet required after loading a deck." },
   { icon: "📂", title: "Any JSON deck", desc: "Load any .json deck file from your device storage." },
   { icon: "🎨", title: "Rich card types", desc: "Stats tiles, step lists, tables, images, notes." },
-  { icon: "🔒", title: "No account needed", desc: "Use free & personal decks with no sign-up. An account unlocks premium content." },
+  { icon: "🔒", title: "No account needed", desc: "Use free & personal decks with no sign-up.", premiumNote: " An account unlocks premium content." },
 ];
 
 export default function HomePage() {
+  const premiumEnabled = usePremiumEnabled();
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -68,11 +70,11 @@ export default function HomePage() {
           Simple by design
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {FEATURES.map(({ icon, title, desc }) => (
+          {FEATURES.map(({ icon, title, desc, premiumNote }) => (
             <div key={title} className="text-center">
               <div className="text-3xl mb-3">{icon}</div>
               <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-              <p className="text-sm text-gray-500">{desc}</p>
+              <p className="text-sm text-gray-500">{desc}{premiumEnabled && premiumNote}</p>
             </div>
           ))}
         </div>

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { getCategories, getDecks } from "@/lib/api";
 import { Category, Deck } from "@/lib/types";
 import DeckCard from "@/components/DeckCard";
+import { usePremiumEnabled } from "@/lib/usePremium";
 
 const PILLS_THRESHOLD = 7; // switch to <select> when more categories than this
 
 export default function LibraryPage() {
+  const premiumEnabled = usePremiumEnabled();
   const [categories, setCategories] = useState<Category[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeSlug, setActiveSlug] = useState<string>("all");
@@ -40,6 +42,12 @@ export default function LibraryPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Deck Library</h1>
+      {!premiumEnabled && (
+        <p className="text-gray-500 mb-8">
+          Browse community decks. Download any deck directly into the myFlashCard app.
+        </p>
+      )}
+      {premiumEnabled && (<>
       <p className="text-gray-500 mb-8">
         Browse community decks. Free decks can be downloaded directly into the myFlashCard app.
         <span className="ml-1 inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 font-medium px-2 py-0.5 rounded-full border border-teal-200">
@@ -61,6 +69,7 @@ export default function LibraryPage() {
           Stay tuned — we&apos;ll announce when subscriptions open.
         </span>
       </div>
+      </>)}
 
       {/* Category filter */}
       {!loading && (
@@ -126,7 +135,7 @@ export default function LibraryPage() {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((deck) => (
-            <DeckCard key={deck.id} deck={deck} />
+            <DeckCard key={deck.id} deck={deck} premiumEnabled={premiumEnabled} />
           ))}
         </div>
       )}

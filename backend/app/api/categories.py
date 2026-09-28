@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Category, Deck
 from app.schemas import CategoryOut
+from app.settings_store import visible_deck_filter
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -16,7 +17,7 @@ def list_categories(db: Session = Depends(get_db)):
         db.query(Category, func.count(Deck.id).label("dc"))
         .outerjoin(
             Deck,
-            (Deck.category_id == Category.id) & (Deck.is_public == True),  # noqa: E712
+            (Deck.category_id == Category.id) & visible_deck_filter(db),
         )
         .group_by(Category.id)
         .order_by(func.count(Deck.id).desc(), Category.label)

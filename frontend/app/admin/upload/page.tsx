@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { adminUploadDeck, getCategories, getToken } from "@/lib/api";
 import { Category } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { usePremiumEnabled } from "@/lib/usePremium";
 
 export default function UploadPage() {
+  const premiumEnabled = usePremiumEnabled();
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -206,7 +208,11 @@ export default function UploadPage() {
           <div>
             <p className="text-sm font-medium text-gray-700">Free to download</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              {form.is_free ? "Anyone can download this deck" : "Premium — download blocked for public users"}
+              {form.is_free
+                ? "Anyone can download this deck"
+                : premiumEnabled
+                  ? "Premium — download blocked for public users"
+                  : "Premium — hidden from the public while Premium is inactive"}
             </p>
           </div>
           <button

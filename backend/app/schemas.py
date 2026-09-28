@@ -76,6 +76,16 @@ class FreeUpdate(BaseModel):
     is_free: bool
 
 
+# ── Settings ──────────────────────────────────────────────────────────────
+
+class PublicSettingsOut(BaseModel):
+    premium_enabled: bool
+
+
+class PremiumUpdate(BaseModel):
+    enabled: bool
+
+
 # ── Category admin ────────────────────────────────────────────────────────
 
 class CategoryCreate(BaseModel):

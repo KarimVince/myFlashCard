@@ -71,7 +71,31 @@ export async function getBuilds(): Promise<{ filename: string; url: string; size
   return request<{ filename: string; url: string; size_mb: number }[]>("/builds");
 }
 
+export interface AppSettings {
+  premium_enabled: boolean;
+}
+
+export async function getSettings(): Promise<AppSettings> {
+  return request<AppSettings>("/settings");
+}
+
 // ── Admin endpoints ───────────────────────────────────────────────────────
+
+export async function adminGetSettings(token: string): Promise<AppSettings> {
+  return request<AppSettings>("/admin/settings", {}, token);
+}
+
+export async function adminSetPremium(token: string, enabled: boolean): Promise<AppSettings> {
+  return request<AppSettings>(
+    "/admin/settings/premium",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    },
+    token,
+  );
+}
 
 export async function adminListDecks(token: string): Promise<Deck[]> {
   return request<Deck[]>("/admin/decks", {}, token);

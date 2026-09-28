@@ -71,12 +71,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/upload", label: "Upload" },
     { href: "/admin/manage", label: "Manage" },
     { href: "/admin/categories", label: "Categories" },
+    { href: "/admin/ai-card", label: "AI Card" },
+    { href: "/admin/premium", label: "Premium" },
   ];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <nav className="flex gap-1">
+        <nav className="flex gap-1 flex-wrap">
           {adminLinks.map(({ href, label }) => (
             <Link
               key={href}

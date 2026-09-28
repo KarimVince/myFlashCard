@@ -56,3 +56,11 @@ class Deck(Base):
     )
 
     category: Mapped[Category] = relationship("Category", back_populates="decks")
+
+
+class AppSetting(Base):
+    """Global key/value feature flags (e.g. premium_enabled)."""
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    value: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

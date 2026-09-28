@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from app.auth import verify_admin_token
 from app.db import get_db
 from app.models import Category, Deck
-from app.schemas import CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate, VisibilityUpdate
+from app.schemas import (
+    CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
+    PremiumUpdate, PublicSettingsOut, VisibilityUpdate,
+)
+from app.settings_store import PREMIUM_ENABLED, premium_enabled, set_flag
 from app.storage import delete_deck, delete_build, list_builds, replace_deck, upload_build, upload_deck
 
 router = APIRouter(
@@ -171,6 +175,21 @@ def delete_deck_endpoint(deck_id: int, db: Session = Depends(get_db)):
     delete_deck(deck.storage_path)
     db.delete(deck)
     db.commit()
+
+
+# ── Admin settings endpoints ──────────────────────────────────────────────
+
+@router.get("/settings", response_model=PublicSettingsOut)
+def admin_get_settings(db: Session = Depends(get_db)):
+    """Current feature flags."""
+    return PublicSettingsOut(premium_enabled=premium_enabled(db))
+
+
+@router.patch("/settings/premium", response_model=PublicSettingsOut)
+def admin_set_premium(body: PremiumUpdate, db: Session = Depends(get_db)):
+    """Turn premium on or off. While off, premium decks are hidden from the public."""
+    set_flag(db, PREMIUM_ENABLED, body.enabled)
+    return PublicSettingsOut(premium_enabled=premium_enabled(db))
 
 
 # ── Admin category endpoints ──────────────────────────────────────────────

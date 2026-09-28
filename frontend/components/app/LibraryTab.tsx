@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { getCategories, getDecks } from "@/lib/api";
 import { Category, Deck } from "@/lib/types";
 import { DeckJson } from "./AppShell";
+import { usePremiumEnabled } from "@/lib/usePremium";
 
 interface Props {
   onOpenDeck: (v: { deck: Deck; json: DeckJson }) => void;
 }
 
 export default function LibraryTab({ onOpenDeck }: Props) {
+  const premiumEnabled = usePremiumEnabled();
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -40,6 +42,10 @@ export default function LibraryTab({ onOpenDeck }: Props) {
   }, [activeCat]);
 
   async function handleOpen(deck: Deck) {
+    if (!deck.is_free) {
+      setError("Premium decks are coming soon.");
+      return;
+    }
     setLoadingDeck(deck.id);
     setError(null);
     try {
@@ -96,7 +102,14 @@ export default function LibraryTab({ onOpenDeck }: Props) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{deck.title}</p>
+                <p className="font-semibold text-gray-900 truncate">
+                  {deck.title}
+                  {premiumEnabled && !deck.is_free && (
+                    <span className="ml-2 align-middle text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                      ★ Premium
+                    </span>
+                  )}
+                </p>
                 {deck.description && (
                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{deck.description}</p>
                 )}

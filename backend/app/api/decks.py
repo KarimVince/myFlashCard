@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Category, Deck
 from app.schemas import DeckPublicOut
+from app.settings_store import visible_deck_filter
 
 router = APIRouter(prefix="/decks", tags=["decks"])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/decks", tags=["decks"])
 def _public_deck_or_404(deck_id: int, db: Session) -> Deck:
     deck = (
         db.query(Deck)
-        .filter(Deck.id == deck_id, Deck.is_public == True)  # noqa: E712
+        .filter(Deck.id == deck_id, visible_deck_filter(db))
         .first()
     )
     if not deck:
@@ -28,7 +29,7 @@ def list_decks(
     db: Session = Depends(get_db),
 ):
     """List all public decks, optionally filtered by category slug or language."""
-    q = db.query(Deck).filter(Deck.is_public == True)  # noqa: E712
+    q = db.query(Deck).filter(visible_deck_filter(db))
     if category:
         cat = db.query(Category).filter(Category.slug == category).first()
         if not cat:

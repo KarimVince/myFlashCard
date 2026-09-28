@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { adminUpdateDeck, getDeck, getToken } from "@/lib/api";
 import { Deck } from "@/lib/types";
 import { useParams, useRouter } from "next/navigation";
+import { usePremiumEnabled } from "@/lib/usePremium";
 
 export default function EditDeckPage() {
+  const premiumEnabled = usePremiumEnabled();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [deck, setDeck] = useState<Deck | null>(null);
@@ -158,7 +160,11 @@ export default function EditDeckPage() {
           <div>
             <p className="text-sm font-medium text-gray-700">Free to download</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              {form.is_free ? "Anyone can download this deck" : "Premium — download blocked for public users"}
+              {form.is_free
+                ? "Anyone can download this deck"
+                : premiumEnabled
+                  ? "Premium — download blocked for public users"
+                  : "Premium — hidden from the public while Premium is inactive"}
             </p>
           </div>
           <button

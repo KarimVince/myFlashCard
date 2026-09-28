@@ -13,6 +13,7 @@ jest.mock("@/lib/api", () => ({
   ...jest.requireActual("@/lib/api"),
   getCategories: jest.fn(),
   getDecks: jest.fn(),
+  getSettings: jest.fn(),
   downloadUrl: jest.fn((id: number) => `http://api/decks/${id}/download`),
 }));
 
@@ -53,6 +54,7 @@ const DECKS: Deck[] = [
 beforeEach(() => {
   (api.getCategories as jest.Mock).mockResolvedValue(CATS);
   (api.getDecks as jest.Mock).mockResolvedValue(DECKS);
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false });
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -90,4 +92,20 @@ test("shows empty state when no decks match filter", async () => {
   await waitFor(() =>
     expect(screen.getByText(/No decks found/i)).toBeInTheDocument(),
   );
+});
+
+test("hides all premium references while premium is inactive", async () => {
+  render(<LibraryPage />);
+  await waitFor(() => expect(screen.getByText("Pasta Week")).toBeInTheDocument());
+  expect(screen.queryByText(/premium/i)).not.toBeInTheDocument();
+  expect(screen.queryByText("✓ Free")).not.toBeInTheDocument();
+});
+
+test("shows premium notice and badges when premium is active", async () => {
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: true });
+  (api.getDecks as jest.Mock).mockResolvedValue([...DECKS, { ...DECKS[0], id: 3, title: "Gold Deck", is_free: false }]);
+  render(<LibraryPage />);
+  await waitFor(() => expect(screen.getByText("Gold Deck")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText(/Premium access is coming/)).toBeInTheDocument());
+  expect(screen.getByText("Premium — access required")).toBeInTheDocument();
 });

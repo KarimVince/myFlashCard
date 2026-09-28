@@ -4,6 +4,7 @@ import { downloadUrl } from "@/lib/api";
 interface Props {
   deck: Deck;
   showVisibility?: boolean;
+  premiumEnabled?: boolean;
   onToggleVisibility?: (id: number, current: boolean) => void;
   onToggleFree?: (id: number, current: boolean) => void;
   onDelete?: (id: number) => void;
@@ -13,6 +14,7 @@ interface Props {
 export default function DeckCard({
   deck,
   showVisibility,
+  premiumEnabled = false,
   onToggleVisibility,
   onToggleFree,
   onDelete,
@@ -28,8 +30,8 @@ export default function DeckCard({
           <span className="text-xs font-semibold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
             {deck.category.label}
           </span>
-          {/* Free / Premium badge */}
-          {deck.is_free ? (
+          {/* Free / Premium badge — public view only while premium is active */}
+          {!showVisibility && !premiumEnabled ? null : deck.is_free ? (
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
               ✓ Free
             </span>
