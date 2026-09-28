@@ -14,6 +14,7 @@ from app.ai.service import (
 from app.db import get_db
 from app.models import AIProvider, Category, Generation, User
 from app.ratelimit import rate_limit
+from app.settings_store import ai_enabled
 from app.schemas import (
     AIOptionsOut,
     BalanceOut,
@@ -47,6 +48,11 @@ def balance_out(db: Session, user: User) -> BalanceOut:
     )
 
 
+def _require_ai(db: Session) -> None:
+    if not ai_enabled(db):
+        raise HTTPException(status_code=503, detail="AI generation is not available right now")
+
+
 def _providers(db: Session) -> list[AIProvider]:
     return db.query(AIProvider).order_by(AIProvider.sort_order).all()
 
@@ -54,6 +60,7 @@ def _providers(db: Session) -> list[AIProvider]:
 @router.get("/ai/options", response_model=AIOptionsOut)
 def ai_options(user: User = Depends(current_user), db: Session = Depends(get_db)):
     """What the Create screen needs: balance, providers this user can use, verification status."""
+    _require_ai(db)
     options = []
     for p in _providers(db):
         reason = provider_unavailable_reason(p, user)
@@ -75,6 +82,7 @@ def ai_options(user: User = Depends(current_user), db: Session = Depends(get_db)
 )
 async def ai_generate(body: GenerateIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     """Generate a deck with AI. One or more tokens are spent only if a valid deck comes back."""
+    _require_ai(db)
     if not user.email_verified_at:
         raise HTTPException(status_code=403, detail="Confirm your email before generating decks with AI")
 

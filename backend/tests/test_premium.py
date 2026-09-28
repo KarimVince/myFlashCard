@@ -16,11 +16,11 @@ def _upload(client, auth_headers, sample_deck_json, is_free):
 def _set_premium(client, auth_headers, enabled):
     resp = client.patch("/admin/settings/premium", json={"enabled": enabled}, headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json() == {"premium_enabled": enabled}
+    assert resp.json()["premium_enabled"] is enabled
 
 
 def test_premium_off_by_default(client):
-    assert client.get("/settings").json() == {"premium_enabled": False}
+    assert client.get("/settings").json()["premium_enabled"] is False
 
 
 def test_toggle_requires_auth(client):
@@ -29,10 +29,10 @@ def test_toggle_requires_auth(client):
 
 def test_toggle_persists(client, auth_headers):
     _set_premium(client, auth_headers, True)
-    assert client.get("/settings").json() == {"premium_enabled": True}
-    assert client.get("/admin/settings", headers=auth_headers).json() == {"premium_enabled": True}
+    assert client.get("/settings").json()["premium_enabled"] is True
+    assert client.get("/admin/settings", headers=auth_headers).json()["premium_enabled"] is True
     _set_premium(client, auth_headers, False)
-    assert client.get("/settings").json() == {"premium_enabled": False}
+    assert client.get("/settings").json()["premium_enabled"] is False
 
 
 def test_premium_decks_hidden_when_inactive(client, auth_headers, sample_deck_json):

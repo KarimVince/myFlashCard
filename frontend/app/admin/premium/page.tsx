@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { adminGetSettings, adminListDecks, adminSetPremium, getToken } from "@/lib/api";
+import { AppSettings, adminGetSettings, adminListDecks, adminSetFeature, adminSetPremium, errorMessage, getToken } from "@/lib/api";
+import { useFeatures } from "@/lib/features";
 
 export default function PremiumPage() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [premiumCount, setPremiumCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +15,10 @@ export default function PremiumPage() {
     const token = getToken();
     if (!token) return;
     adminGetSettings(token)
-      .then((s) => setEnabled(s.premium_enabled))
+      .then((s) => {
+        setEnabled(s.premium_enabled);
+        setSettings(s);
+      })
       .catch((e) => setError(e.message));
     adminListDecks(token)
       .then((decks) => setPremiumCount(decks.filter((d) => !d.is_free).length))
@@ -28,6 +33,7 @@ export default function PremiumPage() {
     try {
       const s = await adminSetPremium(token, !enabled);
       setEnabled(s.premium_enabled);
+      setSettings(s);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Could not update setting");
     } finally {
@@ -94,6 +100,79 @@ export default function PremiumPage() {
           those decks are treated like hidden decks: they don&apos;t appear in the public library or apps.
         </p>
       </div>
+      {settings && <LaunchSwitches settings={settings} onChange={setSettings} />}
     </div>
+  );
+}
+
+function LaunchSwitches({ settings, onChange }: { settings: AppSettings; onChange: (s: AppSettings) => void }) {
+  const features = useFeatures();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggle(feature: "accounts" | "ai", enabled: boolean) {
+    const token = getToken();
+    if (!token) return;
+    setBusy(feature);
+    setError(null);
+    try {
+      onChange(await adminSetFeature(token, feature, enabled));
+      features.refresh(); // show/hide AI Card and public entry points right away
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const rows: { key: "accounts" | "ai"; title: string; on: boolean; onText: string; offText: string }[] = [
+    {
+      key: "accounts",
+      title: "Member accounts",
+      on: !!settings.accounts_enabled,
+      onText: "Anyone can register. Log in / account pages are visible.",
+      offText: "Registration is closed and Log in is hidden. You can still log in as admin at /admin.",
+    },
+    {
+      key: "ai",
+      title: "AI generation",
+      on: !!settings.ai_enabled,
+      onText: "Create page, web app Create tab and the AI how-to are visible. AI Card is in the admin menu.",
+      offText: "Everything AI is hidden; the how-to shows only the manual method. Needs member accounts on.",
+    },
+  ];
+
+  return (
+    <section className="mt-10">
+      <h2 className="font-semibold text-gray-900 mb-1">Launch switches</h2>
+      <p className="text-sm text-gray-500 mb-4">Version 2.0 features, kept hidden until you&apos;re ready.</p>
+      <div className="space-y-3">
+        {rows.map((r) => (
+          <div key={r.key} className="flex items-center justify-between gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4">
+            <div>
+              <p className="font-medium text-gray-900">
+                {r.title}:{" "}
+                <span className={r.on ? "text-teal-600" : "text-gray-500"}>{r.on ? "Actif" : "Inactif"}</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{r.on ? r.onText : r.offText}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={r.on}
+              aria-label={`${r.title} active`}
+              disabled={busy !== null}
+              onClick={() => toggle(r.key, !r.on)}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                r.on ? "bg-teal-600" : "bg-gray-300"
+              }`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${r.on ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+        ))}
+      </div>
+      {error && <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+    </section>
   );
 }

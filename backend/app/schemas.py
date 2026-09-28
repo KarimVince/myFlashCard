@@ -80,10 +80,16 @@ class FreeUpdate(BaseModel):
 
 class PublicSettingsOut(BaseModel):
     premium_enabled: bool
+    accounts_enabled: bool = False
+    ai_enabled: bool = False
 
 
-class PremiumUpdate(BaseModel):
+class FeatureUpdate(BaseModel):
+    """On/off body for the admin feature switches (premium, accounts, ai)."""
     enabled: bool
+
+
+PremiumUpdate = FeatureUpdate
 
 
 # ── Category admin ────────────────────────────────────────────────────────

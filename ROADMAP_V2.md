@@ -479,6 +479,9 @@ Tables `ai_providers` (key encrypted, model, enabled, token cost), `token_ledger
 ### Phase C — Web + iPhone web app ✅ built (+ Mistral provider via OpenAI-compatible adapter)
 Create page (category, description, provider, balance → preview → download / history). How-to reworked into "Generate with AI" and "Do it manually". `/app` gets a 3rd **Create** tab (save to My Decks).
 
+### Launch status (2026-09-28)
+No free AI API is usable yet (Gemini/AI Studio blocked for the owner's account, Mistral API now needs a paid plan, Claude API is billed separately from claude.ai plans). All 2.0 code stays in place but is hidden behind admin launch switches — **Member accounts** and **AI generation**, both Inactif — so the public site behaves like v1. Premium stays Inactif too.
+
 ### Phase D — Android
 Login / register / account screens (token in encrypted storage), "Do My Own" becomes **Create** (AI form + manual guide + load from file). New Play Store build.
 

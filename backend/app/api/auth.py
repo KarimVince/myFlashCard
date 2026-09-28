@@ -18,6 +18,7 @@ from app.db import get_db
 from app.email import send_password_reset, send_verification
 from app.models import User
 from app.ratelimit import rate_limit
+from app.settings_store import accounts_enabled
 from app.schemas import (
     AuthOut,
     EmailIn,
@@ -51,6 +52,8 @@ def _alias_taken(db: Session, alias: str, exclude_id: int | None = None) -> bool
 )
 def register(body: RegisterIn, db: Session = Depends(get_db)):
     """Create an account, log it in and send a verification email."""
+    if not accounts_enabled(db):
+        raise HTTPException(status_code=403, detail="Registration is closed for now")
     if db.query(User).filter(User.email == body.email).first():
         raise HTTPException(status_code=409, detail="An account with this email already exists")
     if _alias_taken(db, body.alias):

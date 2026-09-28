@@ -27,7 +27,7 @@ os.environ["ADMIN_PASSWORD_HASH"] = _TEST_HASH
 
 from app.db import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Category  # noqa: E402
+from app.models import AppSetting, Category  # noqa: E402
 
 SQLALCHEMY_TEST_URL = "sqlite:///./test.db"
 engine = create_engine(SQLALCHEMY_TEST_URL, connect_args={"check_same_thread": False})
@@ -107,6 +107,11 @@ def setup_db():
         ),
     ]
     db.add_all(categories)
+    # Tests exercise accounts and AI; their "off" behaviour is tested explicitly.
+    db.add_all([
+        AppSetting(key="accounts_enabled", value=True),
+        AppSetting(key="ai_enabled", value=True),
+    ])
     db.commit()
     db.close()
     yield

@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { clearToken, setToken } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useFeatures } from "@/lib/features";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const features = useFeatures();
   const [legacyToken, setLegacyToken] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
@@ -100,7 +102,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/manage", label: "Manage" },
     { href: "/admin/categories", label: "Categories" },
     { href: "/admin/members", label: "Members" },
-    { href: "/admin/ai-card", label: "AI Card" },
+    // AI Card only while AI generation is switched on (Premium page → Launch switches).
+    ...(features.ai ? [{ href: "/admin/ai-card", label: "AI Card" }] : []),
     { href: "/admin/premium", label: "Premium" },
   ];
 

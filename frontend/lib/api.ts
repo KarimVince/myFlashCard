@@ -111,6 +111,8 @@ export async function getBuilds(): Promise<{ filename: string; url: string; size
 
 export interface AppSettings {
   premium_enabled: boolean;
+  accounts_enabled?: boolean;
+  ai_enabled?: boolean;
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -249,8 +251,17 @@ export async function adminGetSettings(token: string): Promise<AppSettings> {
 }
 
 export async function adminSetPremium(token: string, enabled: boolean): Promise<AppSettings> {
+  return adminSetFeature(token, "premium", enabled);
+}
+
+/** Launch switches: "premium", "accounts" (public registration) or "ai" (AI generation). */
+export async function adminSetFeature(
+  token: string,
+  feature: "premium" | "accounts" | "ai",
+  enabled: boolean,
+): Promise<AppSettings> {
   return request<AppSettings>(
-    "/admin/settings/premium",
+    `/admin/settings/${feature}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

@@ -4,11 +4,13 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { useFeatures } from "@/lib/features";
 import { errorMessage } from "@/lib/api";
 import { AuthCard, Field, Notice, SubmitButton } from "@/components/account/Form";
 
 function RegisterForm() {
   const { register } = useAuth();
+  const features = useFeatures();
   const router = useRouter();
   const next = useSearchParams().get("next") || "/account";
   const [alias, setAlias] = useState("");
@@ -29,6 +31,15 @@ function RegisterForm() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!features.loaded) return null;
+  if (!features.accounts) {
+    return (
+      <AuthCard title="Accounts are coming soon" subtitle="Registration isn't open yet. Everything else in myFlashCard works without an account.">
+        <Link href="/library" className="text-sm text-teal-600 hover:underline">Browse the library →</Link>
+      </AuthCard>
+    );
   }
 
   return (

@@ -15,6 +15,7 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - AI deck generation backend (2.0 Phase B): Gemini (REST) and Claude (Anthropic SDK, `claude-opus-5` by default with structured JSON output and Anthropic's refusal fallback); every result is validated against the deck format and the category schema, with one automatic retry
 - Monthly AI tokens: 5 for free members, 15 for premium (configurable); spent only when a valid deck comes back; ledger ready for purchased tokens later
 - `/ai/options`, `/ai/generate`, `/me/generations` (history, view, delete)
+- Launch switches on the admin Premium page: **Member accounts** and **AI generation** (both Inactif by default). While off, the site looks like v1: no Create page/tab, no Log in, registration closed, how-to shows only the manual method, AI Card hidden from the admin menu, and the backend refuses registration and AI requests. AI can only be on while accounts are on
 - Mistral as a third AI provider, through a generic OpenAI-compatible adapter (API address editable in AI Card)
 - Create page on the website (2.0 Phase C): pick a deck type, describe it, choose the AI, see tokens left; preview the result, download the JSON, add it to My Decks; history of your AI decks
 - Create tab in the iPhone web app: generated decks open in the card viewer and are saved to My Decks

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.models import AppSetting, Deck
 
 PREMIUM_ENABLED = "premium_enabled"
+ACCOUNTS_ENABLED = "accounts_enabled"  # public registration + account UI (off until launch)
+AI_ENABLED = "ai_enabled"              # AI deck generation (off until launch; needs accounts)
 AI_FREE_MONTHLY = "ai_free_monthly_tokens"
 AI_PREMIUM_MONTHLY = "ai_premium_monthly_tokens"
 INT_DEFAULTS = {AI_FREE_MONTHLY: 5, AI_PREMIUM_MONTHLY: 15}
@@ -41,6 +43,14 @@ def premium_enabled(db: Session) -> bool:
     return get_flag(db, PREMIUM_ENABLED)
 
 
+def accounts_enabled(db: Session) -> bool:
+    return get_flag(db, ACCOUNTS_ENABLED)
+
+
+def ai_enabled(db: Session) -> bool:
+    return get_flag(db, AI_ENABLED)
+
+
 def visible_deck_filter(db: Session):
     """Filter for decks shown publicly: public, and free unless premium is active.
 
@@ -50,3 +60,13 @@ def visible_deck_filter(db: Session):
     if not premium_enabled(db):
         cond = cond & (Deck.is_free == True)  # noqa: E712
     return cond
+
+
+def public_settings(db: Session):
+    from app.schemas import PublicSettingsOut
+
+    return PublicSettingsOut(
+        premium_enabled=premium_enabled(db),
+        accounts_enabled=accounts_enabled(db),
+        ai_enabled=ai_enabled(db),
+    )

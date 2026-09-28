@@ -10,9 +10,11 @@ from app.accounts import SERVICES
 from app.models import Category, Deck, TokenLedger, User, UserService
 from app.schemas import (
     AdminUserOut, CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
-    PremiumUpdate, PublicSettingsOut, ServiceUpdate, VisibilityUpdate,
+    FeatureUpdate, PublicSettingsOut, ServiceUpdate, VisibilityUpdate,
 )
-from app.settings_store import PREMIUM_ENABLED, premium_enabled, set_flag
+from app.settings_store import (
+    ACCOUNTS_ENABLED, AI_ENABLED, PREMIUM_ENABLED, accounts_enabled, ai_enabled, public_settings, set_flag,
+)
 from app.storage import delete_deck, delete_build, list_builds, replace_deck, upload_build, upload_deck
 
 router = APIRouter(
@@ -183,14 +185,32 @@ def delete_deck_endpoint(deck_id: int, db: Session = Depends(get_db)):
 @router.get("/settings", response_model=PublicSettingsOut)
 def admin_get_settings(db: Session = Depends(get_db)):
     """Current feature flags."""
-    return PublicSettingsOut(premium_enabled=premium_enabled(db))
+    return public_settings(db)
 
 
 @router.patch("/settings/premium", response_model=PublicSettingsOut)
-def admin_set_premium(body: PremiumUpdate, db: Session = Depends(get_db)):
+def admin_set_premium(body: FeatureUpdate, db: Session = Depends(get_db)):
     """Turn premium on or off. While off, premium decks are hidden from the public."""
     set_flag(db, PREMIUM_ENABLED, body.enabled)
-    return PublicSettingsOut(premium_enabled=premium_enabled(db))
+    return public_settings(db)
+
+
+@router.patch("/settings/accounts", response_model=PublicSettingsOut)
+def admin_set_accounts(body: FeatureUpdate, db: Session = Depends(get_db)):
+    """Open or close public member accounts (registration and account pages)."""
+    if not body.enabled and ai_enabled(db):
+        raise HTTPException(status_code=422, detail="Turn off AI generation first — it needs member accounts")
+    set_flag(db, ACCOUNTS_ENABLED, body.enabled)
+    return public_settings(db)
+
+
+@router.patch("/settings/ai", response_model=PublicSettingsOut)
+def admin_set_ai(body: FeatureUpdate, db: Session = Depends(get_db)):
+    """Turn AI deck generation on or off for members."""
+    if body.enabled and not accounts_enabled(db):
+        raise HTTPException(status_code=422, detail="Turn on member accounts first — AI generation needs them")
+    set_flag(db, AI_ENABLED, body.enabled)
+    return public_settings(db)
 
 
 # ── Admin member endpoints ────────────────────────────────────────────────

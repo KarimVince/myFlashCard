@@ -6,6 +6,7 @@ import MyDecksTab from "./MyDecksTab";
 import CardViewer from "./CardViewer";
 import CreateTab from "./CreateTab";
 import { Deck } from "@/lib/types";
+import { useFeatures } from "@/lib/features";
 
 export type Tab = "library" | "decks" | "create";
 
@@ -39,7 +40,9 @@ interface Props {
 }
 
 export default function AppShell({ initialTab = "library" }: Props) {
-  const [tab, setTab] = useState<Tab>(initialTab);
+  const [chosenTab, setTab] = useState<Tab>(initialTab);
+  const { ai } = useFeatures();
+  const tab: Tab = chosenTab === "create" && !ai ? "decks" : chosenTab;
   const [viewing, setViewing] = useState<{ deck: Deck; json: DeckJson } | null>(null);
 
   if (viewing) {
@@ -78,7 +81,7 @@ export default function AppShell({ initialTab = "library" }: Props) {
           color="text-teal-600"
           onClick={() => setTab("library")}
         />
-        <TabBtn
+        {ai && <TabBtn
           label="Create"
           icon={
             <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" aria-hidden>
@@ -88,14 +91,14 @@ export default function AppShell({ initialTab = "library" }: Props) {
           active={tab === "create"}
           color="text-rose-500"
           onClick={() => setTab("create")}
-        />
+        />}
       </nav>
 
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {tab === "library" && <LibraryTab onOpenDeck={setViewing} />}
         {tab === "decks" && <MyDecksTab onOpenDeck={setViewing} />}
-        {tab === "create" && <CreateTab onOpenDeck={setViewing} />}
+        {tab === "create" && ai && <CreateTab onOpenDeck={setViewing} />}
       </div>
     </div>
   );

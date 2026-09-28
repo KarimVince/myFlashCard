@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { useFeatures } from "@/lib/features";
 
 const links = [
   { href: "/library", label: "Library" },
@@ -15,6 +16,9 @@ const links = [
 export default function Nav() {
   const path = usePathname();
   const { user, loading } = useAuth();
+  const features = useFeatures();
+  // Create only exists while AI generation is switched on.
+  const visibleLinks = links.filter((l) => l.href !== "/create" || features.ai);
 
   return (
     <header className="bg-teal-600 text-white shadow-md">
@@ -23,7 +27,7 @@ export default function Nav() {
           my<span className="font-light opacity-70">FlashCard</span>
         </Link>
         <nav className="flex items-center gap-1 text-sm">
-          {links.map(({ href, label }) => (
+          {visibleLinks.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
@@ -48,7 +52,7 @@ export default function Nav() {
               Admin
             </Link>
           )}
-          {!loading && (
+          {!loading && (user || features.accounts) && (
             <Link
               href={user ? "/account" : "/account/login"}
               className={`ml-2 px-3 py-1.5 rounded-md transition-colors max-w-[10rem] truncate ${
