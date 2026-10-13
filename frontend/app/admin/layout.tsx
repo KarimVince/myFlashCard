@@ -138,8 +138,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/manage", label: "Manage" },
     { href: "/admin/categories", label: "Categories" },
     { href: "/admin/members", label: "Members" },
-    // AI Card only while AI generation is switched on (Premium page → Launch switches).
-    ...(features.ai ? [{ href: "/admin/ai-card", label: "AI Card" }] : []),
+    // Always shown so keys can be set up and tested before AI generation is switched on.
+    { href: "/admin/ai-card", label: "AI Card" },
     { href: "/admin/premium", label: "Premium" },
   ];
 
