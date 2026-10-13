@@ -21,9 +21,6 @@ android/captures/
 android/.externalNativeBuild/
 android/.cxx/
 
-# ── Gradle wrapper jar (keep scripts, ignore the binary) ──────────────────
-android/gradle/wrapper/gradle-wrapper.jar
-
 # ── macOS ─────────────────────────────────────────────────────────────────
 .DS_Store
 
