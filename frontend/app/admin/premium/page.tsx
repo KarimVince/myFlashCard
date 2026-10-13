@@ -49,7 +49,8 @@ export default function PremiumPage() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Premium</h1>
       <p className="text-sm text-gray-500 mb-8">
-        Paid access to premium decks. Payments are not implemented yet — keep this inactive for launch.
+        Premium levels — Bronze, Silver and Gold — set per member on the Members page. Payments are not implemented yet
+        — keep this inactive for launch.
       </p>
 
       <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-5 py-4">
@@ -62,8 +63,8 @@ export default function PremiumPage() {
           </p>
           <p className="text-xs text-gray-400 mt-1">
             {enabled
-              ? "Premium decks and badges are shown on the website, web app and Android app."
-              : "All premium references are removed from the website, web app and Android app."}
+              ? "Premium decks and badges are shown. Silver and Gold can download premium decks; members with a level can use AI (with AI generation on)."
+              : "All premium references are removed from the website, web app and Android app. Members can't use AI; you still can."}
           </p>
         </div>
         <button
@@ -137,8 +138,8 @@ function LaunchSwitches({ settings, onChange }: { settings: AppSettings; onChang
       key: "ai",
       title: "AI generation",
       on: !!settings.ai_enabled,
-      onText: "Create page, web app Create tab and the AI how-to are visible. AI Card is in the admin menu.",
-      offText: "Everything AI is hidden; the how-to shows only the manual method. Needs member accounts on.",
+      onText: "Create page, web app Create tab and the AI how-to are visible. Members also need a Premium level, with Premium on.",
+      offText: "Everything AI is hidden from members; the how-to shows only the manual method. You can still create decks as admin. Needs member accounts on.",
     },
   ];
 

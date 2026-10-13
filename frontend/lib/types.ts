@@ -1,14 +1,18 @@
+/** Premium level. Bronze: own AI key. Silver: + a few shared AI decks. Gold: + shared AI decks every month. */
+export type Tier = "none" | "bronze" | "silver" | "gold";
+
 export interface User {
   id: number;
   alias: string;
   email: string;
   role: "user" | "admin";
+  tier: Tier;
   email_verified: boolean;
-  services: string[];
   created_at: string;
   // admin list only
   last_login_at?: string | null;
   tokens_used_month?: number;
+  own_key_provider?: string | null;
 }
 
 export interface Category {
@@ -42,13 +46,16 @@ export interface Deck {
 
 // ── AI generation ──────────────────────────────────────────────────────────
 
+/** Shared-AI allowance. period "month" (Gold) renews on resets_on; "total" (Silver) never renews. */
 export interface Balance {
-  monthly_allowance: number;
-  monthly_used: number;
-  monthly_left: number;
+  allowance: number;
+  used: number;
+  left: number;
   extra: number;
   total: number;
-  resets_on: string;
+  period: "month" | "total" | null;
+  resets_on: string | null;
+  unlimited: boolean;
 }
 
 export interface ProviderOption {
@@ -60,12 +67,40 @@ export interface ProviderOption {
   reason: string | null;
 }
 
+export interface KeyProvider {
+  id: string;
+  label: string;
+  model: string;
+}
+
+export interface OwnKey {
+  provider: string;
+  provider_label: string;
+  model: string;
+  key_hint: string | null;
+  last_test_ok: boolean | null;
+  last_tested_at: string | null;
+}
+
 export interface AIOptions {
   email_verified: boolean;
+  tier: Tier;
+  is_admin: boolean;
+  can_generate: boolean;
+  reason: string | null;
+  /** Plan includes the site's AI (Silver, Gold, admin). */
+  shared: boolean;
+  own_key_allowed: boolean;
+  own_key: OwnKey | null;
   balance: Balance;
+  /** The site's AIs (only when shared). */
   providers: ProviderOption[];
+  /** AIs a member can add their own key for. */
+  key_providers: KeyProvider[];
   max_description: number;
 }
+
+export type KeySource = "shared" | "own";
 
 export interface GenerationSummary {
   id: number;
@@ -73,6 +108,7 @@ export interface GenerationSummary {
   category_slug: string | null;
   category_label: string | null;
   provider: string;
+  key_source: KeySource;
   card_count: number | null;
   tokens_spent: number;
   created_at: string;
@@ -91,7 +127,6 @@ export interface AdminProvider {
   is_default: boolean;
   model: string;
   token_cost: number;
-  requires_service: string | null;
   base_url: string | null;
   has_key: boolean;
   key_hint: string | null;
@@ -99,8 +134,8 @@ export interface AdminProvider {
 
 export interface AdminAI {
   providers: AdminProvider[];
-  free_monthly: number;
-  premium_monthly: number;
+  silver_total: number;
+  gold_monthly: number;
   secrets_key_configured: boolean;
 }
 
@@ -111,6 +146,7 @@ export interface AdminGeneration {
   category_label: string | null;
   provider: string;
   model: string;
+  key_source: KeySource;
   description: string;
   status: string;
   title: string | null;

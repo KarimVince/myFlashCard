@@ -6,7 +6,7 @@ import Link from "next/link";
 import CreateForm from "@/components/create/CreateForm";
 import DeckPreview from "@/components/create/DeckPreview";
 import { useAuth } from "@/lib/auth";
-import { useFeatures } from "@/lib/features";
+import { useAIVisible } from "@/lib/useAIVisible";
 import { deleteGeneration, errorMessage, getCategories, getGeneration, listGenerations } from "@/lib/api";
 import { downloadDeckJson, generationToDeck } from "@/lib/generated";
 import { saveDeck } from "@/lib/deckStorage";
@@ -14,7 +14,7 @@ import { Category, Generation, GenerationSummary } from "@/lib/types";
 
 export default function CreatePage() {
   const { user, token } = useAuth();
-  const features = useFeatures();
+  const ai = useAIVisible();
   const router = useRouter();
   const [current, setCurrent] = useState<Generation | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -30,8 +30,8 @@ export default function CreatePage() {
   }, []);
   useEffect(loadHistory, [loadHistory]);
   useEffect(() => {
-    if (features.loaded && !features.ai) router.replace("/how-to");
-  }, [features.loaded, features.ai, router]);
+    if (ai.loaded && !ai.visible) router.replace("/how-to");
+  }, [ai.loaded, ai.visible, router]);
 
   function show(gen: Generation) {
     setCurrent(gen);
@@ -61,7 +61,7 @@ export default function CreatePage() {
     setSaved(true);
   }
 
-  if (!features.ai) return <div className="text-center py-20 text-gray-400">Loading…</div>;
+  if (!ai.visible) return <div className="text-center py-20 text-gray-400">Loading…</div>;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">

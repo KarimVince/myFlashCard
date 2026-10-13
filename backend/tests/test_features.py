@@ -48,9 +48,10 @@ def test_ai_endpoints_refused_when_ai_off(client, monkeypatch):
     token = client.post("/auth/register", json={"alias": "Maker", "email": "m@example.com", "password": "secret123"}).json()["token"]
     _set("ai_enabled", False)
     headers = {"Authorization": f"Bearer {token}"}
-    assert client.get("/ai/options", headers=headers).status_code == 503
+    options = client.get("/ai/options", headers=headers).json()
+    assert options["can_generate"] is False and "isn't open" in options["reason"]
     resp = client.post("/ai/generate", json={"category_slug": "recipe", "description": "A long enough topic"}, headers=headers)
-    assert resp.status_code == 503
+    assert resp.status_code == 403
 
 
 def test_admin_switches_and_dependency(client, auth_headers):

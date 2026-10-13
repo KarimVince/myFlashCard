@@ -6,9 +6,9 @@ from app.models import AppSetting, Deck
 PREMIUM_ENABLED = "premium_enabled"
 ACCOUNTS_ENABLED = "accounts_enabled"  # public registration + account UI (off until launch)
 AI_ENABLED = "ai_enabled"              # AI deck generation (off until launch; needs accounts)
-AI_FREE_MONTHLY = "ai_free_monthly_tokens"
-AI_PREMIUM_MONTHLY = "ai_premium_monthly_tokens"
-INT_DEFAULTS = {AI_FREE_MONTHLY: 5, AI_PREMIUM_MONTHLY: 15}
+AI_SILVER_TOTAL = "ai_silver_total_tokens"     # Silver: shared-AI decks in total (never resets)
+AI_GOLD_MONTHLY = "ai_gold_monthly_tokens"     # Gold: shared-AI decks per month
+INT_DEFAULTS = {AI_SILVER_TOTAL: 3, AI_GOLD_MONTHLY: 10}
 
 
 def get_flag(db: Session, key: str, default: bool = False) -> bool:

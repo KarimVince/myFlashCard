@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
+from app.accounts import PREMIUM_DECK_TIERS, optional_user
 from app.db import get_db
-from app.models import Category, Deck
+from app.models import Category, Deck, User
 from app.schemas import DeckPublicOut
-from app.settings_store import visible_deck_filter
+from app.settings_store import premium_enabled, visible_deck_filter
 
 router = APIRouter(prefix="/decks", tags=["decks"])
 
@@ -20,6 +21,18 @@ def _public_deck_or_404(deck_id: int, db: Session) -> Deck:
     if not deck:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
     return deck
+
+
+def _check_access(deck: Deck, user: User | None, db: Session) -> None:
+    """Free decks are open to everyone; premium decks need Silver, Gold or admin (while Premium is on)."""
+    if deck.is_free:
+        return
+    if user and (user.is_admin or (premium_enabled(db) and user.tier in PREMIUM_DECK_TIERS)):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Premium decks are for Silver and Gold members",
+    )
 
 
 @router.get("", response_model=list[DeckPublicOut])
@@ -47,11 +60,13 @@ def get_deck(deck_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{deck_id}/content")
-async def deck_content(deck_id: int, db: Session = Depends(get_db)):
-    """Fetch and return deck JSON server-side — avoids R2 CORS restrictions."""
+async def deck_content(
+    deck_id: int, db: Session = Depends(get_db), user: User | None = Depends(optional_user)
+):
+    """Fetch and return deck JSON server-side — avoids R2 CORS restrictions.
+    Premium decks need a logged-in Silver or Gold member (send the session token)."""
     deck = _public_deck_or_404(deck_id, db)
-    if not deck.is_free:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Free decks only")
+    _check_access(deck, user, db)
     async with httpx.AsyncClient() as client:
         r = await client.get(deck.public_url, timeout=10)
     if r.status_code != 200:

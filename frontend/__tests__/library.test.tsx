@@ -3,8 +3,9 @@
  */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import LibraryPage from "@/app/library/page";
+import { AuthProvider } from "@/lib/auth";
 import * as api from "@/lib/api";
-import { Category, Deck } from "@/lib/types";
+import { Category, Deck, User } from "@/lib/types";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,8 @@ jest.mock("@/lib/api", () => ({
   getCategories: jest.fn(),
   getDecks: jest.fn(),
   getSettings: jest.fn(),
+  getMe: jest.fn(),
+  getDeckContent: jest.fn(),
   downloadUrl: jest.fn((id: number) => `http://api/decks/${id}/download`),
 }));
 
@@ -51,7 +54,18 @@ const DECKS: Deck[] = [
   },
 ];
 
+const MEMBER: User = {
+  id: 5, alias: "Reader", email: "r@example.com", role: "user", tier: "bronze", email_verified: true,
+  created_at: "2026-09-01T00:00:00Z",
+};
+
+function renderLibrary() {
+  return render(<AuthProvider><LibraryPage /></AuthProvider>);
+}
+
 beforeEach(() => {
+  jest.clearAllMocks();
+  localStorage.clear();
   (api.getCategories as jest.Mock).mockResolvedValue(CATS);
   (api.getDecks as jest.Mock).mockResolvedValue(DECKS);
   (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false });
@@ -60,13 +74,13 @@ beforeEach(() => {
 // ── Tests ─────────────────────────────────────────────────────────────────
 
 test("renders deck cards fetched from mocked API", async () => {
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() => screen.getByText("Pasta Week"));
   expect(screen.getByText("French History")).toBeInTheDocument();
 });
 
 test("category filter buttons change displayed decks", async () => {
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() => screen.getAllByText("Recipe"));
   // Click the "Recipe" filter button (role=button, not the badge span inside a card)
   const recipeBtn = screen.getAllByRole("button").find(
@@ -80,7 +94,7 @@ test("category filter buttons change displayed decks", async () => {
 });
 
 test("download button calls correct API URL", async () => {
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() => screen.getByText("Pasta Week"));
   const links = screen.getAllByRole("link", { name: /Download JSON/i });
   expect(links[0]).toHaveAttribute("href", "http://api/decks/1/download");
@@ -88,14 +102,14 @@ test("download button calls correct API URL", async () => {
 
 test("shows empty state when no decks match filter", async () => {
   (api.getDecks as jest.Mock).mockResolvedValue([]);
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() =>
     expect(screen.getByText(/No decks found/i)).toBeInTheDocument(),
   );
 });
 
 test("hides all premium references while premium is inactive", async () => {
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() => expect(screen.getByText("Pasta Week")).toBeInTheDocument());
   expect(screen.queryByText(/premium/i)).not.toBeInTheDocument();
   expect(screen.queryByText("✓ Free")).not.toBeInTheDocument();
@@ -104,8 +118,37 @@ test("hides all premium references while premium is inactive", async () => {
 test("shows premium notice and badges when premium is active", async () => {
   (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: true });
   (api.getDecks as jest.Mock).mockResolvedValue([...DECKS, { ...DECKS[0], id: 3, title: "Gold Deck", is_free: false }]);
-  render(<LibraryPage />);
+  renderLibrary();
   await waitFor(() => expect(screen.getByText("Gold Deck")).toBeInTheDocument());
-  await waitFor(() => expect(screen.getByText(/Premium access is coming/)).toBeInTheDocument());
-  expect(screen.getByText("Premium — access required")).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText(/only available to Silver and Gold members/)).toBeInTheDocument());
+  expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/account/login?next=/library");
+  expect(screen.getByText("Silver & Gold members only")).toBeInTheDocument();
+});
+
+test("tells logged-in members below Silver that premium decks are for Silver and Gold", async () => {
+  localStorage.setItem("mfc_user_token", "tok");
+  (api.getMe as jest.Mock).mockResolvedValue(MEMBER);
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: true });
+  (api.getDecks as jest.Mock).mockResolvedValue([{ ...DECKS[0], id: 3, title: "Gold Deck", is_free: false }]);
+  renderLibrary();
+  expect(await screen.findByRole("link", { name: "See your plan" })).toHaveAttribute("href", "/account/ai");
+  expect(screen.getByText(/only available to Silver and Gold members/)).toBeInTheDocument();
+  expect(screen.getByText("Silver & Gold members only")).toBeInTheDocument();
+});
+
+test("Silver members can download premium decks", async () => {
+  localStorage.setItem("mfc_user_token", "tok");
+  (api.getMe as jest.Mock).mockResolvedValue({ ...MEMBER, tier: "silver" });
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: true });
+  (api.getDecks as jest.Mock).mockResolvedValue([{ ...DECKS[0], id: 3, title: "Gold Deck", is_free: false }]);
+  (api.getDeckContent as jest.Mock).mockResolvedValue({ deckTitle: "Gold Deck", cards: [] });
+  URL.createObjectURL = jest.fn(() => "blob:x");
+  URL.revokeObjectURL = jest.fn();
+  const click = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  renderLibrary();
+  expect(await screen.findByText(/As a/)).toHaveTextContent("As a Silver member you can download every premium deck.");
+  fireEvent.click(screen.getByRole("button", { name: /Download JSON/ }));
+  await waitFor(() => expect(api.getDeckContent).toHaveBeenCalledWith(3, "tok"));
+  await waitFor(() => expect(click).toHaveBeenCalled());
+  click.mockRestore();
 });

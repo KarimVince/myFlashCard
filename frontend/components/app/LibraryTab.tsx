@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCategories, getDecks } from "@/lib/api";
+import { errorMessage, getCategories, getDeckContent, getDecks } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { canOpenPremiumDecks } from "@/lib/tiers";
 import { Category, Deck } from "@/lib/types";
 import { DeckJson } from "./AppShell";
 import { usePremiumEnabled } from "@/lib/usePremium";
@@ -12,6 +14,7 @@ interface Props {
 
 export default function LibraryTab({ onOpenDeck }: Props) {
   const premiumEnabled = usePremiumEnabled();
+  const { user, token } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -42,20 +45,17 @@ export default function LibraryTab({ onOpenDeck }: Props) {
   }, [activeCat]);
 
   async function handleOpen(deck: Deck) {
-    if (!deck.is_free) {
-      setError("Premium decks are coming soon.");
+    if (!deck.is_free && !canOpenPremiumDecks(user)) {
+      setError("Premium decks are only available to Silver and Gold members.");
       return;
     }
     setLoadingDeck(deck.id);
     setError(null);
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-      const res = await fetch(`${base}/decks/${deck.id}/content`);
-      if (!res.ok) throw new Error("Failed to load deck");
-      const json: DeckJson = await res.json();
+      const json = (await getDeckContent(deck.id, deck.is_free ? null : token)) as DeckJson;
       onOpenDeck({ deck, json });
-    } catch {
-      setError("Could not load this deck. Check your connection.");
+    } catch (e) {
+      setError(e instanceof Error && e.message.startsWith("403") ? errorMessage(e) : "Could not load this deck. Check your connection.");
     } finally {
       setLoadingDeck(null);
     }

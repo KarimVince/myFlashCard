@@ -482,6 +482,13 @@ Create page (category, description, provider, balance → preview → download /
 ### Launch status (2026-09-28)
 No free AI API is usable yet (Gemini/AI Studio blocked for the owner's account, Mistral API now needs a paid plan, Claude API is billed separately from claude.ai plans). All 2.0 code stays in place but is hidden behind admin launch switches — **Member accounts** and **AI generation**, both Inactif — so the public site behaves like v1. Premium stays Inactif too.
 
+### Premium levels and own AI keys (2026-10-13) ✅ built (web)
+- Levels per member, set by the admin: **Bronze** (AI with own key), **Silver** (3 shared AI decks in total + own key + premium decks), **Gold** (10 shared AI decks per month + own key + premium decks). No member has a level yet; the Premium switch stays Inactif until launch.
+- Only members with a level can use AI, and only while the Premium and AI switches are on. The admin can always generate, without limits.
+- Own key: one provider per member, encrypted, model from AI Card. Shared decks are used first, then the own key; the member can also pick.
+- The old admin password stays until the new admin account is confirmed working.
+- Next: Android (same endpoints: `/ai/options`, `/me/ai-key`, `/decks/{id}/content` with the session token for premium decks).
+
 **2026-10-13:** Groq added as a provider (migration 010, OpenAI-compatible, free tier with no card). Once a Groq key is saved and tested in AI Card, it can be the default provider and the launch switches can be turned on.
 
 ### Phase D — Android

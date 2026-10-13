@@ -1,15 +1,14 @@
-"""Tests for AI deck generation: providers, tokens, validation/retry, history, admin AI settings."""
+"""Tests for AI deck generation: Premium levels, own keys, tokens, validation/retry, history, admin AI settings."""
 import json
 
 import pytest
 
 import app.ai.service as service
-import app.api.admin_ai as admin_ai
 import app.api.auth as auth_api
 from app.ai.deck import InvalidDeck, extract_json, validate_deck
 from app.ai.providers import ProviderError
 from app.crypto import encrypt
-from app.models import AIProvider
+from app.models import AIProvider, AppSetting, TokenLedger, User, UserAIKey
 from tests.conftest import TestingSessionLocal
 
 GOOD_DECK = {
@@ -28,10 +27,12 @@ def providers():
         AIProvider(id="gemini", label="Gemini", enabled=True, is_default=True, model="gemini-test",
                    api_key_enc=encrypt("gemini-secret-key-1234"), token_cost=1, sort_order=1),
         AIProvider(id="claude", label="Claude", enabled=True, is_default=False, model="claude-opus-5",
-                   api_key_enc=encrypt("claude-secret-key-5678"), token_cost=2, requires_service="ai_claude", sort_order=2),
+                   api_key_enc=encrypt("claude-secret-key-5678"), token_cost=2, sort_order=2),
         AIProvider(id="mistral", label="Mistral", enabled=True, is_default=False, model="mistral-small-latest",
                    api_key_enc=encrypt("mistral-secret-key-4321"), token_cost=1, sort_order=3,
                    base_url="https://api.mistral.ai/v1"),
+        # Premium is live in these tests; the "off" behaviour is tested explicitly.
+        AppSetting(key="premium_enabled", value=True),
     ])
     db.commit()
     db.close()
@@ -51,25 +52,62 @@ def ai_reply(monkeypatch):
         return reply
 
     monkeypatch.setattr(service, "call_provider", fake_call)
-    monkeypatch.setattr(admin_ai, "call_provider", fake_call)
     return state
+
+
+def _set(user_id, **fields):
+    db = TestingSessionLocal()
+    u = db.get(User, user_id)
+    for k, v in fields.items():
+        setattr(u, k, v)
+    db.commit()
+    db.close()
+
+
+def _set_flag(key, value):
+    db = TestingSessionLocal()
+    db.merge(AppSetting(key=key, value=value))
+    db.commit()
+    db.close()
+
+
+def _member(client, monkeypatch, alias="Maker", tier="gold", verified=True):
+    """Register a member at a Premium level. Returns (headers, user_id)."""
+    box = []
+    monkeypatch.setattr(auth_api, "send_verification", lambda to, alias, token: box.append(token))
+    resp = client.post("/auth/register", json={"alias": alias, "email": f"{alias.lower()}@example.com", "password": "secret123"})
+    if verified:
+        client.post("/auth/verify-email", json={"token": box[0]})
+    uid = resp.json()["user"]["id"]
+    _set(uid, tier=tier)
+    return {"Authorization": f"Bearer {resp.json()['token']}"}, uid
 
 
 @pytest.fixture
 def user(client, monkeypatch):
-    """A registered, verified user. Returns (headers, user_id)."""
-    box = []
-    monkeypatch.setattr(auth_api, "send_verification", lambda to, alias, token: box.append(token))
-    resp = client.post("/auth/register", json={"alias": "Maker", "email": "maker@example.com", "password": "secret123"})
-    client.post("/auth/verify-email", json={"token": box[0]})
-    return {"Authorization": f"Bearer {resp.json()['token']}"}, resp.json()["user"]["id"]
+    """A verified Gold member. Returns (headers, user_id)."""
+    return _member(client, monkeypatch)
 
 
-def _generate(client, headers, provider=None, description="A classic Roman pasta dish"):
+@pytest.fixture
+def admin(client, monkeypatch):
+    """A verified admin account (no Premium level). Returns (headers, user_id)."""
+    headers, uid = _member(client, monkeypatch, alias="Boss", tier="none")
+    _set(uid, role="admin")
+    return headers, uid
+
+
+def _generate(client, headers, provider=None, description="A classic Roman pasta dish", source=None):
     body = {"category_slug": "recipe", "description": description}
     if provider:
         body["provider"] = provider
+    if source:
+        body["source"] = source
     return client.post("/ai/generate", json=body, headers=headers)
+
+
+def _options(client, headers):
+    return client.get("/ai/options", headers=headers).json()
 
 
 # ── Deck validation ───────────────────────────────────────────────────────
@@ -93,37 +131,78 @@ def test_validate_deck_rejects_bad_decks(deck, msg):
         validate_deck(deck)
 
 
-# ── Options / balance ─────────────────────────────────────────────────────
+# ── Access by level ───────────────────────────────────────────────────────
 
 def test_options_requires_login(client):
     assert client.get("/ai/options").status_code == 401
 
 
-def test_options_free_user(client, user):
+def test_options_gold_member(client, user):
     headers, _ = user
-    data = client.get("/ai/options", headers=headers).json()
-    assert data["email_verified"] is True
-    assert data["balance"]["monthly_allowance"] == 5 and data["balance"]["total"] == 5
+    data = _options(client, headers)
+    assert data["tier"] == "gold" and data["can_generate"] and data["shared"] and data["own_key_allowed"]
+    assert data["balance"]["allowance"] == 10 and data["balance"]["total"] == 10
+    assert data["balance"]["period"] == "month" and data["balance"]["resets_on"]
     by_id = {p["id"]: p for p in data["providers"]}
-    assert by_id["gemini"]["available"] is True and by_id["gemini"]["is_default"] is True
-    assert by_id["claude"]["available"] is False and "access" in by_id["claude"]["reason"]
+    assert by_id["gemini"]["available"] and by_id["gemini"]["is_default"]
+    assert by_id["claude"]["available"] and by_id["claude"]["token_cost"] == 2
+    assert {p["id"] for p in data["key_providers"]} == {"gemini", "claude", "mistral"}
+    assert data["own_key"] is None
 
 
-def test_premium_user_gets_premium_allowance(client, user, auth_headers):
-    headers, uid = user
-    client.put(f"/admin/users/{uid}/services/premium", json={"enabled": True}, headers=auth_headers)
-    assert client.get("/ai/options", headers=headers).json()["balance"]["monthly_allowance"] == 15
+@pytest.mark.parametrize("tier,can,shared,allowance,period", [
+    ("none", False, False, 0, None),
+    ("bronze", True, False, 0, None),
+    ("silver", True, True, 3, "total"),
+    ("gold", True, True, 10, "month"),
+])
+def test_options_by_level(client, monkeypatch, tier, can, shared, allowance, period):
+    headers, _ = _member(client, monkeypatch, tier=tier)
+    data = _options(client, headers)
+    assert data["can_generate"] is can and data["shared"] is shared and data["own_key_allowed"] is can
+    assert data["balance"]["allowance"] == allowance and data["balance"]["period"] == period
+    assert bool(data["providers"]) is shared
+    if not can:
+        assert "Premium members" in data["reason"]
 
 
-def test_allowances_are_configurable(client, user, auth_headers):
+def test_no_premium_level_cannot_generate(client, monkeypatch, ai_reply):
+    headers, _ = _member(client, monkeypatch, tier="none")
+    resp = _generate(client, headers)
+    assert resp.status_code == 403 and "Premium members" in resp.json()["detail"]
+    assert ai_reply["calls"] == []
+
+
+@pytest.mark.parametrize("flag", ["premium_enabled", "ai_enabled"])
+def test_members_wait_for_launch_switches(client, user, ai_reply, flag):
     headers, _ = user
-    resp = client.put("/admin/ai/allowances", json={"free_monthly": 3, "premium_monthly": 30}, headers=auth_headers)
-    assert resp.status_code == 200 and resp.json()["free_monthly"] == 3
-    assert client.get("/ai/options", headers=headers).json()["balance"]["total"] == 3
-    assert client.put("/admin/ai/allowances", json={"free_monthly": -1, "premium_monthly": 5}, headers=auth_headers).status_code == 422
+    _set_flag(flag, False)
+    data = _options(client, headers)
+    assert data["can_generate"] is False and "isn't open" in data["reason"]
+    assert _generate(client, headers).status_code == 403
 
 
-# ── Generate ──────────────────────────────────────────────────────────────
+def test_admin_can_always_generate_without_tokens(client, admin, ai_reply):
+    headers, _ = admin
+    _set_flag("premium_enabled", False)
+    _set_flag("ai_enabled", False)
+    data = _options(client, headers)
+    assert data["can_generate"] and data["is_admin"] and data["balance"]["unlimited"]
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)] * 2
+    for _ in range(2):
+        resp = _generate(client, headers)
+        assert resp.status_code == 200 and resp.json()["generation"]["tokens_spent"] == 0
+
+
+def test_allowances_are_configurable(client, monkeypatch, auth_headers):
+    resp = client.put("/admin/ai/allowances", json={"silver_total": 5, "gold_monthly": 30}, headers=auth_headers)
+    assert resp.status_code == 200 and resp.json()["silver_total"] == 5 and resp.json()["gold_monthly"] == 30
+    silver, _ = _member(client, monkeypatch, alias="Silv", tier="silver")
+    assert _options(client, silver)["balance"]["total"] == 5
+    assert client.put("/admin/ai/allowances", json={"silver_total": -1, "gold_monthly": 5}, headers=auth_headers).status_code == 422
+
+
+# ── Generate with the site's AI ───────────────────────────────────────────
 
 def test_generate_success_spends_token_and_saves_history(client, user, ai_reply):
     headers, _ = user
@@ -132,8 +211,8 @@ def test_generate_success_spends_token_and_saves_history(client, user, ai_reply)
     assert resp.status_code == 200
     body = resp.json()
     assert body["generation"]["deck"]["deckTitle"] == "Carbonara"
-    assert body["generation"]["card_count"] == 2
-    assert body["balance"]["total"] == 4
+    assert body["generation"]["card_count"] == 2 and body["generation"]["key_source"] == "shared"
+    assert body["balance"]["total"] == 9
     call = ai_reply["calls"][0]
     assert call["provider"] == "gemini" and call["key"] == "gemini-secret-key-1234"
     assert "Roman pasta" in call["turns"][0].text
@@ -143,10 +222,9 @@ def test_generate_success_spends_token_and_saves_history(client, user, ai_reply)
     assert one["deck"]["cards"][0]["title"] == "Ingredients"
 
 
-def test_generate_requires_verified_email(client, ai_reply, monkeypatch):
-    monkeypatch.setattr(auth_api, "send_verification", lambda *a: None)
-    token = client.post("/auth/register", json={"alias": "New", "email": "new@example.com", "password": "secret123"}).json()["token"]
-    resp = _generate(client, {"Authorization": f"Bearer {token}"})
+def test_generate_requires_verified_email(client, monkeypatch, ai_reply):
+    headers, _ = _member(client, monkeypatch, alias="New", verified=False)
+    resp = _generate(client, headers)
     assert resp.status_code == 403 and "Confirm your email" in resp.json()["detail"]
     assert ai_reply["calls"] == []
 
@@ -155,6 +233,7 @@ def test_generate_validation(client, user):
     headers, _ = user
     assert _generate(client, headers, description="short").status_code == 422
     assert _generate(client, headers, description="x" * 1001).status_code == 422
+    assert _generate(client, headers, source="mine").status_code == 422
     assert client.post("/ai/generate", json={"category_slug": "nope", "description": "A long enough topic"}, headers=headers).status_code == 404
 
 
@@ -163,7 +242,7 @@ def test_invalid_then_valid_retries_once(client, user, ai_reply):
     bad = {"deckTitle": "X", "cards": [{"title": "A", "blocks": [{"type": "video"}]}]}
     ai_reply["replies"] = [json.dumps(bad), json.dumps(GOOD_DECK)]
     resp = _generate(client, headers)
-    assert resp.status_code == 200 and resp.json()["balance"]["total"] == 4
+    assert resp.status_code == 200 and resp.json()["balance"]["total"] == 9
     retry_turns = ai_reply["calls"][1]["turns"]
     assert [t.role for t in retry_turns] == ["user", "assistant", "user"]
     assert "not valid" in retry_turns[2].text
@@ -174,7 +253,7 @@ def test_invalid_twice_fails_without_spending(client, user, ai_reply, auth_heade
     ai_reply["replies"] = ["not json", "still not json"]
     resp = _generate(client, headers)
     assert resp.status_code == 502 and "usable deck" in resp.json()["detail"]
-    assert client.get("/ai/options", headers=headers).json()["balance"]["total"] == 5
+    assert _options(client, headers)["balance"]["total"] == 10
     assert client.get("/me/generations", headers=headers).json() == []
     failed = client.get("/admin/ai/generations?status=failed", headers=auth_headers).json()
     assert len(failed) == 1 and "Attempt 2" in failed[0]["error"]
@@ -189,23 +268,35 @@ def test_provider_error_shows_safe_message(client, user, ai_reply, auth_headers)
     assert client.get("/admin/ai/generations", headers=auth_headers).json()[0]["error"] == "Gemini HTTP 429: quota"
 
 
-def test_out_of_tokens(client, user, ai_reply, auth_headers):
+def test_gold_runs_out_for_the_month(client, user, ai_reply, auth_headers):
     headers, _ = user
-    client.put("/admin/ai/allowances", json={"free_monthly": 1, "premium_monthly": 15}, headers=auth_headers)
+    client.put("/admin/ai/allowances", json={"silver_total": 3, "gold_monthly": 1}, headers=auth_headers)
     ai_reply["replies"] = [json.dumps(GOOD_DECK)]
     assert _generate(client, headers).status_code == 200
     resp = _generate(client, headers)
-    assert resp.status_code == 402 and "resets on" in resp.json()["detail"]
+    assert resp.status_code == 402 and "renews on" in resp.json()["detail"]
     assert len(ai_reply["calls"]) == 1
 
 
-def test_claude_needs_extra_access_and_costs_more(client, user, ai_reply, auth_headers):
-    headers, uid = user
-    assert _generate(client, headers, provider="claude").status_code == 403
-    client.put(f"/admin/users/{uid}/services/ai_claude", json={"enabled": True}, headers=auth_headers)
+def test_silver_allowance_is_in_total_not_per_month(client, monkeypatch, ai_reply):
+    headers, uid = _member(client, monkeypatch, alias="Silv", tier="silver")
+    db = TestingSessionLocal()
+    # Two decks used in an earlier month still count for Silver.
+    db.add_all([TokenLedger(user_id=uid, delta=-1, source="shared", period="2020-01") for _ in range(2)])
+    db.commit()
+    db.close()
+    assert _options(client, headers)["balance"]["total"] == 1
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    assert _generate(client, headers).status_code == 200
+    resp = _generate(client, headers)
+    assert resp.status_code == 402 and "used up" in resp.json()["detail"]
+
+
+def test_claude_costs_more(client, user, ai_reply):
+    headers, _ = user
     ai_reply["replies"] = [json.dumps(GOOD_DECK)]
     resp = _generate(client, headers, provider="claude")
-    assert resp.status_code == 200 and resp.json()["balance"]["total"] == 3
+    assert resp.status_code == 200 and resp.json()["balance"]["total"] == 8
     assert ai_reply["calls"][0]["key"] == "claude-secret-key-5678"
 
 
@@ -217,9 +308,8 @@ def test_disabled_provider(client, user, auth_headers):
 
 def test_no_provider_usable(client, user, auth_headers):
     headers, _ = user
-    for pid in ("gemini", "mistral"):
+    for pid in ("gemini", "claude", "mistral"):
         client.patch(f"/admin/ai/providers/{pid}", json={"enabled": False}, headers=auth_headers)
-    # Claude is enabled but this user lacks access
     assert _generate(client, headers).status_code == 503
 
 
@@ -228,8 +318,97 @@ def test_default_falls_back_to_another_usable_provider(client, user, ai_reply, a
     client.patch("/admin/ai/providers/gemini", json={"enabled": False}, headers=auth_headers)
     ai_reply["replies"] = [json.dumps(GOOD_DECK)]
     assert _generate(client, headers).status_code == 200
-    assert ai_reply["calls"][0]["provider"] == "mistral"
+    assert ai_reply["calls"][0]["provider"] == "claude"
 
+
+# ── The member's own key ──────────────────────────────────────────────────
+
+def test_own_key_needs_a_premium_level(client, monkeypatch):
+    headers, _ = _member(client, monkeypatch, tier="none")
+    resp = client.put("/me/ai-key", json={"provider": "mistral", "api_key": "my-key-0000"}, headers=headers)
+    assert resp.status_code == 403
+
+
+def test_own_key_is_saved_masked_and_replaceable(client, monkeypatch):
+    headers, _ = _member(client, monkeypatch, tier="bronze")
+    resp = client.put("/me/ai-key", json={"provider": "mistral", "api_key": "  my-mistral-key-7777 "}, headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()["key_hint"] == "••••7777" and resp.json()["model"] == "mistral-small-latest"
+    data = _options(client, headers)
+    assert data["own_key"]["provider"] == "mistral" and "my-mistral-key" not in json.dumps(data)
+    replaced = client.put("/me/ai-key", json={"provider": "gemini", "api_key": "my-gemini-key-8888"}, headers=headers)
+    assert replaced.json()["provider"] == "gemini" and replaced.json()["key_hint"] == "••••8888"
+    assert client.put("/me/ai-key", json={"provider": "nope", "api_key": "k-123456789"}, headers=headers).status_code == 404
+    assert client.put("/me/ai-key", json={"provider": "gemini", "api_key": "two words"}, headers=headers).status_code == 422
+    assert client.delete("/me/ai-key", headers=headers).status_code == 204
+    assert _options(client, headers)["own_key"] is None
+
+
+def test_bronze_generates_with_own_key_for_free(client, monkeypatch, ai_reply, auth_headers):
+    headers, _ = _member(client, monkeypatch, tier="bronze")
+    resp = _generate(client, headers)
+    assert resp.status_code == 403 and "own API key" in resp.json()["detail"]
+    client.put("/me/ai-key", json={"provider": "mistral", "api_key": "my-mistral-key-7777"}, headers=headers)
+    # Asking for the site's AI is refused for Bronze
+    assert _generate(client, headers, source="shared").status_code == 403
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    resp = _generate(client, headers)
+    assert resp.status_code == 200
+    gen = resp.json()["generation"]
+    assert gen["key_source"] == "own" and gen["tokens_spent"] == 0 and gen["provider"] == "mistral"
+    call = ai_reply["calls"][0]
+    assert call["key"] == "my-mistral-key-7777" and call["base_url"] == "https://api.mistral.ai/v1"
+    # Uses the model set in AI Card
+    client.patch("/admin/ai/providers/mistral", json={"model": "mistral-large-latest"}, headers=auth_headers)
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    _generate(client, headers)
+    assert ai_reply["calls"][1]["model"] == "mistral-large-latest"
+
+
+def test_gold_switches_to_own_key_when_shared_runs_out(client, user, ai_reply, auth_headers):
+    headers, _ = user
+    client.put("/admin/ai/allowances", json={"silver_total": 3, "gold_monthly": 1}, headers=auth_headers)
+    client.put("/me/ai-key", json={"provider": "mistral", "api_key": "my-mistral-key-7777"}, headers=headers)
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)] * 3
+    first = _generate(client, headers).json()["generation"]
+    second = _generate(client, headers).json()["generation"]
+    assert (first["key_source"], second["key_source"]) == ("shared", "own")
+    resp = _generate(client, headers, source="shared")
+    assert resp.status_code == 402 and "own API key" in resp.json()["detail"]
+    # The member can also pick their own key while shared decks remain
+    client.put("/admin/ai/allowances", json={"silver_total": 3, "gold_monthly": 10}, headers=auth_headers)
+    assert _generate(client, headers, source="own").json()["generation"]["key_source"] == "own"
+
+
+def test_own_source_without_key(client, user):
+    headers, _ = user
+    resp = _generate(client, headers, source="own")
+    assert resp.status_code == 403 and "AI settings" in resp.json()["detail"]
+
+
+def test_test_own_key(client, monkeypatch, ai_reply):
+    headers, _ = _member(client, monkeypatch, tier="bronze")
+    assert client.post("/me/ai-key/test", headers=headers).status_code == 404
+    client.put("/me/ai-key", json={"provider": "gemini", "api_key": "my-gemini-key-8888"}, headers=headers)
+    ai_reply["replies"] = [json.dumps(GOOD_DECK), ProviderError("x", admin_detail="Gemini rejected the API key")]
+    ok = client.post("/me/ai-key/test", headers=headers).json()
+    assert ok["ok"] is True and ai_reply["calls"][0]["key"] == "my-gemini-key-8888"
+    assert _options(client, headers)["own_key"]["last_test_ok"] is True
+    bad = client.post("/me/ai-key/test", headers=headers).json()
+    assert bad["ok"] is False and "rejected" in bad["message"]
+    assert _options(client, headers)["own_key"]["last_test_ok"] is False
+
+
+def test_own_key_deleted_with_account(client, monkeypatch):
+    headers, uid = _member(client, monkeypatch, tier="bronze")
+    client.put("/me/ai-key", json={"provider": "gemini", "api_key": "my-gemini-key-8888"}, headers=headers)
+    client.request("DELETE", "/me", json={"password": "secret123"}, headers=headers)
+    db = TestingSessionLocal()
+    assert db.query(UserAIKey).count() == 0
+    db.close()
+
+
+# ── History and admin views ───────────────────────────────────────────────
 
 def test_history_is_private_and_deletable(client, user, ai_reply, monkeypatch):
     headers, _ = user
@@ -241,15 +420,16 @@ def test_history_is_private_and_deletable(client, user, ai_reply, monkeypatch):
     assert client.delete(f"/me/generations/{gen_id}", headers=headers).status_code == 204
     assert client.get("/me/generations", headers=headers).json() == []
     # Deleting from history doesn't refund the token
-    assert client.get("/ai/options", headers=headers).json()["balance"]["total"] == 4
+    assert _options(client, headers)["balance"]["total"] == 9
 
 
-def test_members_show_tokens_used(client, user, ai_reply, auth_headers):
+def test_members_show_tokens_used_and_own_key(client, user, ai_reply, auth_headers):
     headers, uid = user
     ai_reply["replies"] = [json.dumps(GOOD_DECK)]
     _generate(client, headers)
+    client.put("/me/ai-key", json={"provider": "mistral", "api_key": "my-mistral-key-7777"}, headers=headers)
     member = next(u for u in client.get("/admin/users", headers=auth_headers).json() if u["id"] == uid)
-    assert member["tokens_used_month"] == 1
+    assert member["tokens_used_month"] == 1 and member["own_key_provider"] == "mistral" and member["tier"] == "gold"
 
 
 def test_deleting_account_removes_generations(client, user, ai_reply, auth_headers):

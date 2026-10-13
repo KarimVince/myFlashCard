@@ -6,7 +6,7 @@ import MyDecksTab from "./MyDecksTab";
 import CardViewer from "./CardViewer";
 import CreateTab from "./CreateTab";
 import { Deck } from "@/lib/types";
-import { useFeatures } from "@/lib/features";
+import { useAIVisible } from "@/lib/useAIVisible";
 
 export type Tab = "library" | "decks" | "create";
 
@@ -41,7 +41,7 @@ interface Props {
 
 export default function AppShell({ initialTab = "library" }: Props) {
   const [chosenTab, setTab] = useState<Tab>(initialTab);
-  const { ai } = useFeatures();
+  const { visible: ai } = useAIVisible();
   const tab: Tab = chosenTab === "create" && !ai ? "decks" : chosenTab;
   const [viewing, setViewing] = useState<{ deck: Deck; json: DeckJson } | null>(null);
 

@@ -7,9 +7,9 @@ type Step = { title: string; body: string; link?: { href: string; label: string 
 
 const AI_STEPS: Step[] = [
   {
-    title: "Create a free account",
-    body: "Only an alias and an email. Confirm your email with the link we send you — that unlocks AI generation.",
-    link: { href: "/account/register?next=/create", label: "Create an account →" },
+    title: "Get a Premium account",
+    body: "AI decks are part of Premium. Bronze uses your own AI key, Silver adds a few decks on us, Gold adds decks on us every month. Confirm your email, then add your key in AI settings if your plan uses one.",
+    link: { href: "/account/ai", label: "See AI settings →" },
   },
   {
     title: "Pick a deck type and describe your deck",
@@ -18,7 +18,7 @@ const AI_STEPS: Step[] = [
   },
   {
     title: "Get your deck in under a minute",
-    body: "The AI writes the deck in the right format. We check it before you see it, and a token is only used when you get a valid deck.",
+    body: "The AI writes the deck in the right format. We check it before you see it, and a deck only counts when you get a valid one.",
   },
   {
     title: "Study it anywhere",
@@ -86,7 +86,7 @@ export default function HowToPage() {
           <p className="text-2xl mb-2">✨</p>
           <p className="font-semibold text-gray-900">Generate with AI</p>
           <p className="text-sm text-gray-500 mt-1">
-            Describe it, get it in a minute. Free account, free decks every month.
+            Describe it, get it in a minute. Part of Premium.
           </p>
         </a>
         <a href="#manual" className="block bg-white border border-gray-200 rounded-xl p-5 hover:bg-gray-50 transition-colors">
@@ -102,10 +102,11 @@ export default function HowToPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-6">✨ Generate with AI</h2>
         <Steps steps={AI_STEPS} />
         <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-5 text-sm text-gray-600 space-y-2">
-          <p className="font-semibold text-gray-900">About tokens</p>
+          <p className="font-semibold text-gray-900">Our AI or your own key</p>
           <p>
-            Each deck uses a token. Free accounts get a set number of tokens every month, renewed on the 1st; unused
-            tokens don&apos;t carry over. If the AI can&apos;t produce a valid deck, no token is used.
+            Silver members get a few AI decks on us in total, Gold members a set number every month (renewed on the 1st,
+            unused ones don&apos;t carry over). With your own API key there is no limit on our side — your AI provider
+            may charge you or apply its own free-tier limits. If the AI can&apos;t produce a valid deck, nothing is counted.
           </p>
         </div>
       </section>

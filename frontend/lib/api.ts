@@ -8,6 +8,9 @@ import {
   Deck,
   Generation,
   GenerationSummary,
+  KeySource,
+  OwnKey,
+  Tier,
   User,
 } from "./types";
 
@@ -191,8 +194,28 @@ export async function generateDeck(
   category_slug: string,
   description: string,
   provider?: string,
+  source?: KeySource,
 ): Promise<{ generation: Generation; balance: Balance }> {
-  return request("/ai/generate", { method: "POST", ...json({ category_slug, description, provider }) }, token);
+  return request("/ai/generate", { method: "POST", ...json({ category_slug, description, provider, source }) }, token);
+}
+
+// ── The member's own AI key ───────────────────────────────────────────────
+
+export async function saveMyKey(token: string, provider: string, api_key: string): Promise<OwnKey> {
+  return request<OwnKey>("/me/ai-key", { method: "PUT", ...json({ provider, api_key }) }, token);
+}
+
+export async function deleteMyKey(token: string): Promise<void> {
+  return request<void>("/me/ai-key", { method: "DELETE" }, token);
+}
+
+export async function testMyKey(token: string): Promise<{ ok: boolean; message: string; duration_ms: number }> {
+  return request("/me/ai-key/test", { method: "POST" }, token);
+}
+
+/** Deck JSON through the backend. Premium decks need a Silver or Gold member's token. */
+export async function getDeckContent(id: number, token?: string | null): Promise<unknown> {
+  return request(`/decks/${id}/content`, {}, token);
 }
 
 export async function listGenerations(token: string): Promise<GenerationSummary[]> {
@@ -220,8 +243,12 @@ export async function adminListUsers(token: string, q?: string): Promise<User[]>
   return request<User[]>(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, {}, token);
 }
 
-export async function adminSetService(token: string, userId: number, service: string, enabled: boolean): Promise<User> {
-  return request<User>(`/admin/users/${userId}/services/${service}`, { method: "PUT", ...json({ enabled }) }, token);
+export async function adminUpdateMember(
+  token: string,
+  userId: number,
+  data: Partial<{ tier: Tier; role: "user" | "admin"; email_verified: boolean }>,
+): Promise<User> {
+  return request<User>(`/admin/users/${userId}`, { method: "PATCH", ...json(data) }, token);
 }
 
 export async function adminGetAI(token: string): Promise<AdminAI> {
@@ -240,8 +267,8 @@ export async function adminTestProvider(token: string, id: string): Promise<{ ok
   return request(`/admin/ai/providers/${id}/test`, { method: "POST" }, token);
 }
 
-export async function adminSetAllowances(token: string, free_monthly: number, premium_monthly: number): Promise<AdminAI> {
-  return request<AdminAI>("/admin/ai/allowances", { method: "PUT", ...json({ free_monthly, premium_monthly }) }, token);
+export async function adminSetAllowances(token: string, silver_total: number, gold_monthly: number): Promise<AdminAI> {
+  return request<AdminAI>("/admin/ai/allowances", { method: "PUT", ...json({ silver_total, gold_monthly }) }, token);
 }
 
 export async function adminListGenerations(token: string, status?: string): Promise<AdminGeneration[]> {

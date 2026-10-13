@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { changePassword, deleteAccount, errorMessage, resendVerification, updateAlias } from "@/lib/api";
-import { usePremiumEnabled } from "@/lib/usePremium";
+import AccountHeader from "@/components/account/AccountHeader";
 import { Field, Notice, SubmitButton } from "@/components/account/Form";
 
 export default function AccountPage() {
   const { user, token, loading, logout, setUser } = useAuth();
-  const premiumEnabled = usePremiumEnabled();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,36 +19,9 @@ export default function AccountPage() {
     return <div className="text-center py-20 text-gray-400">Loading…</div>;
   }
 
-  const isPremium = user.services.includes("premium");
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{user.alias}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {user.email} · member since {new Date(user.created_at).toLocaleDateString()}
-          </p>
-          <div className="flex gap-2 mt-3">
-            {user.role === "admin" && (
-              <Link href="/admin" className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-900 text-white">
-                Admin →
-              </Link>
-            )}
-            {premiumEnabled && isPremium && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                ★ Premium
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={async () => { await logout(); router.push("/"); }}
-          className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
-        >
-          Log out
-        </button>
-      </div>
+      <AccountHeader user={user} />
 
       {!user.email_verified && <VerifyBanner token={token} email={user.email} />}
 
