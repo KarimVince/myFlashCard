@@ -16,6 +16,7 @@ const KEY_LINKS: Record<string, { href: string; label: string }> = {
   gemini: { href: "https://aistudio.google.com/apikey", label: "Google AI Studio" },
   claude: { href: "https://console.anthropic.com/settings/keys", label: "Anthropic Console" },
   mistral: { href: "https://console.mistral.ai/api-keys", label: "Mistral console" },
+  groq: { href: "https://console.groq.com/keys", label: "Groq console" },
 };
 
 export default function AiCardPage() {

@@ -388,3 +388,23 @@ async def test_openai_compatible_errors(monkeypatch, status, expected):
     with pytest.raises(ProviderError) as exc:
         await call_provider("mistral", "k", "m", "S", [Turn("user", "hi")], "https://api.mistral.ai/v1")
     assert expected in exc.value.admin_detail
+
+
+@pytest.mark.anyio
+async def test_groq_request_url(monkeypatch):
+    import httpx
+
+    from app.ai.providers import Turn, call_provider
+
+    seen = {}
+
+    def handler(request: httpx.Request):
+        seen["url"] = str(request.url)
+        seen["model"] = json.loads(request.content)["model"]
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]})
+
+    _patch_transport(monkeypatch, handler)
+    text = await call_provider("groq", "gsk_test", "llama-3.3-70b-versatile", "S", [Turn("user", "hi")], "https://api.groq.com/openai/v1")
+    assert text == "{}"
+    assert seen["url"] == "https://api.groq.com/openai/v1/chat/completions"
+    assert seen["model"] == "llama-3.3-70b-versatile"
