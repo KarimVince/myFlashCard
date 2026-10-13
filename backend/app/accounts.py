@@ -15,8 +15,11 @@ from app.models import EmailToken, User, UserSession
 SESSION_DAYS = 30
 TOKEN_TTL = {"verify": timedelta(hours=48), "reset": timedelta(hours=1)}
 
-# Known services an admin can grant. Add new ones here.
-SERVICES = {"premium", "ai_claude"}
+# Premium levels, lowest first. Set by the admin on the Members page.
+TIERS = ("none", "bronze", "silver", "gold")
+PREMIUM_TIERS = {"bronze", "silver", "gold"}   # may use AI with their own key
+SHARED_AI_TIERS = {"silver", "gold"}           # may also use the site's AI keys (with an allowance)
+PREMIUM_DECK_TIERS = {"silver", "gold"}        # may download premium library decks
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -133,6 +136,13 @@ def bearer_token(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)) 
     if not creds:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in")
     return creds.credentials
+
+
+def optional_user(
+    creds: HTTPAuthorizationCredentials | None = Depends(_bearer), db: Session = Depends(get_db)
+) -> User | None:
+    """The logged-in user if a valid session token was sent, else None (public endpoints)."""
+    return user_from_token(db, creds.credentials) if creds else None
 
 
 def current_user(token: str = Depends(bearer_token), db: Session = Depends(get_db)) -> User:

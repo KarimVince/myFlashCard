@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { hasAdminPasswordSession } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFeatures } from "@/lib/features";
+import { useAIVisible } from "@/lib/useAIVisible";
 
 const links = [
   { href: "/library", label: "Library" },
@@ -19,8 +20,9 @@ export default function Nav() {
   const path = usePathname();
   const { user, loading } = useAuth();
   const features = useFeatures();
-  // Create only exists while AI generation is switched on.
-  const visibleLinks = links.filter((l) => l.href !== "/create" || features.ai);
+  // Create shows while AI generation is switched on, and always for admins.
+  const ai = useAIVisible();
+  const visibleLinks = links.filter((l) => l.href !== "/create" || ai.visible);
   // Admin button while signed in as admin — by admin account or by the admin password.
   const [passwordAdmin, setPasswordAdmin] = useState(false);
   useEffect(() => setPasswordAdmin(hasAdminPasswordSession()), [path]);

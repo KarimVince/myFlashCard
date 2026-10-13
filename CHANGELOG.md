@@ -17,8 +17,14 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - `/ai/options`, `/ai/generate`, `/me/generations` (history, view, delete)
 - Launch switches on the admin Premium page: **Member accounts** and **AI generation** (both Inactif by default). While off, the site looks like v1: no Create page/tab, no Log in, registration closed, how-to shows only the manual method, and the backend refuses registration and AI requests. AI can only be on while accounts are on
 - Mistral as a third AI provider, through a generic OpenAI-compatible adapter (API address editable in AI Card)
-- Groq as a fourth AI provider (free tier, `llama-3.3-70b-versatile` by default) through the same OpenAI-compatible adapter; off until a key is added in AI Card
+- Groq as a fourth AI provider (free tier, `openai/gpt-oss-120b` by default — Groq retired `llama-3.3-70b-versatile`) through the same OpenAI-compatible adapter; off until a key is added in AI Card
 - AI Card stays in the admin menu while AI generation is off, so provider keys can be set up and tested before launch
+- Premium levels **Bronze / Silver / Gold**, set per member on the admin Members page (replaces the "premium" and "Claude AI" grants). AI generation is for Premium members only: Bronze uses their own API key, Silver gets 3 shared AI decks in total, Gold 10 per month (both editable in AI Card), and both can also add their own key. Premium library decks are for Silver and Gold
+- Members' own API key (one provider): **Account → AI settings** to add, test, replace or remove it. Stored encrypted; generation uses the model set in AI Card; costs no shared decks
+- Create page: choose "Our AI" or "Your key" when both are available; clear messages when AI isn't part of the plan or a key is needed
+- The admin can always generate with AI — even with the AI or Premium switches off — with no limit
+- Admin Members page: set the level, confirm a member's email, make or remove an admin (lets the admin password holder set up the new admin account without an email service)
+- Library: logged-in members are told premium decks are for Silver and Gold; Silver and Gold can download them on the website and open them in the web app
 - Create page on the website (2.0 Phase C): pick a deck type, describe it, choose the AI, see tokens left; preview the result, download the JSON, add it to My Decks; history of your AI decks
 - Create tab in the iPhone web app: generated decks open in the card viewer and are saved to My Decks
 - How-to page reworked into "Generate with AI" and "Do it manually"; "Create" in the site nav

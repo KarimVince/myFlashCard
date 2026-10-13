@@ -20,7 +20,7 @@ jest.mock("@/lib/api", () => ({
   login: jest.fn(),
   getMe: jest.fn(),
   adminListUsers: jest.fn(),
-  adminSetService: jest.fn(),
+  adminUpdateMember: jest.fn(),
   getToken: jest.fn(() => "admin-token"),
 }));
 
@@ -29,8 +29,8 @@ const USER: User = {
   alias: "Alice",
   email: "alice@example.com",
   role: "user",
+  tier: "none",
   email_verified: true,
-  services: [],
   created_at: "2026-09-01T00:00:00Z",
   last_login_at: null,
 };
@@ -61,12 +61,24 @@ test("login shows the server error without the status code", async () => {
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-test("members page lists members and toggles premium", async () => {
+test("members page lists members and sets their level", async () => {
   (api.adminListUsers as jest.Mock).mockResolvedValue([USER]);
-  (api.adminSetService as jest.Mock).mockResolvedValue({ ...USER, services: ["premium"] });
+  (api.adminUpdateMember as jest.Mock).mockResolvedValue({ ...USER, tier: "silver" });
   render(<MembersPage />);
   expect(await screen.findByText("Alice")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "+ Premium" }));
-  await waitFor(() => expect(api.adminSetService).toHaveBeenCalledWith("admin-token", 7, "premium", true));
-  expect(await screen.findByRole("button", { name: "✓ Premium" })).toBeInTheDocument();
+  await userEvent.selectOptions(screen.getByRole("combobox", { name: "Alice level" }), "silver");
+  await waitFor(() => expect(api.adminUpdateMember).toHaveBeenCalledWith("admin-token", 7, { tier: "silver" }));
+  expect(await screen.findByRole("combobox", { name: "Alice level" })).toHaveValue("silver");
+});
+
+test("members page confirms an email and makes an admin", async () => {
+  window.confirm = jest.fn(() => true);
+  (api.adminListUsers as jest.Mock).mockResolvedValue([{ ...USER, email_verified: false }]);
+  (api.adminUpdateMember as jest.Mock).mockResolvedValue({ ...USER, role: "admin" });
+  render(<MembersPage />);
+  await userEvent.click(await screen.findByRole("button", { name: "Make admin" }));
+  await waitFor(() =>
+    expect(api.adminUpdateMember).toHaveBeenCalledWith("admin-token", 7, { role: "admin", email_verified: true }),
+  );
+  expect(await screen.findByRole("button", { name: "Remove admin" })).toBeInTheDocument();
 });

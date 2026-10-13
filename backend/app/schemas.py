@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 # ── Category ─────────────────────────────────────────────────────────────
@@ -61,11 +61,17 @@ class DeckPublicOut(BaseModel):
     author: str | None
     language: str
     card_count: int | None
-    public_url: str
+    public_url: str   # empty for premium decks: their file only comes through /decks/{id}/content
     is_free: bool
     downloads: int
     category: CategoryOut
     created_at: datetime
+
+    @model_validator(mode="after")
+    def _hide_premium_file(self) -> "DeckPublicOut":
+        if not self.is_free:
+            self.public_url = ""
+        return self
 
 
 class VisibilityUpdate(BaseModel):
@@ -204,8 +210,8 @@ class UserOut(BaseModel):
     alias: str
     email: str
     role: str
+    tier: str
     email_verified: bool
-    services: list[str]
     created_at: datetime
 
     @classmethod
@@ -215,8 +221,8 @@ class UserOut(BaseModel):
             alias=user.alias,
             email=user.email,
             role=user.role,
+            tier=user.tier,
             email_verified=user.email_verified_at is not None,
-            services=user.service_names,
             created_at=user.created_at,
         )
 
@@ -224,6 +230,7 @@ class UserOut(BaseModel):
 class AdminUserOut(UserOut):
     last_login_at: datetime | None = None
     tokens_used_month: int = 0
+    own_key_provider: str | None = None
 
     @classmethod
     def of(cls, user, tokens_used_month: int = 0) -> "AdminUserOut":
@@ -231,6 +238,7 @@ class AdminUserOut(UserOut):
             **UserOut.of(user).model_dump(),
             last_login_at=user.last_login_at,
             tokens_used_month=tokens_used_month,
+            own_key_provider=user.ai_key.provider_id if user.ai_key else None,
         )
 
 
@@ -239,8 +247,27 @@ class AuthOut(BaseModel):
     user: UserOut
 
 
-class ServiceUpdate(BaseModel):
-    enabled: bool
+class MemberUpdate(BaseModel):
+    """Admin changes to a member. Every field is optional."""
+    tier: str | None = None
+    role: str | None = None              # "user" | "admin"
+    email_verified: bool | None = None   # lets the admin confirm an email when no email service is set up
+
+    @field_validator("tier")
+    @classmethod
+    def _tier(cls, v: str | None) -> str | None:
+        from app.accounts import TIERS
+
+        if v is not None and v not in TIERS:
+            raise ValueError(f"Level must be one of: {', '.join(TIERS)}")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def _role(cls, v: str | None) -> str | None:
+        if v is not None and v not in ("user", "admin"):
+            raise ValueError("Role must be user or admin")
+        return v
 
 
 # ── AI generation ─────────────────────────────────────────────────────────
@@ -249,12 +276,16 @@ MAX_DESCRIPTION = 1000
 
 
 class BalanceOut(BaseModel):
-    monthly_allowance: int
-    monthly_used: int
-    monthly_left: int
+    """Shared-AI allowance. period: "month" (Gold, resets on resets_on), "total" (Silver, never
+    resets), or None (no shared AI). Admins are unlimited and get unlimited=True."""
+    allowance: int
+    used: int
+    left: int
     extra: int
     total: int
-    resets_on: str  # ISO date of the next monthly reset
+    period: str | None
+    resets_on: str | None = None
+    unlimited: bool = False
 
 
 class ProviderOption(BaseModel):
@@ -266,17 +297,65 @@ class ProviderOption(BaseModel):
     reason: str | None = None
 
 
+class KeyProviderOut(BaseModel):
+    """A provider a member can use their own key with."""
+    id: str
+    label: str
+    model: str
+
+
+class OwnKeyOut(BaseModel):
+    provider: str
+    provider_label: str
+    model: str
+    key_hint: str | None          # None when the stored key can't be read (SECRETS_KEY changed)
+    last_test_ok: bool | None
+    last_tested_at: datetime | None
+
+
+class OwnKeyIn(BaseModel):
+    provider: str
+    api_key: str
+
+    @field_validator("api_key")
+    @classmethod
+    def _key(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Paste your API key")
+        if len(v) > 500 or any(c.isspace() for c in v):
+            raise ValueError("That doesn't look like an API key")
+        return v
+
+
 class AIOptionsOut(BaseModel):
+    """Everything the Create screen and AI settings page need for the current user."""
     email_verified: bool
+    tier: str
+    is_admin: bool
+    can_generate: bool             # may use AI at all (plan, launch switches)
+    reason: str | None = None      # why not, when can_generate is False
+    shared: bool                   # plan includes the site's AI (Silver, Gold, admin)
+    own_key_allowed: bool          # plan allows the member's own key (Bronze and up)
+    own_key: OwnKeyOut | None = None
     balance: BalanceOut
-    providers: list[ProviderOption]
+    providers: list[ProviderOption]          # the site's AIs (shared)
+    key_providers: list[KeyProviderOut]      # AIs a member can add their own key for
     max_description: int = MAX_DESCRIPTION
 
 
 class GenerateIn(BaseModel):
     category_slug: str
     description: str
-    provider: str | None = None
+    provider: str | None = None    # shared AI to use; ignored for source "own"
+    source: str | None = None      # "shared" | "own"; None picks shared while the allowance lasts
+
+    @field_validator("source")
+    @classmethod
+    def _source(cls, v: str | None) -> str | None:
+        if v is not None and v not in ("shared", "own"):
+            raise ValueError("source must be shared or own")
+        return v
 
     @field_validator("description")
     @classmethod
@@ -295,6 +374,7 @@ class GenerationSummary(BaseModel):
     category_slug: str | None
     category_label: str | None
     provider: str
+    key_source: str
     card_count: int | None
     tokens_spent: int
     created_at: datetime
@@ -307,6 +387,7 @@ class GenerationSummary(BaseModel):
             category_slug=g.category.slug if g.category else None,
             category_label=g.category.label if g.category else None,
             provider=g.provider,
+            key_source=g.key_source,
             card_count=g.card_count,
             tokens_spent=g.tokens_spent,
             created_at=g.created_at,
@@ -334,7 +415,6 @@ class AdminProviderOut(BaseModel):
     is_default: bool
     model: str
     token_cost: int
-    requires_service: str | None
     base_url: str | None = None
     has_key: bool
     key_hint: str | None
@@ -342,8 +422,8 @@ class AdminProviderOut(BaseModel):
 
 class AdminAIOut(BaseModel):
     providers: list[AdminProviderOut]
-    free_monthly: int
-    premium_monthly: int
+    silver_total: int
+    gold_monthly: int
     secrets_key_configured: bool
 
 
@@ -364,10 +444,10 @@ class ProviderUpdate(BaseModel):
 
 
 class AllowancesUpdate(BaseModel):
-    free_monthly: int
-    premium_monthly: int
+    silver_total: int
+    gold_monthly: int
 
-    @field_validator("free_monthly", "premium_monthly")
+    @field_validator("silver_total", "gold_monthly")
     @classmethod
     def _range(cls, v: int) -> int:
         if not 0 <= v <= 1000:
@@ -388,6 +468,7 @@ class AdminGenerationOut(BaseModel):
     category_label: str | None
     provider: str
     model: str
+    key_source: str
     description: str
     status: str
     title: str | None

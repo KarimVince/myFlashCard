@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.auth import verify_admin_token
 from app.db import get_db
-from app.accounts import SERVICES
-from app.models import Category, Deck, TokenLedger, User, UserService
+from app.accounts import utcnow
+from app.models import Category, Deck, TokenLedger, User
 from app.schemas import (
     AdminUserOut, CategoryCreate, CategoryOut, CategoryUpdate, DeckOut, DeckUpdate, FreeUpdate,
-    FeatureUpdate, PublicSettingsOut, ServiceUpdate, VisibilityUpdate,
+    FeatureUpdate, MemberUpdate, PublicSettingsOut, VisibilityUpdate,
 )
 from app.settings_store import (
     ACCOUNTS_ENABLED, AI_ENABLED, PREMIUM_ENABLED, accounts_enabled, ai_enabled, public_settings, set_flag,
@@ -242,17 +242,21 @@ def admin_list_users(q: str | None = None, db: Session = Depends(get_db)):
     return [AdminUserOut.of(u, used.get(u.id, 0)) for u in query.order_by(User.created_at.desc()).all()]
 
 
-@router.put("/users/{user_id}/services/{service}", response_model=AdminUserOut)
-def admin_set_service(user_id: int, service: str, body: ServiceUpdate, db: Session = Depends(get_db)):
-    """Grant or remove an access (e.g. premium, ai_claude) for a member."""
-    if service not in SERVICES:
-        raise HTTPException(status_code=422, detail=f"Unknown service: {service!r}")
+@router.patch("/users/{user_id}", response_model=AdminUserOut)
+def admin_update_member(user_id: int, body: MemberUpdate, request: Request, db: Session = Depends(get_db)):
+    """Set a member's Premium level, admin role, or confirm their email by hand."""
     user = _user_or_404(user_id, db)
-    existing = next((s for s in user.services if s.service == service), None)
-    if body.enabled and not existing:
-        user.services.append(UserService(service=service))
-    elif not body.enabled and existing:
-        user.services.remove(existing)
+    me = getattr(request.state, "admin_user", None)
+    if body.tier is not None:
+        user.tier = body.tier
+    if body.role is not None:
+        if me and me.id == user.id and body.role != "admin":
+            raise HTTPException(status_code=400, detail="You can't remove your own admin access")
+        if body.role == "admin" and not (user.email_verified_at or body.email_verified):
+            raise HTTPException(status_code=422, detail="Confirm this member's email before making them admin")
+        user.role = body.role
+    if body.email_verified is not None:
+        user.email_verified_at = (user.email_verified_at or utcnow()) if body.email_verified else None
     db.commit()
     db.refresh(user)
     return AdminUserOut.of(user)

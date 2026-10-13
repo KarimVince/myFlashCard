@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getCategories, getDecks } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { canOpenPremiumDecks, TIER_LABEL } from "@/lib/tiers";
 import { Category, Deck } from "@/lib/types";
 import DeckCard from "@/components/DeckCard";
 import { usePremiumEnabled } from "@/lib/usePremium";
@@ -10,6 +13,8 @@ const PILLS_THRESHOLD = 7; // switch to <select> when more categories than this
 
 export default function LibraryPage() {
   const premiumEnabled = usePremiumEnabled();
+  const { user, token } = useAuth();
+  const premiumAccess = premiumEnabled && canOpenPremiumDecks(user);
   const [categories, setCategories] = useState<Category[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeSlug, setActiveSlug] = useState<string>("all");
@@ -49,25 +54,37 @@ export default function LibraryPage() {
       )}
       {premiumEnabled && (<>
       <p className="text-gray-500 mb-8">
-        Browse community decks. Free decks can be downloaded directly into the myFlashCard app.
-        <span className="ml-1 inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 font-medium px-2 py-0.5 rounded-full border border-teal-200">
+        Browse community decks and download them into the myFlashCard app.{" "}
+        <span className="inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 font-medium px-2 py-0.5 rounded-full border border-teal-200">
           ✓ Free
         </span>
-        {" "}decks include the JSON download.{" "}
+        {" "}decks are open to everyone;{" "}
         <span className="inline-flex items-center text-xs bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded-full border border-amber-200">
           ★ Premium
         </span>
-        {" "}decks are preview-only for now.
+        {" "}decks are for Silver and Gold members.
       </p>
 
-      {/* Premium coming-soon notice */}
+      {/* Premium access notice */}
       <div className="mb-8 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
         <span className="text-lg leading-none mt-0.5">★</span>
-        <span>
-          <strong>Premium access is coming at a later stage.</strong>{" "}
-          For now, all premium decks are available to preview but not download.
-          Stay tuned — we&apos;ll announce when subscriptions open.
-        </span>
+        {premiumAccess ? (
+          <span>
+            {user?.role === "admin"
+              ? "As admin you can download every premium deck."
+              : <>As a <strong>{TIER_LABEL[user!.tier]}</strong> member you can download every premium deck.</>}
+          </span>
+        ) : user ? (
+          <span>
+            <strong>Premium decks are only available to Silver and Gold members.</strong>{" "}
+            <Link href="/account/ai" className="underline">See your plan</Link>
+          </span>
+        ) : (
+          <span>
+            <strong>Premium decks are only available to Silver and Gold members.</strong>{" "}
+            <Link href="/account/login?next=/library" className="underline">Log in</Link> to download them.
+          </span>
+        )}
       </div>
       </>)}
 
@@ -135,7 +152,7 @@ export default function LibraryPage() {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((deck) => (
-            <DeckCard key={deck.id} deck={deck} premiumEnabled={premiumEnabled} />
+            <DeckCard key={deck.id} deck={deck} premiumEnabled={premiumEnabled} premiumToken={premiumAccess ? token : null} />
           ))}
         </div>
       )}

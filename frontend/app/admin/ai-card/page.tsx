@@ -10,14 +10,9 @@ import {
   errorMessage,
   getToken,
 } from "@/lib/api";
+import { KEY_LINKS } from "@/lib/aiProviders";
 import { AdminAI, AdminGeneration, AdminProvider } from "@/lib/types";
 
-const KEY_LINKS: Record<string, { href: string; label: string }> = {
-  gemini: { href: "https://aistudio.google.com/apikey", label: "Google AI Studio" },
-  claude: { href: "https://console.anthropic.com/settings/keys", label: "Anthropic Console" },
-  mistral: { href: "https://console.mistral.ai/api-keys", label: "Mistral console" },
-  groq: { href: "https://console.groq.com/keys", label: "Groq console" },
-};
 
 export default function AiCardPage() {
   const [data, setData] = useState<AdminAI | null>(null);
@@ -44,7 +39,7 @@ export default function AiCardPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Card</h1>
         <p className="text-sm text-gray-500">
-          AI deck generation for registered members. Keys are stored encrypted and never shown again after saving.
+          Your AI keys, used by you and shared with Silver &amp; Gold members. Keys are stored encrypted and never shown again after saving.
         </p>
       </div>
 
@@ -124,7 +119,7 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
             )}
           </h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            {provider.requires_service ? "Only members with Claude AI access" : "All verified members"}
+            Shared with Silver &amp; Gold members · also used with members&apos; own keys
           </p>
         </div>
         <button
@@ -133,7 +128,11 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
           aria-checked={provider.enabled}
           aria-label={`${provider.label} enabled`}
           disabled={busy}
-          onClick={() => save({ enabled: !provider.enabled }, provider.enabled ? "Disabled" : "Enabled")}
+          onClick={() => save(
+            // Send a pasted key with the switch, so "paste key → switch on" works without pressing Save first.
+            { enabled: !provider.enabled, ...(apiKey.trim() ? { api_key: apiKey } : {}) },
+            provider.enabled ? "Disabled" : "Enabled",
+          )}
           className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
             provider.enabled ? "bg-teal-600" : "bg-gray-300"
           }`}
@@ -243,8 +242,8 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
 }
 
 function Allowances({ data, onSaved }: { data: AdminAI; onSaved: (d: AdminAI) => void }) {
-  const [free, setFree] = useState(String(data.free_monthly));
-  const [premium, setPremium] = useState(String(data.premium_monthly));
+  const [silver, setSilver] = useState(String(data.silver_total));
+  const [gold, setGold] = useState(String(data.gold_monthly));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -255,8 +254,8 @@ function Allowances({ data, onSaved }: { data: AdminAI; onSaved: (d: AdminAI) =>
     setBusy(true);
     setMsg(null);
     try {
-      onSaved(await adminSetAllowances(token, Number(free), Number(premium)));
-      setMsg({ ok: true, text: "Saved — applies immediately, including this month." });
+      onSaved(await adminSetAllowances(token, Number(silver), Number(gold)));
+      setMsg({ ok: true, text: "Saved — applies immediately." });
     } catch (err) {
       setMsg({ ok: false, text: errorMessage(err) });
     } finally {
@@ -266,20 +265,21 @@ function Allowances({ data, onSaved }: { data: AdminAI; onSaved: (d: AdminAI) =>
 
   return (
     <section>
-      <h2 className="font-semibold text-gray-900 mb-1">Monthly tokens</h2>
+      <h2 className="font-semibold text-gray-900 mb-1">Shared AI decks</h2>
       <p className="text-sm text-gray-500 mb-4">
-        Each member gets this many tokens on the 1st of every month. Unused tokens don&apos;t carry over. A token is only
-        used when a valid deck comes back.
+        How many decks Premium members can make with your keys above (each deck costs its provider&apos;s &ldquo;tokens per
+        deck&rdquo;). A deck only counts when a valid one comes back. Bronze members, and Silver/Gold once theirs are used
+        up, generate with their own API key. You, as admin, are never limited.
       </p>
       <form onSubmit={save} className="bg-white border border-gray-200 rounded-xl p-5 flex flex-wrap items-end gap-4">
         <label className="block">
-          <span className="block text-xs font-medium text-gray-600 mb-1">Free members</span>
-          <input type="number" min={0} max={1000} value={free} onChange={(e) => setFree(e.target.value)}
+          <span className="block text-xs font-medium text-gray-600 mb-1">Silver · in total</span>
+          <input type="number" min={0} max={1000} value={silver} onChange={(e) => setSilver(e.target.value)}
             className="w-28 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </label>
         <label className="block">
-          <span className="block text-xs font-medium text-gray-600 mb-1">Premium members</span>
-          <input type="number" min={0} max={1000} value={premium} onChange={(e) => setPremium(e.target.value)}
+          <span className="block text-xs font-medium text-gray-600 mb-1">Gold · per month</span>
+          <input type="number" min={0} max={1000} value={gold} onChange={(e) => setGold(e.target.value)}
             className="w-28 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </label>
         <button disabled={busy} className="text-sm px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors disabled:opacity-50">
@@ -328,7 +328,7 @@ function RecentGenerations() {
                 <tr key={g.id}>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                     {new Date(g.created_at).toLocaleString()}
-                    <div className="text-xs text-gray-400">{g.provider} · {g.duration_ms ? `${(g.duration_ms / 1000).toFixed(1)}s` : "—"}</div>
+                    <div className="text-xs text-gray-400">{g.provider}{g.key_source === "own" ? " (own key)" : ""} · {g.duration_ms ? `${(g.duration_ms / 1000).toFixed(1)}s` : "—"}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{g.user_alias}</div>

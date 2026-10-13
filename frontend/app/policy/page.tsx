@@ -39,7 +39,7 @@ export default function PolicyPage() {
         {
           title: "AI deck generation",
           content:
-            "If you generate a deck with AI, the category and the description you write are sent to the AI provider you choose — Google (Gemini), Anthropic (Claude), Mistral or Groq — to create the deck. Don't include personal or sensitive information in descriptions. Google may use content submitted through the free Gemini service to improve its products. We keep your descriptions, the generated decks and your token usage in your account so you can find your decks again and so we can enforce monthly limits and prevent misuse.",
+            "If you generate a deck with AI, the category and the description you write are sent to an AI provider — Google (Gemini), Anthropic (Claude), Mistral or Groq — to create the deck. With our AI, the request goes through our account with that provider; with your own API key, it goes through your account, under that provider's terms. Don't include personal or sensitive information in descriptions. Google may use content submitted through the free Gemini service to improve its products. If you save your own API key, we store it encrypted, use it only to generate your decks, and delete it when you remove it or delete your account. We keep your descriptions, the generated decks and your AI deck usage in your account so you can find your decks again and so we can enforce limits and prevent misuse.",
         },
         {
           title: "Where your data is stored",

@@ -1,10 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import { Deck } from "@/lib/types";
-import { downloadUrl } from "@/lib/api";
+import { downloadUrl, errorMessage, getDeckContent } from "@/lib/api";
 
 interface Props {
   deck: Deck;
   showVisibility?: boolean;
   premiumEnabled?: boolean;
+  /** Session token of a member who may download premium decks (Silver, Gold, admin). */
+  premiumToken?: string | null;
   onToggleVisibility?: (id: number, current: boolean) => void;
   onToggleFree?: (id: number, current: boolean) => void;
   onDelete?: (id: number) => void;
@@ -15,12 +20,32 @@ export default function DeckCard({
   deck,
   showVisibility,
   premiumEnabled = false,
+  premiumToken,
   onToggleVisibility,
   onToggleFree,
   onDelete,
   onEdit,
 }: Props) {
   const icon = deck.category.icon ?? "📄";
+  const [busy, setBusy] = useState(false);
+
+  async function downloadPremium() {
+    if (!premiumToken) return;
+    setBusy(true);
+    try {
+      const data = await getDeckContent(deck.id, premiumToken);
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${deck.title.replace(/[^\w\- ]+/g, "").trim() || "deck"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
@@ -81,9 +106,18 @@ export default function DeckCard({
             ↓ Download JSON
           </a>
         )}
-        {!showVisibility && !deck.is_free && (
+        {!showVisibility && !deck.is_free && premiumToken && (
+          <button
+            onClick={downloadPremium}
+            disabled={busy}
+            className="flex-1 text-center text-sm py-1.5 px-3 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
+          >
+            {busy ? "Downloading…" : "↓ Download JSON"}
+          </button>
+        )}
+        {!showVisibility && !deck.is_free && !premiumToken && (
           <span className="flex-1 text-center text-sm py-1.5 px-3 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed">
-            Premium — access required
+            Silver &amp; Gold members only
           </span>
         )}
 

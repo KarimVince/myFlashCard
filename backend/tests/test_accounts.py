@@ -199,19 +199,36 @@ def test_admin_list_and_search_members(client, outbox, auth_headers):
     assert [u["alias"] for u in found] == ["Alice"]
 
 
-def test_admin_grant_and_remove_services(client, outbox, auth_headers):
+def test_admin_sets_premium_level(client, outbox, auth_headers):
     user = _register(client).json()
     uid, token = user["user"]["id"], user["token"]
-    resp = client.put(f"/admin/users/{uid}/services/premium", json={"enabled": True}, headers=auth_headers)
-    assert resp.status_code == 200 and resp.json()["services"] == ["premium"]
-    client.put(f"/admin/users/{uid}/services/ai_claude", json={"enabled": True}, headers=auth_headers)
-    # Idempotent
-    client.put(f"/admin/users/{uid}/services/premium", json={"enabled": True}, headers=auth_headers)
-    assert client.get("/me", headers=_bearer(token)).json()["services"] == ["ai_claude", "premium"]
-    resp = client.put(f"/admin/users/{uid}/services/premium", json={"enabled": False}, headers=auth_headers)
-    assert resp.json()["services"] == ["ai_claude"]
-    assert client.put(f"/admin/users/{uid}/services/bogus", json={"enabled": True}, headers=auth_headers).status_code == 422
-    assert client.put("/admin/users/9999/services/premium", json={"enabled": True}, headers=auth_headers).status_code == 404
+    assert client.get("/me", headers=_bearer(token)).json()["tier"] == "none"
+    resp = client.patch(f"/admin/users/{uid}", json={"tier": "silver"}, headers=auth_headers)
+    assert resp.status_code == 200 and resp.json()["tier"] == "silver"
+    assert client.get("/me", headers=_bearer(token)).json()["tier"] == "silver"
+    assert client.patch(f"/admin/users/{uid}", json={"tier": "platinum"}, headers=auth_headers).status_code == 422
+    assert client.patch("/admin/users/9999", json={"tier": "gold"}, headers=auth_headers).status_code == 404
+
+
+def test_admin_confirms_email_and_makes_admin(client, outbox, auth_headers):
+    """With the admin password, a member can be confirmed and made admin (no email service needed)."""
+    user = _register(client).json()
+    uid, token = user["user"]["id"], user["token"]
+    resp = client.patch(f"/admin/users/{uid}", json={"role": "admin"}, headers=auth_headers)
+    assert resp.status_code == 422 and "Confirm" in resp.json()["detail"]
+    resp = client.patch(f"/admin/users/{uid}", json={"email_verified": True, "role": "admin"}, headers=auth_headers)
+    assert resp.status_code == 200 and resp.json()["role"] == "admin" and resp.json()["email_verified"]
+    # The account's own session now opens the admin API
+    assert client.get("/admin/users", headers=_bearer(token)).status_code == 200
+    assert client.patch(f"/admin/users/{uid}", json={"role": "bogus"}, headers=auth_headers).status_code == 422
+
+
+def test_admin_cannot_remove_own_admin_role(client, outbox, auth_headers):
+    user = _register(client).json()
+    uid, token = user["user"]["id"], user["token"]
+    client.patch(f"/admin/users/{uid}", json={"email_verified": True, "role": "admin"}, headers=auth_headers)
+    resp = client.patch(f"/admin/users/{uid}", json={"role": "user"}, headers=_bearer(token))
+    assert resp.status_code == 400
 
 
 def test_admin_delete_member(client, outbox, auth_headers):

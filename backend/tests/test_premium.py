@@ -1,6 +1,8 @@
 """Tests for the global premium toggle: premium decks behave like hidden decks while it's off."""
 import io
 
+import pytest
+
 
 def _upload(client, auth_headers, sample_deck_json, is_free):
     resp = client.post(
@@ -58,5 +60,59 @@ def test_premium_decks_listed_when_active(client, auth_headers, sample_deck_json
     listed = {d["id"]: d for d in client.get("/decks").json()}
     assert premium["id"] in listed
     assert listed[premium["id"]]["is_free"] is False
+    # The file address isn't public: premium decks only come through the access-checked endpoint
+    assert listed[premium["id"]]["public_url"] == ""
+    assert client.get(f"/decks/{premium['id']}").json()["public_url"] == ""
     # Still not downloadable until payments exist
     assert client.get(f"/decks/{premium['id']}/download", follow_redirects=False).status_code == 403
+
+
+# ── Premium decks: Silver and Gold only ───────────────────────────────────
+
+def _member_headers(client, monkeypatch, tier):
+    import app.api.auth as auth_api
+    from app.models import User
+    from tests.conftest import TestingSessionLocal
+
+    monkeypatch.setattr(auth_api, "send_verification", lambda *a: None)
+    resp = client.post("/auth/register", json={"alias": tier.title(), "email": f"{tier}@example.com", "password": "secret123"})
+    db = TestingSessionLocal()
+    db.get(User, resp.json()["user"]["id"]).tier = tier
+    db.commit()
+    db.close()
+    return {"Authorization": f"Bearer {resp.json()['token']}"}
+
+
+@pytest.fixture
+def deck_file(monkeypatch):
+    """Serve deck files from a fake R2."""
+    import httpx
+
+    import app.api.decks as decks_api
+
+    real = httpx.AsyncClient
+
+    class Client(real):
+        def __init__(self, *a, **kw):
+            kw.pop("transport", None)
+            super().__init__(*a, transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"deckTitle": "P"})), **kw)
+
+    monkeypatch.setattr(decks_api.httpx, "AsyncClient", Client)
+
+
+@pytest.mark.parametrize("tier,status", [("none", 403), ("bronze", 403), ("silver", 200), ("gold", 200)])
+def test_premium_deck_content_by_level(client, auth_headers, sample_deck_json, monkeypatch, deck_file, tier, status):
+    premium = _upload(client, auth_headers, sample_deck_json, False)
+    _set_premium(client, auth_headers, True)
+    headers = _member_headers(client, monkeypatch, tier)
+    resp = client.get(f"/decks/{premium['id']}/content", headers=headers)
+    assert resp.status_code == status
+    if status == 403:
+        assert "Silver and Gold" in resp.json()["detail"]
+    # Anonymous visitors can't get it either
+    assert client.get(f"/decks/{premium['id']}/content").status_code == 403
+
+
+def test_free_deck_content_needs_no_login(client, auth_headers, sample_deck_json, deck_file):
+    free = _upload(client, auth_headers, sample_deck_json, True)
+    assert client.get(f"/decks/{free['id']}/content").status_code == 200
