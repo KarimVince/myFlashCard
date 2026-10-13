@@ -17,7 +17,7 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - `/ai/options`, `/ai/generate`, `/me/generations` (history, view, delete)
 - Launch switches on the admin Premium page: **Member accounts** and **AI generation** (both Inactif by default). While off, the site looks like v1: no Create page/tab, no Log in, registration closed, how-to shows only the manual method, and the backend refuses registration and AI requests. AI can only be on while accounts are on
 - Mistral as a third AI provider, through a generic OpenAI-compatible adapter (API address editable in AI Card)
-- Groq as a fourth AI provider (free tier, `llama-3.3-70b-versatile` by default) through the same OpenAI-compatible adapter; off until a key is added in AI Card
+- Groq as a fourth AI provider (free tier, `openai/gpt-oss-120b` by default — Groq retired `llama-3.3-70b-versatile`) through the same OpenAI-compatible adapter; off until a key is added in AI Card
 - AI Card stays in the admin menu while AI generation is off, so provider keys can be set up and tested before launch
 - Create page on the website (2.0 Phase C): pick a deck type, describe it, choose the AI, see tokens left; preview the result, download the JSON, add it to My Decks; history of your AI decks
 - Create tab in the iPhone web app: generated decks open in the card viewer and are saved to My Decks
