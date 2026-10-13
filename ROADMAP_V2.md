@@ -482,6 +482,8 @@ Create page (category, description, provider, balance → preview → download /
 ### Launch status (2026-09-28)
 No free AI API is usable yet (Gemini/AI Studio blocked for the owner's account, Mistral API now needs a paid plan, Claude API is billed separately from claude.ai plans). All 2.0 code stays in place but is hidden behind admin launch switches — **Member accounts** and **AI generation**, both Inactif — so the public site behaves like v1. Premium stays Inactif too.
 
+**2026-10-13:** Groq added as a provider (migration 010, OpenAI-compatible, free tier with no card). Once a Groq key is saved and tested in AI Card, it can be the default provider and the launch switches can be turned on.
+
 ### Phase D — Android
 Login / register / account screens (token in encrypted storage), "Do My Own" becomes **Create** (AI form + manual guide + load from file). New Play Store build.
 
