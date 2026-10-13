@@ -133,7 +133,11 @@ function ProviderCard({ provider, onSaved }: { provider: AdminProvider; onSaved:
           aria-checked={provider.enabled}
           aria-label={`${provider.label} enabled`}
           disabled={busy}
-          onClick={() => save({ enabled: !provider.enabled }, provider.enabled ? "Disabled" : "Enabled")}
+          onClick={() => save(
+            // Send a pasted key with the switch, so "paste key → switch on" works without pressing Save first.
+            { enabled: !provider.enabled, ...(apiKey.trim() ? { api_key: apiKey } : {}) },
+            provider.enabled ? "Disabled" : "Enabled",
+          )}
           className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
             provider.enabled ? "bg-teal-600" : "bg-gray-300"
           }`}

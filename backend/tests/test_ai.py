@@ -408,3 +408,19 @@ async def test_groq_request_url(monkeypatch):
     assert text == "{}"
     assert seen["url"] == "https://api.groq.com/openai/v1/chat/completions"
     assert seen["model"] == "llama-3.3-70b-versatile"
+
+
+def test_invalid_secrets_key_gives_clear_error(client, auth_headers, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "secrets_key", "not-a-fernet-key")
+    r = client.patch("/admin/ai/providers/mistral", json={"api_key": "abc"}, headers=auth_headers)
+    assert r.status_code == 500 and "SECRETS_KEY is not a valid key" in r.json()["detail"]
+
+
+def test_enable_without_key_explains_what_to_do(client, auth_headers):
+    client.patch("/admin/ai/providers/mistral", json={"enabled": False, "api_key": ""}, headers=auth_headers)
+    r = client.patch("/admin/ai/providers/mistral", json={"enabled": True}, headers=auth_headers)
+    assert r.status_code == 422 and "press Save" in r.json()["detail"]
+    ok = client.patch("/admin/ai/providers/mistral", json={"enabled": True, "api_key": "gsk_new"}, headers=auth_headers)
+    assert ok.status_code == 200 and ok.json()["has_key"] and ok.json()["enabled"]

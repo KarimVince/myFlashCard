@@ -14,7 +14,13 @@ _warned = False
 def _fernet() -> Fernet:
     key = settings.secrets_key.strip()
     if key:
-        return Fernet(key.encode())
+        try:
+            return Fernet(key.encode())
+        except ValueError:
+            raise RuntimeError(
+                "SECRETS_KEY is not a valid key — it must be 44 characters, made with "
+                "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+            )
     if not settings.database_url.startswith("sqlite"):
         raise RuntimeError("SECRETS_KEY is not set — required to store API keys in production")
     # Local dev only: a stable key derived from the DB URL, so no setup is needed.
@@ -33,7 +39,7 @@ def encrypt(plain: str) -> str:
 def decrypt(token: str) -> str | None:
     try:
         return _fernet().decrypt(token.encode()).decode()
-    except (InvalidToken, ValueError):
+    except (InvalidToken, ValueError, RuntimeError):
         log.error("Could not decrypt a stored secret — was SECRETS_KEY changed?")
         return None
 

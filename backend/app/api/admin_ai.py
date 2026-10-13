@@ -83,7 +83,7 @@ def admin_update_provider(provider_id: str, body: ProviderUpdate, db: Session = 
         for other in db.query(AIProvider).all():
             other.is_default = other.id == p.id
     if p.enabled and not p.api_key_enc:
-        raise HTTPException(status_code=422, detail="Add an API key before enabling this provider")
+        raise HTTPException(status_code=422, detail="No API key saved yet — paste the key and press Save, then switch the provider on")
     db.commit()
     db.refresh(p)
     return _provider_out(p)
