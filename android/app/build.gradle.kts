@@ -12,7 +12,7 @@ val localProps = Properties().also { props ->
 }
 
 // Single source of truth for the version — bump here before every release
-val appVersion = "2.0"
+val appVersion = "2.1"
 
 // Release APK will be named myFlashCard-<version>-release.apk
 base.archivesName.set("myFlashCard-$appVersion")
@@ -28,7 +28,7 @@ android {
         minSdk = 24
         targetSdk = 37
         // CI injects VERSION_CODE via env var (github.run_number); local builds default to 1
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 2
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 3
         versionName = appVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

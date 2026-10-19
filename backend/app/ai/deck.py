@@ -35,6 +35,7 @@ _BLOCKS = [
         "properties": {
             "type": {"const": "steps"},
             "style": {"enum": ["number", "bullet"]},
+            "heading": {"type": "string"},
             "items": {"type": "array", "items": {"type": "string"}},
             "accentColor": _COLOR,
         },
@@ -48,6 +49,8 @@ _BLOCKS = [
             "heading": {"type": "string"},
             "columns": {"type": "array", "items": {"type": "string"}},
             "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+            # Optional relative column widths, one per column (e.g. [1, 3]); apps size by content otherwise.
+            "columnWeights": {"type": "array", "items": {"type": "number"}},
             "accentColor": _COLOR,
         },
         "required": ["type", "columns", "rows"],
@@ -119,8 +122,9 @@ FORMAT_GUIDE = """JSON format (use these exact field names):
 Block types — use only these five:
 - stats: { "type": "stats", "items": [ { "label": "...", "value": "...", "icon": "emoji (optional)" } ] }
 - note:  { "type": "note", "text": "..." }
-- steps: { "type": "steps", "style": "number" | "bullet", "items": [ "...", "..." ] }
-- table: { "type": "table", "heading": "optional", "columns": [ "..." ], "rows": [ [ "...", "..." ] ] }
+- steps: { "type": "steps", "style": "number" | "bullet", "heading": "optional", "items": [ "...", "..." ] }
+- table: { "type": "table", "heading": "optional", "columns": [ "..." ], "rows": [ [ "...", "..." ] ],
+           "columnWeights": [1, 3] (optional, relative column widths — usually leave it out) }
 - chart: { "type": "chart", "style": "bar" | "progress", "heading": "optional", "unit": "optional, e.g. kcal",
            "max": 100 (progress only, optional), "items": [ { "label": "...", "value": 12.5, "icon": "emoji (optional)" } ] }
 Icons and charts are optional extras:
@@ -212,6 +216,13 @@ def validate_deck(data: dict, category_schema: dict | None = None) -> dict:
                 if any(len(row) != width for row in block["rows"]):
                     raise InvalidDeck(
                         f"Card {i + 1}: every table row must have {width} cells, like the columns."
+                    )
+                weights = block.get("columnWeights")
+                if weights is not None and (
+                    len(weights) != width or any(isinstance(w, bool) or not w > 0 for w in weights)
+                ):
+                    raise InvalidDeck(
+                        f"Card {i + 1}: columnWeights needs one positive number per column ({width})."
                     )
     if category_schema and any(k in category_schema for k in ("properties", "$schema", "type")):
         try:

@@ -35,8 +35,8 @@ export interface CardData {
 export type Block =
   | { type: "stats"; items: { label: string; value: string; icon?: string }[] }
   | { type: "note"; text: string; accentColor?: string }
-  | { type: "steps"; style: "number" | "bullet"; items: string[]; accentColor?: string }
-  | { type: "table"; columns: string[]; rows: string[][]; heading?: string; accentColor?: string }
+  | { type: "steps"; style: "number" | "bullet"; items: string[]; heading?: string; accentColor?: string }
+  | { type: "table"; columns: string[]; rows: string[][]; heading?: string; columnWeights?: number[]; accentColor?: string }
   | {
       type: "chart";
       /** bar: compare amounts (scaled to the largest); progress: each value out of `max` (default 100). */

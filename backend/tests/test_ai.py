@@ -786,3 +786,22 @@ def test_generate_rejects_oversized_source(client, user):
     headers, _ = user
     body = {"category_slug": "study", "description": "Make a revision deck", "source_text": "x" * 20_000}
     assert client.post("/ai/generate", json=body, headers=headers).status_code == 422
+
+
+# ── App-format extras the validator accepts ──────────────────────────────
+
+def test_validator_accepts_list_heading_and_column_weights():
+    deck = {"deckTitle": "X", "cards": [{"title": "A", "blocks": [
+        {"type": "steps", "style": "bullet", "heading": "Key rules", "items": ["One", "Two"]},
+        {"type": "table", "columns": ["Hand", "Fa'an"], "rows": [["Common", "1"]], "columnWeights": [3, 1]},
+    ]}]}
+    validate_deck(deck)
+
+
+@pytest.mark.parametrize("weights", [[1], [1, 0], [1, -2], [True, 1]])
+def test_validator_rejects_bad_column_weights(weights):
+    deck = {"deckTitle": "X", "cards": [{"title": "A", "blocks": [
+        {"type": "table", "columns": ["Hand", "Fa'an"], "rows": [["Common", "1"]], "columnWeights": weights},
+    ]}]}
+    with pytest.raises(InvalidDeck, match="columnWeights"):
+        validate_deck(deck)

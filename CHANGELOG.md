@@ -44,6 +44,9 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
 
 ### Fixed
+- Android: table columns are sized from their content when a deck doesn't set columnWeights — short columns (e.g. Mahjong's "Fa'an") stay narrow and long text gets the room
+- Website / iPhone web app: list headings ("heading" on steps blocks) are now shown, and tables honour "columnWeights"
+- AI deck validator accepts the app-format list "heading" and table "columnWeights" (one positive number per column), so valid app decks aren't rejected
 - Android: publishing an AI deck to the library no longer leaves a second copy — the phone's copy is kept under the library name, so the Library shows it as already downloaded (existing duplicates are cleaned up when the Create tab loads)
 - Website: a member's Premium level is re-checked when they come back to the tab, so a change made in Members (e.g. Bronze → Silver) applies without logging out
 - Website: an admin signed in with the admin password can download premium library decks (the backend now accepts it for premium deck content)

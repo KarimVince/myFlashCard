@@ -178,8 +178,10 @@ fun TableBlock(block: Block.Table, accent: Color) {
     val indexColumn = totalCols > 1 && block.columns.firstOrNull()?.trim() == "#"
     val indexWidth  = 36.dp
 
-    // Use JSON-supplied weights when available, otherwise equal weight(1f) per column.
+    // JSON-supplied weights when available, otherwise sized from the content
+    // (short columns stay narrow, long text gets the room).
     val weights = block.columnWeights?.takeIf { it.size == totalCols }
+        ?: TableLayout.autoColumnWeights(block.columns, block.rows)
 
     Column(modifier = Modifier.fillMaxWidth()) {
 
@@ -205,11 +207,7 @@ fun TableBlock(block: Block.Table, accent: Color) {
             ) {
                 block.columns.forEachIndexed { colIdx, col ->
                     val isIdx = indexColumn && colIdx == 0
-                    val mod = when {
-                        isIdx               -> Modifier.width(indexWidth)
-                        weights != null     -> Modifier.weight(weights[colIdx])
-                        else                -> Modifier.weight(1f)
-                    }
+                    val mod = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(weights.getOrElse(colIdx) { 1f })
                     Text(
                         text       = col,
                         fontSize   = 13.sp,
@@ -233,11 +231,7 @@ fun TableBlock(block: Block.Table, accent: Color) {
                 ) {
                     row.forEachIndexed { colIdx, cell ->
                         val isIdx = indexColumn && colIdx == 0
-                        val mod = when {
-                            isIdx           -> Modifier.width(indexWidth)
-                            weights != null -> Modifier.weight(weights[colIdx])
-                            else            -> Modifier.weight(1f)
-                        }
+                        val mod = if (isIdx) Modifier.width(indexWidth) else Modifier.weight(weights.getOrElse(colIdx) { 1f })
                         Text(
                             text       = cell,
                             fontSize   = 15.sp,

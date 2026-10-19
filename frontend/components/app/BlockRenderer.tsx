@@ -38,6 +38,12 @@ export default function BlockRenderer({ block, accent }: Props) {
 
     case "steps":
       return (
+        <div>
+        {block.heading && (
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">
+            {block.heading}
+          </p>
+        )}
         <ul className="space-y-2">
           {block.items.map((item, i) => (
             <li key={i} className="flex gap-3 text-sm text-gray-700">
@@ -58,6 +64,7 @@ export default function BlockRenderer({ block, accent }: Props) {
             </li>
           ))}
         </ul>
+        </div>
       );
 
     case "table":
@@ -69,6 +76,15 @@ export default function BlockRenderer({ block, accent }: Props) {
             </p>
           )}
           <table className="w-full text-sm border-collapse">
+            {/* Custom widths when the deck sets them; otherwise the browser sizes columns by content. */}
+            {block.columnWeights?.length === block.columns.length && (
+              <colgroup>
+                {block.columnWeights.map((w, i) => {
+                  const total = block.columnWeights!.reduce((a, b) => a + b, 0) || 1;
+                  return <col key={i} style={{ width: `${(w / total) * 100}%` }} />;
+                })}
+              </colgroup>
+            )}
             <thead>
               <tr>
                 {block.columns.map((col, i) => (
