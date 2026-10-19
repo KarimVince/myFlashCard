@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useFeatures } from "@/lib/features";
+import { useAIVisible } from "@/lib/useAIVisible";
 import { TIER_BADGE, TIER_LABEL } from "@/lib/tiers";
 import { User } from "@/lib/types";
 
@@ -18,6 +19,9 @@ export default function AccountHeader({ user }: { user: User }) {
   const { premium } = useFeatures();
   const router = useRouter();
   const path = usePathname();
+  // AI settings only when AI is offered to this user (admins always; members while AI and Premium are on).
+  const ai = useAIVisible();
+  const tabs = TABS.filter((t) => t.href !== "/account/ai" || ai.visible);
 
   return (
     <div className="space-y-6">
@@ -48,8 +52,8 @@ export default function AccountHeader({ user }: { user: User }) {
         </button>
       </div>
 
-      <nav className="flex gap-1 border-b border-gray-200">
-        {TABS.map((t) => (
+      {tabs.length > 1 && <nav className="flex gap-1 border-b border-gray-200">
+        {tabs.map((t) => (
           <Link
             key={t.href}
             href={t.href}
@@ -60,7 +64,7 @@ export default function AccountHeader({ user }: { user: User }) {
             {t.label}
           </Link>
         ))}
-      </nav>
+      </nav>}
     </div>
   );
 }
