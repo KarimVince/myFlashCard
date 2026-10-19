@@ -11,13 +11,18 @@ export default function PublishPanel({
   gen,
   premiumEnabled,
   onPublished,
+  startOpen = false,
+  onCancel,
 }: {
   token: string;
   gen: Generation;
   premiumEnabled: boolean;
   onPublished: (deckId: number) => void;
+  /** Show the form straight away (web app history), instead of the "Add to library" button first. */
+  startOpen?: boolean;
+  onCancel?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   const [title, setTitle] = useState(gen.title ?? "");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("en");
@@ -96,7 +101,7 @@ export default function PublishPanel({
         >
           {busy ? "Publishing…" : "Publish"}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="px-3 py-2 text-sm text-gray-500 hover:underline">
+        <button type="button" onClick={() => { setOpen(false); onCancel?.(); }} className="px-3 py-2 text-sm text-gray-500 hover:underline">
           Cancel
         </button>
       </div>

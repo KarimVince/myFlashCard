@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { FROM_APP_KEY } from "@/components/app/AccountPanel";
 import { useAuth } from "@/lib/auth";
 import { useFeatures } from "@/lib/features";
 import { useAIVisible } from "@/lib/useAIVisible";
@@ -22,9 +24,23 @@ export default function AccountHeader({ user }: { user: User }) {
   // AI settings only when AI is offered to this user (admins always; members while AI and Premium are on).
   const ai = useAIVisible();
   const tabs = TABS.filter((t) => t.href !== "/account/ai" || ai.visible);
+  // Opened from the web app (e.g. the home-screen app on iPhone, which has no browser back button).
+  const [fromApp, setFromApp] = useState(false);
+  useEffect(() => {
+    try {
+      setFromApp(sessionStorage.getItem(FROM_APP_KEY) === "1");
+    } catch {
+      // storage unavailable
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
+      {fromApp && (
+        <Link href="/app" className="inline-block text-sm font-medium text-teal-600 hover:underline">
+          ‹ Back to the app
+        </Link>
+      )}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{user.alias}</h1>
@@ -45,7 +61,7 @@ export default function AccountHeader({ user }: { user: User }) {
           </div>
         </div>
         <button
-          onClick={async () => { await logout(); router.push("/"); }}
+          onClick={async () => { await logout(); router.push(fromApp ? "/app" : "/"); }}
           className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
         >
           Log out
