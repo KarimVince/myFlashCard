@@ -9,6 +9,7 @@ import { KEY_LINKS } from "@/lib/aiProviders";
 import { TIER_LABEL, tierPerks } from "@/lib/tiers";
 import { AIOptions, Balance } from "@/lib/types";
 import AccountHeader from "@/components/account/AccountHeader";
+import { useAIVisible } from "@/lib/useAIVisible";
 import { Notice } from "@/components/account/Form";
 
 export default function AISettingsPage() {
@@ -17,16 +18,18 @@ export default function AISettingsPage() {
   const [options, setOptions] = useState<AIOptions | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const ai = useAIVisible();
   useEffect(() => {
     if (!loading && !user) router.replace("/account/login?next=/account/ai");
-  }, [loading, user, router]);
+    else if (ai.loaded && !ai.visible) router.replace("/account");
+  }, [loading, user, ai.loaded, ai.visible, router]);
 
   const load = useCallback(() => {
     if (token) getAIOptions(token).then(setOptions).catch((e) => setError(errorMessage(e)));
   }, [token]);
   useEffect(load, [load]);
 
-  if (loading || !user || !token) return <div className="text-center py-20 text-gray-400">Loading…</div>;
+  if (loading || !user || !token || !ai.visible) return <div className="text-center py-20 text-gray-400">Loading…</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-8">

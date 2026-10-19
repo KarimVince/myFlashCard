@@ -11,7 +11,7 @@ import { FeaturesProvider } from "@/lib/features";
 import * as api from "@/lib/api";
 import { User } from "@/lib/types";
 
-jest.mock("next/navigation", () => ({ usePathname: () => "/" }));
+jest.mock("next/navigation", () => ({ usePathname: () => "/", useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
 jest.mock("@/lib/api", () => ({
   ...jest.requireActual("@/lib/api"),
   getSettings: jest.fn(),
@@ -90,10 +90,10 @@ test("logging out also ends an admin-password session, so Admin disappears", asy
   await waitFor(() => expect(sessionStorage.getItem("mfc_admin_token")).toBeNull());
 });
 
-test("footer shows Log in to visitors and Admin only to admins", async () => {
+test("footer shows Admin to visitors and admins, not to other members", async () => {
   (api.getSettings as jest.Mock).mockResolvedValue(ALL_ON);
   const { unmount } = renderWith(<FooterAccountLink />);
-  expect(await screen.findByRole("link", { name: "Log in" })).toHaveAttribute("href", "/account/login");
+  expect(await screen.findByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
   unmount();
 
   loginAs(MEMBER);
@@ -149,4 +149,26 @@ test("how-to shows both paths to admins even with everything off", async () => {
   (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false, accounts_enabled: false, ai_enabled: false });
   renderWith(<HowToPage />);
   expect(await screen.findByText("✨ Generate with AI")).toBeInTheDocument();
+});
+
+test("account tabs hide AI settings from members while Premium is off", async () => {
+  const AccountHeader = (await import("@/components/account/AccountHeader")).default;
+  loginAs(MEMBER);
+  (api.getSettings as jest.Mock).mockResolvedValue({ ...ALL_ON, premium_enabled: false });
+  const { unmount } = renderWith(<AccountHeader user={MEMBER} />);
+  expect(await screen.findByRole("button", { name: "Log out" })).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 0));
+  expect(screen.queryByRole("link", { name: "AI settings" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Profile" })).not.toBeInTheDocument(); // no tab bar for one tab
+  unmount();
+
+  (api.getSettings as jest.Mock).mockResolvedValue(ALL_ON);
+  const member = renderWith(<AccountHeader user={MEMBER} />);
+  expect(await screen.findByRole("link", { name: "AI settings" })).toBeInTheDocument();
+  member.unmount();
+
+  loginAs(ADMIN);
+  (api.getSettings as jest.Mock).mockResolvedValue({ premium_enabled: false, accounts_enabled: false, ai_enabled: false });
+  renderWith(<AccountHeader user={ADMIN} />);
+  expect(await screen.findByRole("link", { name: "AI settings" })).toBeInTheDocument();
 });
