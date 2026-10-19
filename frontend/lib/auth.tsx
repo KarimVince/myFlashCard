@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout: async () => {
       if (token) await api.logout(token).catch(() => {});
       api.setUserToken(null);
+      api.clearToken(); // also end an admin-password session in this tab
       setToken(null);
       setUser(null);
     },

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
 import "./globals.css";
-import { ConditionalNav, ConditionalFooter } from "@/components/ConditionalShell";
+import { ConditionalNav, ConditionalFooter, FooterAccountLink } from "@/components/ConditionalShell";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { AuthProvider } from "@/lib/auth";
 import { FeaturesProvider } from "@/lib/features";
@@ -41,8 +40,7 @@ export default function RootLayout({
             <ConditionalFooter>
               <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
                 © 2025 WillYGO Incorporation · myFlashCard
-                <span className="mx-2">·</span>
-                <Link href="/admin" className="text-gray-300 hover:text-gray-500">Admin</Link>
+                <FooterAccountLink />
               </footer>
             </ConditionalFooter>
           </AuthProvider>
