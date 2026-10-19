@@ -183,6 +183,8 @@ function OwnKeyCard({ token, options, onChanged }: { token: string; options: AIO
         </div>
       )}
 
+      {msg && <div className="mb-4" role="status"><Notice kind={msg.ok ? "success" : "error"}>{msg.text}</Notice></div>}
+
       {options.own_key_allowed && (
         <form
           onSubmit={(e) => {
@@ -237,7 +239,6 @@ function OwnKeyCard({ token, options, onChanged }: { token: string; options: AIO
         </form>
       )}
 
-      {msg && <div className="mt-3"><Notice kind={msg.ok ? "success" : "error"}>{msg.text}</Notice></div>}
     </Card>
   );
 }

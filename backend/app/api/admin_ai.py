@@ -1,7 +1,10 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.ai.service import try_key
+from app.api.admin import create_library_deck
 from app.auth import verify_admin_token
 from app.config import settings
 from app.crypto import decrypt, encrypt, mask
@@ -12,8 +15,10 @@ from app.schemas import (
     AdminGenerationOut,
     AdminProviderOut,
     AllowancesUpdate,
+    DeckOut,
     ProviderTestOut,
     ProviderUpdate,
+    PublishIn,
 )
 from app.settings_store import AI_GOLD_MONTHLY, AI_SILVER_TOTAL, get_int, set_int
 
@@ -120,3 +125,25 @@ def admin_generations(limit: int = 100, status: str | None = None, db: Session =
         )
         for g in rows
     ]
+
+
+@router.post("/generations/{gen_id}/publish", response_model=DeckOut, status_code=201)
+def admin_publish_generation(gen_id: int, body: PublishIn, db: Session = Depends(get_db)):
+    """Add an AI-generated deck to the public library (stored like an uploaded deck)."""
+    gen = db.get(Generation, gen_id)
+    if not gen or gen.status != "success" or not gen.deck_json:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    if not gen.category:
+        raise HTTPException(status_code=422, detail="This deck's type no longer exists")
+    if gen.published_deck_id:
+        raise HTTPException(status_code=409, detail="This deck is already in the library")
+    deck_json = {**gen.deck_json, "deckTitle": body.title}
+    deck = create_library_deck(
+        db, gen.category, json.dumps(deck_json, ensure_ascii=False, indent=2).encode(),
+        title=body.title, description=body.description, author=gen.user.alias,
+        language=body.language, is_free=body.is_free,
+    )
+    gen.published_deck_id = deck.id
+    db.commit()
+    db.refresh(deck)
+    return deck

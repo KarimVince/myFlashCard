@@ -111,6 +111,8 @@ export interface GenerationSummary {
   key_source: KeySource;
   card_count: number | null;
   tokens_spent: number;
+  /** Library deck the admin published from this generation. */
+  published_deck_id?: number | null;
   created_at: string;
 }
 

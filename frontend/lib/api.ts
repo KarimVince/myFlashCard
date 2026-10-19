@@ -271,6 +271,15 @@ export async function adminSetAllowances(token: string, silver_total: number, go
   return request<AdminAI>("/admin/ai/allowances", { method: "PUT", ...json({ silver_total, gold_monthly }) }, token);
 }
 
+/** Admin: add an AI-generated deck to the public library. */
+export async function adminPublishGeneration(
+  token: string,
+  genId: number,
+  data: { title: string; description?: string; language: string; is_free: boolean },
+): Promise<Deck> {
+  return request<Deck>(`/admin/ai/generations/${genId}/publish`, { method: "POST", ...json(data) }, token);
+}
+
 export async function adminListGenerations(token: string, status?: string): Promise<AdminGeneration[]> {
   return request<AdminGeneration[]>(`/admin/ai/generations${status ? `?status=${status}` : ""}`, {}, token);
 }

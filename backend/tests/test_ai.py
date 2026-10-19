@@ -395,7 +395,7 @@ def test_test_own_key(client, monkeypatch, ai_reply):
     assert ok["ok"] is True and ai_reply["calls"][0]["key"] == "my-gemini-key-8888"
     assert _options(client, headers)["own_key"]["last_test_ok"] is True
     bad = client.post("/me/ai-key/test", headers=headers).json()
-    assert bad["ok"] is False and "rejected" in bad["message"]
+    assert bad["ok"] is False and bad["message"].startswith("Gemini rejected this key. Check you copied")
     assert _options(client, headers)["own_key"]["last_test_ok"] is False
 
 
@@ -604,3 +604,40 @@ def test_enable_without_key_explains_what_to_do(client, auth_headers):
     assert r.status_code == 422 and "press Save" in r.json()["detail"]
     ok = client.patch("/admin/ai/providers/mistral", json={"enabled": True, "api_key": "gsk_new"}, headers=auth_headers)
     assert ok.status_code == 200 and ok.json()["has_key"] and ok.json()["enabled"]
+
+
+# ── Publishing an AI deck to the library (admin) ──────────────────────────
+
+def test_admin_publishes_ai_deck_to_library(client, admin, ai_reply, auth_headers):
+    headers, _ = admin
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    gen_id = _generate(client, headers).json()["generation"]["id"]
+    body = {"title": "Roman Carbonara", "description": "The real one", "language": "it", "is_free": True}
+    resp = client.post(f"/admin/ai/generations/{gen_id}/publish", json=body, headers=headers)
+    assert resp.status_code == 201
+    deck = resp.json()
+    assert deck["title"] == "Roman Carbonara" and deck["author"] == "Boss" and deck["card_count"] == 2
+    assert deck["language"] == "it" and deck["is_free"] and deck["is_public"]
+    assert any(d["id"] == deck["id"] for d in client.get("/decks").json())
+    # Remembered on the generation, and only once
+    assert client.get("/me/generations", headers=headers).json()[0]["published_deck_id"] == deck["id"]
+    again = client.post(f"/admin/ai/generations/{gen_id}/publish", json=body, headers=headers)
+    assert again.status_code == 409
+    # The legacy admin password can publish too; validation applies
+    assert client.post(f"/admin/ai/generations/{gen_id}/publish", json={"title": " "}, headers=auth_headers).status_code == 422
+
+
+def test_members_cannot_publish(client, user, ai_reply):
+    headers, _ = user
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    gen_id = _generate(client, headers).json()["generation"]["id"]
+    assert client.post(f"/admin/ai/generations/{gen_id}/publish", json={"title": "X"}, headers=headers).status_code == 401
+
+
+def test_publish_unknown_or_failed_generation(client, admin, ai_reply, auth_headers):
+    headers, _ = admin
+    assert client.post("/admin/ai/generations/999/publish", json={"title": "X"}, headers=headers).status_code == 404
+    ai_reply["replies"] = ["not json", "still not json"]
+    _generate(client, headers)
+    failed = client.get("/admin/ai/generations?status=failed", headers=auth_headers).json()[0]
+    assert client.post(f"/admin/ai/generations/{failed['id']}/publish", json={"title": "X"}, headers=headers).status_code == 404

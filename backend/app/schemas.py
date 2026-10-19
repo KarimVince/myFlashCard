@@ -377,6 +377,7 @@ class GenerationSummary(BaseModel):
     key_source: str
     card_count: int | None
     tokens_spent: int
+    published_deck_id: int | None = None
     created_at: datetime
 
     @classmethod
@@ -390,8 +391,33 @@ class GenerationSummary(BaseModel):
             key_source=g.key_source,
             card_count=g.card_count,
             tokens_spent=g.tokens_spent,
+            published_deck_id=g.published_deck_id,
             created_at=g.created_at,
         )
+
+
+class PublishIn(BaseModel):
+    """Admin: put an AI-generated deck in the public library."""
+    title: str
+    description: str | None = None
+    language: str = "en"
+    is_free: bool = True
+
+    @field_validator("title")
+    @classmethod
+    def _title(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Give the deck a title")
+        return v[:200]
+
+    @field_validator("language")
+    @classmethod
+    def _lang(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not 2 <= len(v) <= 5:
+            raise ValueError("Language must be a short code like en or fr")
+        return v
 
 
 class GenerationOut(GenerationSummary):

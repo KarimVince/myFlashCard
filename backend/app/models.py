@@ -196,6 +196,8 @@ class Generation(Base):
     error: Mapped[str | None] = mapped_column(Text)
     tokens_spent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     duration_ms: Mapped[int | None] = mapped_column(Integer)
+    # Set when the admin published this deck to the public library
+    published_deck_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("decks.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

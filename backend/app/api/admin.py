@@ -55,6 +55,30 @@ def _validate_json(content: bytes, category: Category) -> dict:
     return data
 
 
+def create_library_deck(
+    db: Session, category: Category, content: bytes, *, title: str, description: str | None,
+    author: str | None, language: str, is_free: bool,
+) -> Deck:
+    """Validate deck JSON, store the file and add it to the public library."""
+    data = _validate_json(content, category)
+    deck = Deck(
+        category_id=category.id,
+        title=title,
+        description=description,
+        author=author,
+        language=language,
+        card_count=len(data.get("cards", [])),
+        storage_path="",
+        public_url="",
+        is_public=True,
+        is_free=is_free,
+    )
+    db.add(deck)
+    db.flush()
+    deck.storage_path, deck.public_url = upload_deck(category.slug, deck.id, content)
+    return deck
+
+
 # ── Admin deck endpoints ──────────────────────────────────────────────────
 
 @router.get("/decks", response_model=list[DeckOut])
@@ -76,28 +100,10 @@ def upload_deck_endpoint(
 ):
     """Upload a new deck: validates JSON against schema, stores file, inserts DB row."""
     category = _category_by_slug(category_slug, db)
-    content = json_file.file.read()
-    data = _validate_json(content, category)
-    card_count = len(data.get("cards", []))
-
-    deck = Deck(
-        category_id=category.id,
-        title=title,
-        description=description,
-        author=author,
-        language=language,
-        card_count=card_count,
-        storage_path="",
-        public_url="",
-        is_public=True,
-        is_free=is_free,
+    deck = create_library_deck(
+        db, category, json_file.file.read(), title=title, description=description,
+        author=author, language=language, is_free=is_free,
     )
-    db.add(deck)
-    db.flush()
-
-    storage_path, public_url = upload_deck(category_slug, deck.id, content)
-    deck.storage_path = storage_path
-    deck.public_url = public_url
     db.commit()
     db.refresh(deck)
     return deck
