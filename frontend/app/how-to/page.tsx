@@ -13,7 +13,7 @@ const AI_STEPS: Step[] = [
   },
   {
     title: "Pick a deck type and describe your deck",
-    body: 'On the Create page (or the Create tab in the app), choose a type such as Recipe, Study or Travel, then describe what you want: "3 days in Lisbon on a budget, with food and transport tips".',
+    body: 'On the Create page (or the Create tab in the app), choose a type such as Recipe, Study or Travel, then describe what you want: "3 days in Lisbon on a budget, with food and transport tips". You can also add a document — a PDF, Word or text file such as your course notes — and the AI builds the deck from it.',
     link: { href: "/create", label: "Open the Create page →" },
   },
   {

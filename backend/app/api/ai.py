@@ -1,9 +1,10 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.accounts import current_user, utcnow
+from app.ai.documents import MAX_FILE_BYTES, DocumentError, extract_text
 from app.ai.providers import ProviderError
 from app.ai.service import (
     OWN,
@@ -22,6 +23,7 @@ from app.ratelimit import rate_limit
 from app.schemas import (
     AIOptionsOut,
     BalanceOut,
+    ExtractOut,
     GenerateIn,
     GenerateOut,
     GenerationOut,
@@ -173,7 +175,9 @@ async def ai_generate(body: GenerateIn, user: User = Depends(current_user), db: 
         raise HTTPException(status_code=409, detail="A deck is already being generated — please wait")
     _in_flight.add(user.id)
     try:
-        gen = await generate_deck(db, user, category, provider, body.description, source)
+        gen = await generate_deck(
+            db, user, category, provider, body.description, source, body.source_text, body.source_name,
+        )
     except GenerationFailed as exc:
         raise HTTPException(status_code=502, detail=exc.message)
     except ProviderError as exc:
@@ -182,6 +186,24 @@ async def ai_generate(body: GenerateIn, user: User = Depends(current_user), db: 
         _in_flight.discard(user.id)
 
     return GenerateOut(generation=GenerationOut.of(gen), balance=balance_out(db, user))
+
+
+@router.post(
+    "/ai/extract",
+    response_model=ExtractOut,
+    dependencies=[Depends(rate_limit("extract", 30, 3600))],
+)
+async def ai_extract(file: UploadFile = File(...), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Read the text of a document to use as source material. Nothing is stored."""
+    access = ai_access(db, user)
+    if not access.allowed:
+        raise HTTPException(status_code=403, detail=access.reason)
+    content = await file.read(MAX_FILE_BYTES + 1)
+    try:
+        text, truncated = extract_text(file.filename or "", content)
+    except DocumentError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return ExtractOut(text=text, chars=len(text), truncated=truncated, filename=file.filename or "document")
 
 
 # ── The member's own API key ──────────────────────────────────────────────

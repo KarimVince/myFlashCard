@@ -349,6 +349,25 @@ class GenerateIn(BaseModel):
     description: str
     provider: str | None = None    # shared AI to use; ignored for source "own"
     source: str | None = None      # "shared" | "own"; None picks shared while the allowance lasts
+    source_text: str | None = None  # text from the member's document (see /ai/extract)
+    source_name: str | None = None  # that document's file name, for the prompt
+
+    @field_validator("source_text")
+    @classmethod
+    def _source_text(cls, v: str | None) -> str | None:
+        from app.ai.documents import MAX_SOURCE_CHARS
+
+        v = (v or "").strip()
+        if not v:
+            return None
+        if len(v) > MAX_SOURCE_CHARS:
+            raise ValueError(f"The document text is too long (max {MAX_SOURCE_CHARS} characters)")
+        return v
+
+    @field_validator("source_name")
+    @classmethod
+    def _source_name(cls, v: str | None) -> str | None:
+        return (v or "").strip()[:120] or None
 
     @field_validator("source")
     @classmethod
@@ -366,6 +385,13 @@ class GenerateIn(BaseModel):
         if len(v) > MAX_DESCRIPTION:
             raise ValueError(f"Keep the description under {MAX_DESCRIPTION} characters")
         return v
+
+
+class ExtractOut(BaseModel):
+    text: str
+    chars: int
+    truncated: bool
+    filename: str
 
 
 class GenerationSummary(BaseModel):

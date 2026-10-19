@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { errorMessage, generateDeck, getAIOptions, getCategories, resendVerification } from "@/lib/api";
-import { AIOptions, Balance, Category, Generation, KeySource } from "@/lib/types";
+import { AIOptions, Balance, Category, Generation, KeySource, SourceDocument } from "@/lib/types";
+import DocumentPicker from "./DocumentPicker";
 
 interface Props {
   /** "web" = website page, "app" = compact layout for the iPhone web app */
@@ -31,6 +32,7 @@ export default function CreateForm({ variant, returnTo, onGenerated }: Props) {
   const [description, setDescription] = useState("");
   const [provider, setProvider] = useState("");
   const [source, setSource] = useState<KeySource>("shared");
+  const [doc, setDoc] = useState<SourceDocument | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -114,10 +116,11 @@ export default function CreateForm({ variant, returnTo, onGenerated }: Props) {
     setError(null);
     try {
       const result = await generateDeck(
-        token, category, description.trim(), useOwn ? undefined : provider || undefined, useOwn ? "own" : "shared",
+        token, category, description.trim(), useOwn ? undefined : provider || undefined, useOwn ? "own" : "shared", doc,
       );
       setOptions((o) => o && { ...o, balance: result.balance });
       setDescription("");
+      setDoc(null);
       onGenerated(result.generation, categories);
     } catch (err) {
       setError(errorMessage(err));
@@ -210,6 +213,8 @@ export default function CreateForm({ variant, returnTo, onGenerated }: Props) {
           <span>{description.length}/{options.max_description}</span>
         </span>
       </label>
+
+      <DocumentPicker token={token} doc={doc} onChange={setDoc} disabled={busy} />
 
       {!useOwn && sharedPossible && options.providers.length > 1 && (
         <div>

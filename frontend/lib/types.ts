@@ -102,6 +102,14 @@ export interface AIOptions {
 
 export type KeySource = "shared" | "own";
 
+/** Text read from a member's document, sent with the description as source material. */
+export interface SourceDocument {
+  text: string;
+  chars: number;
+  truncated: boolean;
+  filename: string;
+}
+
 export interface GenerationSummary {
   id: number;
   title: string | null;

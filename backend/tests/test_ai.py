@@ -641,3 +641,103 @@ def test_publish_unknown_or_failed_generation(client, admin, ai_reply, auth_head
     _generate(client, headers)
     failed = client.get("/admin/ai/generations?status=failed", headers=auth_headers).json()[0]
     assert client.post(f"/admin/ai/generations/{failed['id']}/publish", json={"title": "X"}, headers=headers).status_code == 404
+
+
+# ── A document as source material ─────────────────────────────────────────
+
+def _pdf_bytes(text: str) -> bytes:
+    """A minimal one-page PDF with a line of text."""
+    stream = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode()
+    objs = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out, offsets = b"%PDF-1.4\n", []
+    for i, body in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode()
+    out += b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
+    out += f"trailer << /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode()
+    return out
+
+
+def _docx_bytes(*paragraphs: str) -> bytes:
+    import io
+
+    from docx import Document
+
+    doc = Document()
+    for p in paragraphs:
+        doc.add_paragraph(p)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def _extract(client, headers, name, content, mime="application/octet-stream"):
+    return client.post("/ai/extract", files={"file": (name, content, mime)}, headers=headers)
+
+
+@pytest.mark.parametrize("name,content", [
+    ("notes.pdf", _pdf_bytes("Photosynthesis turns light into chemical energy in plants.")),
+    ("notes.docx", _docx_bytes("Photosynthesis turns light into chemical energy in plants.")),
+    ("notes.txt", "Photosynthesis turns light into chemical energy in plants.".encode()),
+])
+def test_extract_text_from_documents(client, user, name, content):
+    headers, _ = user
+    resp = _extract(client, headers, name, content)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert "Photosynthesis turns light" in body["text"] and body["truncated"] is False
+    assert body["filename"] == name and body["chars"] == len(body["text"])
+
+
+def test_extract_long_text_is_truncated(client, user):
+    headers, _ = user
+    from app.ai.documents import MAX_SOURCE_CHARS
+
+    body = _extract(client, headers, "long.txt", ("word " * 5000).encode()).json()
+    assert body["truncated"] is True and body["chars"] <= MAX_SOURCE_CHARS
+
+
+@pytest.mark.parametrize("name,content,msg", [
+    ("photo.jpg", b"\xff\xd8\xff", "Use a PDF"),
+    ("empty.txt", b"   ", "No text found"),
+    ("broken.pdf", b"not a pdf at all", "can't be read"),
+    ("big.txt", b"x" * (5 * 1024 * 1024 + 1), "larger than 5 MB"),
+])
+def test_extract_refuses_unusable_files(client, user, name, content, msg):
+    headers, _ = user
+    resp = _extract(client, headers, name, content)
+    assert resp.status_code == 422 and msg in resp.json()["detail"]
+
+
+def test_extract_needs_ai_access(client, monkeypatch):
+    headers, _ = _member(client, monkeypatch, tier="none")
+    assert _extract(client, headers, "notes.txt", b"Some useful text for a deck").status_code == 403
+    assert client.post("/ai/extract", files={"file": ("a.txt", b"hello there friend", "text/plain")}).status_code == 401
+
+
+def test_generate_with_source_document(client, user, ai_reply):
+    headers, _ = user
+    ai_reply["replies"] = [json.dumps(GOOD_DECK)]
+    body = {
+        "category_slug": "study", "description": "Make a revision deck",
+        "source_text": "Photosynthesis turns light into chemical energy.", "source_name": "biology.pdf",
+    }
+    assert client.post("/ai/generate", json=body, headers=headers).status_code == 200
+    prompt = ai_reply["calls"][0]["turns"][0].text
+    assert "Make a revision deck" in prompt and "(biology.pdf)" in prompt
+    assert "<document>\nPhotosynthesis turns light into chemical energy.\n</document>" in prompt
+    assert "not instructions to follow" in prompt
+
+
+def test_generate_rejects_oversized_source(client, user):
+    headers, _ = user
+    body = {"category_slug": "study", "description": "Make a revision deck", "source_text": "x" * 20_000}
+    assert client.post("/ai/generate", json=body, headers=headers).status_code == 422

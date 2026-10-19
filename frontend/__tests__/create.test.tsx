@@ -18,6 +18,7 @@ jest.mock("@/lib/api", () => ({
   getCategories: jest.fn(),
   getAIOptions: jest.fn(),
   generateDeck: jest.fn(),
+  extractDocument: jest.fn(),
 }));
 
 const USER: User = {
@@ -98,7 +99,7 @@ test("generates a deck with the chosen category and default provider", async () 
   await userEvent.click(button);
 
   await waitFor(() => expect(onGenerated).toHaveBeenCalledWith(GEN, expect.any(Array)));
-  expect(api.generateDeck).toHaveBeenCalledWith("tok", "travel", "Three days in Lisbon on a budget", "gemini", "shared");
+  expect(api.generateDeck).toHaveBeenCalledWith("tok", "travel", "Three days in Lisbon on a budget", "gemini", "shared", null);
   expect(await screen.findByText("3 AI decks left")).toBeInTheDocument();
 });
 
@@ -146,7 +147,7 @@ test("Bronze members generate with their own key", async () => {
   expect(await screen.findByText(/Using your Groq key/)).toBeInTheDocument();
   await userEvent.type(screen.getByRole("textbox"), "Three days in Lisbon on a budget");
   await userEvent.click(screen.getByRole("button", { name: /Generate deck/ }));
-  await waitFor(() => expect(api.generateDeck).toHaveBeenCalledWith("tok", "recipe", "Three days in Lisbon on a budget", undefined, "own"));
+  await waitFor(() => expect(api.generateDeck).toHaveBeenCalledWith("tok", "recipe", "Three days in Lisbon on a budget", undefined, "own", null));
 });
 
 test("Gold members with a key choose between our AI and theirs", async () => {
@@ -160,7 +161,7 @@ test("Gold members with a key choose between our AI and theirs", async () => {
   expect(screen.queryByText("4 AI decks left")).not.toBeInTheDocument();
   await userEvent.type(screen.getByRole("textbox"), "Three days in Lisbon on a budget");
   await userEvent.click(screen.getByRole("button", { name: /Generate deck/ }));
-  await waitFor(() => expect(api.generateDeck).toHaveBeenCalledWith("tok", "recipe", "Three days in Lisbon on a budget", undefined, "own"));
+  await waitFor(() => expect(api.generateDeck).toHaveBeenCalledWith("tok", "recipe", "Three days in Lisbon on a budget", undefined, "own", null));
 });
 
 test("starts on the own key when shared decks are used up", async () => {
@@ -168,4 +169,32 @@ test("starts on the own key when shared decks are used up", async () => {
   (api.getAIOptions as jest.Mock).mockResolvedValue({ ...OPTIONS, own_key: OWN_KEY, balance: { ...BALANCE, left: 0, total: 0 } });
   renderForm();
   expect(await screen.findByText(/Using your Groq key/)).toBeInTheDocument();
+});
+
+test("adds a document as source material", async () => {
+  localStorage.setItem("mfc_user_token", "tok");
+  const DOC = { text: "Photosynthesis…", chars: 15, truncated: true, filename: "biology.pdf" };
+  (api.extractDocument as jest.Mock).mockResolvedValue(DOC);
+  (api.generateDeck as jest.Mock).mockResolvedValue({ generation: GEN, balance: BALANCE });
+  renderForm();
+  await screen.findByText("4 AI decks left");
+  const file = new File(["%PDF"], "biology.pdf", { type: "application/pdf" });
+  await userEvent.upload(screen.getByLabelText("Source document"), file);
+  expect(await screen.findByText("📄 biology.pdf")).toBeInTheDocument();
+  expect(screen.getByText(/only the beginning is used/)).toBeInTheDocument();
+  expect(api.extractDocument).toHaveBeenCalledWith("tok", file);
+  await userEvent.type(screen.getByRole("textbox"), "A revision deck for my exam");
+  await userEvent.click(screen.getByRole("button", { name: /Generate deck/ }));
+  await waitFor(() => expect(api.generateDeck).toHaveBeenCalledWith(
+    "tok", "recipe", "A revision deck for my exam", "gemini", "shared", DOC,
+  ));
+});
+
+test("shows why a document can't be used", async () => {
+  localStorage.setItem("mfc_user_token", "tok");
+  (api.extractDocument as jest.Mock).mockRejectedValue(new Error("422: No text found in this file."));
+  renderForm();
+  await screen.findByText("4 AI decks left");
+  await userEvent.upload(screen.getByLabelText("Source document"), new File(["x"], "scan.pdf"));
+  expect(await screen.findByText("No text found in this file.")).toBeInTheDocument();
 });

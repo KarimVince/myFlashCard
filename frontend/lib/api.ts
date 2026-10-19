@@ -10,6 +10,7 @@ import {
   GenerationSummary,
   KeySource,
   OwnKey,
+  SourceDocument,
   Tier,
   User,
 } from "./types";
@@ -195,8 +196,19 @@ export async function generateDeck(
   description: string,
   provider?: string,
   source?: KeySource,
+  doc?: SourceDocument | null,
 ): Promise<{ generation: Generation; balance: Balance }> {
-  return request("/ai/generate", { method: "POST", ...json({ category_slug, description, provider, source }) }, token);
+  return request("/ai/generate", {
+    method: "POST",
+    ...json({ category_slug, description, provider, source, source_text: doc?.text, source_name: doc?.filename }),
+  }, token);
+}
+
+/** Read the text of a document (PDF, Word, text) to use as source material. Nothing is stored. */
+export async function extractDocument(token: string, file: File): Promise<SourceDocument> {
+  const form = new FormData();
+  form.append("file", file);
+  return request<SourceDocument>("/ai/extract", { method: "POST", body: form }, token);
 }
 
 // ── The member's own AI key ───────────────────────────────────────────────
