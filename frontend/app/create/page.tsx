@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CreateForm from "@/components/create/CreateForm";
 import DeckPreview from "@/components/create/DeckPreview";
+import PublishPanel from "@/components/create/PublishPanel";
 import { useAuth } from "@/lib/auth";
 import { useAIVisible } from "@/lib/useAIVisible";
+import { usePremiumEnabled } from "@/lib/usePremium";
 import { deleteGeneration, errorMessage, getCategories, getGeneration, listGenerations } from "@/lib/api";
 import { downloadDeckJson, generationToDeck } from "@/lib/generated";
 import { saveDeck } from "@/lib/deckStorage";
@@ -15,6 +17,7 @@ import { Category, Generation, GenerationSummary } from "@/lib/types";
 export default function CreatePage() {
   const { user, token } = useAuth();
   const ai = useAIVisible();
+  const premiumEnabled = usePremiumEnabled();
   const router = useRouter();
   const [current, setCurrent] = useState<Generation | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -103,6 +106,18 @@ export default function CreatePage() {
               </button>
             </div>
           </div>
+          {user?.role === "admin" && token && (
+            <PublishPanel
+              key={current.id}
+              token={token}
+              gen={current}
+              premiumEnabled={premiumEnabled}
+              onPublished={(deckId) => {
+                setCurrent({ ...current, published_deck_id: deckId });
+                setHistory((h) => h.map((g) => (g.id === current.id ? { ...g, published_deck_id: deckId } : g)));
+              }}
+            />
+          )}
           {saved && (
             <p className="text-sm text-teal-800 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
               Saved on this device. Open <Link href="/app" className="underline font-medium">the web app</Link> to study it
@@ -134,6 +149,7 @@ export default function CreatePage() {
                   <p className="font-medium text-gray-900 truncate hover:text-teal-700">{g.title}</p>
                   <p className="text-xs text-gray-400">
                     {g.category_label} · {g.card_count} cards · {new Date(g.created_at).toLocaleDateString()}
+                    {g.published_deck_id ? " · in library" : ""}
                   </p>
                 </button>
                 <button onClick={() => removeFromHistory(g.id)} className="text-xs text-gray-400 hover:text-red-600 shrink-0">

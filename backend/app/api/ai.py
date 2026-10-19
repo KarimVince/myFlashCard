@@ -233,7 +233,20 @@ async def test_my_key(user: User = Depends(current_user), db: Session = Depends(
     ok, message, duration = await try_key(db, key.provider, plain)
     key.last_test_ok, key.last_tested_at = ok, utcnow()
     db.commit()
-    return ProviderTestOut(ok=ok, message=message, duration_ms=duration)
+    return ProviderTestOut(ok=ok, message=message if ok else _plain_key_error(key.provider.label, message), duration_ms=duration)
+
+
+def _plain_key_error(label: str, detail: str) -> str:
+    """Members see a short, plain reason instead of the provider's raw error body."""
+    if "rejected the API key" in detail or "permission denied" in detail:
+        return f"{label} rejected this key. Check you copied the whole key and that it's still active."
+    if "rate limit" in detail.lower() or "HTTP 429" in detail:
+        return f"{label} says this key has reached its limit for now. Try again later."
+    if "not found" in detail:
+        return f"This key can't use the model set for {label}. Try another provider, or tell us."
+    if "took too long" in detail or "Could not reach" in detail:
+        return f"{label} didn't answer in time. Try again in a minute."
+    return f"{label} returned an error: {detail[:160]}"
 
 
 @router.get("/me/generations", response_model=list[GenerationSummary])
