@@ -8,6 +8,7 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 ## [Unreleased]
 
 ### Added
+- Android 2.0 (Phase D): account icon in the header → log in, create account (while Member accounts is on), forgot password, profile, confirm-email reminder, change alias/password, log out, delete account; AI settings (plan, AI decks left, own API key: add/test/remove); "Do My Own" becomes **Create** — Generate with AI (admins always; Premium members while AI and Premium are on), saved to My Decks and opened, "Your AI decks" history, admins can add a deck to the public library; manual guide and Load from file unchanged. Library decks now load through the backend so premium decks open only for Silver, Gold and admins. Login token kept in app-private storage and excluded from backups. Version 2.0 (versionCode 2)
 - User accounts (2.0 Phase A): register with alias + email, email verification, login, password reset, change password, delete account; account pages on the website; "Log in" / alias in the nav
 - Admin access through an admin user account (the `ADMIN_EMAIL` account becomes admin once verified); the old admin password still works during the transition
 - Admin Members page: search members, grant or remove Premium and Claude AI access, delete members

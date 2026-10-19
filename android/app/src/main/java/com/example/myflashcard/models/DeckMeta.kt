@@ -11,4 +11,5 @@ data class DeckMeta(
     val downloads: Int,
     val categorySlug: String,
     val categoryLabel: String,
+    val isFree: Boolean = true,
 )

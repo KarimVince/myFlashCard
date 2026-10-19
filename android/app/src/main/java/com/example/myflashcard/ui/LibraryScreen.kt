@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myflashcard.AppSession
 import com.example.myflashcard.DeckStorage
 import com.example.myflashcard.JsonParser
 import com.example.myflashcard.api.ApiClient
@@ -25,7 +26,7 @@ import com.example.myflashcard.models.DeckMeta
 import kotlinx.coroutines.launch
 
 @Composable
-fun LibraryScreen(onOpenDeck: (CardDeck) -> Unit) {
+fun LibraryScreen(session: AppSession, onOpenDeck: (CardDeck) -> Unit) {
     val context = LocalContext.current
     val scope   = rememberCoroutineScope()
 
@@ -126,10 +127,14 @@ fun LibraryScreen(onOpenDeck: (CardDeck) -> Unit) {
                     val downloaded  = DeckStorage.exists(context, filename)
                     val isDownloading = downloadingId == deck.id
 
+                    // Premium decks are only listed while Premium is on; they open for Silver, Gold and admins.
+                    val locked = !deck.isFree && session.user?.canOpenPremiumDecks != true
+
                     RemoteDeckCard(
                         deck          = deck,
                         downloaded    = downloaded,
                         isDownloading = isDownloading,
+                        locked        = locked,
                         onOpen = {
                             // Already downloaded — open local copy
                             try {
@@ -145,13 +150,14 @@ fun LibraryScreen(onOpenDeck: (CardDeck) -> Unit) {
                                 downloadError = null
                                 downloadingId = deck.id
                                 try {
-                                    val bytes = ApiClient.downloadDeck(deck.publicUrl)
+                                    // Through the backend, which checks premium access.
+                                    val bytes = ApiClient.deckContent(deck.id, session.token)
                                     DeckStorage.save(context, filename, bytes)
                                     // Open immediately after download
                                     val parsed = JsonParser.parse(String(bytes))
                                     onOpenDeck(parsed)
                                 } catch (e: Exception) {
-                                    downloadError = "Download failed: ${e.message}"
+                                    downloadError = e.message ?: "Download failed"
                                 } finally {
                                     downloadingId = null
                                 }
@@ -171,6 +177,7 @@ private fun RemoteDeckCard(
     deck: DeckMeta,
     downloaded: Boolean,
     isDownloading: Boolean,
+    locked: Boolean,
     onOpen: () -> Unit,
     onDownload: () -> Unit,
 ) {
@@ -195,6 +202,18 @@ private fun RemoteDeckCard(
                         .padding(horizontal = 7.dp, vertical = 3.dp),
                 )
                 Spacer(Modifier.width(8.dp))
+                if (!deck.isFree) {
+                    Text(
+                        text = "★ Premium",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF92400E),
+                        modifier = Modifier
+                            .background(Color(0xFFFEF3C7), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 7.dp, vertical = 3.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 if (deck.language.isNotBlank() && deck.language != "en") {
                     Text(
                         text = deck.language.uppercase(),
@@ -246,6 +265,12 @@ private fun RemoteDeckCard(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp,
                         color = DefaultAccent,
+                    )
+                    locked && !downloaded -> Text(
+                        "Silver & Gold",
+                        fontSize = 12.sp,
+                        color = DimText,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                     )
                     downloaded -> TextButton(
                         onClick = onOpen,

@@ -3,6 +3,7 @@ package com.example.myflashcard
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +13,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,11 +39,13 @@ import com.example.myflashcard.ui.theme.MyFlashCardTheme
 // ── App navigation states ──────────────────────────────────────────────────────
 
 private sealed class Screen {
-    data object Home   : Screen()
+    data object Home       : Screen()
     data class  Viewer(val deck: CardDeck) : Screen()
+    data object Account    : Screen()
+    data object AISettings : Screen()
 }
 
-private enum class Tab { MY_DECKS, LIBRARY, MY_OWN }
+private enum class Tab { MY_DECKS, LIBRARY, CREATE }
 
 // ── Activity ──────────────────────────────────────────────────────────────────
 
@@ -67,6 +72,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun FlashCardApp() {
     val context = LocalContext.current
+    val session = remember { AppSession(context.applicationContext) }
+    LaunchedEffect(Unit) { session.refresh() }
     var screen       by remember { mutableStateOf<Screen>(Screen.Home) }
     var activeTab    by remember { mutableStateOf(Tab.MY_DECKS) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -97,9 +104,24 @@ private fun FlashCardApp() {
                 screen = Screen.Home
             },
         )
+        is Screen.Account -> {
+            BackHandler { screen = Screen.Home }
+            AccountScreen(
+                session = session,
+                onBack = { screen = Screen.Home },
+                onOpenAISettings = { screen = Screen.AISettings },
+            )
+        }
+        is Screen.AISettings -> {
+            BackHandler { screen = Screen.Account }
+            AISettingsScreen(session = session, onBack = { screen = Screen.Account })
+        }
         is Screen.Home -> Column(Modifier.fillMaxSize()) {
             // ── Top header + tabs ─────────────────────────────────────────
-            AppHeader()
+            AppHeader(
+                accountLabel = session.user?.alias ?: "Log in",
+                onAccount = { screen = Screen.Account },
+            )
             AppTabBar(
                 active = activeTab,
                 onSelect = { tab ->
@@ -116,11 +138,15 @@ private fun FlashCardApp() {
                         errorMessage = errorMessage,
                     )
                     Tab.LIBRARY  -> LibraryScreen(
+                        session    = session,
                         onOpenDeck = { deck -> screen = Screen.Viewer(deck) },
                     )
-                    Tab.MY_OWN   -> MyOwnScreen(
-                        onLoadFile   = { fileLauncher.launch("application/json") },
-                        errorMessage = errorMessage,
+                    Tab.CREATE   -> CreateScreen(
+                        session          = session,
+                        onOpenDeck       = { deck -> screen = Screen.Viewer(deck) },
+                        onLoadFile       = { fileLauncher.launch("application/json") },
+                        onOpenAISettings = { screen = Screen.AISettings },
+                        errorMessage     = errorMessage,
                     )
                 }
             }
@@ -144,7 +170,7 @@ private fun AppTabBar(active: Tab, onSelect: (Tab) -> Unit) {
             val tabColor = when (tab) {
                 Tab.MY_DECKS -> Color(0xFF4CAF82)  // light green
                 Tab.LIBRARY  -> Color(0xFF4A90D9)  // light blue
-                Tab.MY_OWN   -> Color(0xFFE05C5C)  // light red
+                Tab.CREATE   -> Color(0xFFE05C5C)  // light red
             }
             Box(
                 modifier = Modifier
@@ -162,7 +188,7 @@ private fun AppTabBar(active: Tab, onSelect: (Tab) -> Unit) {
                         text = when (tab) {
                             Tab.MY_DECKS -> "My Decks"
                             Tab.LIBRARY  -> "Library"
-                            Tab.MY_OWN   -> "Do My Own"
+                            Tab.CREATE   -> "Create"
                         },
                         fontSize = 13.sp,
                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
@@ -186,7 +212,7 @@ private fun AppTabBar(active: Tab, onSelect: (Tab) -> Unit) {
 // ── Shared app header ─────────────────────────────────────────────────────────
 
 @Composable
-private fun AppHeader() {
+private fun AppHeader(accountLabel: String, onAccount: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -208,7 +234,31 @@ private fun AppHeader() {
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             color = PrimaryText,
+            modifier = Modifier.weight(1f),
         )
+        // Account: person icon + alias (or "Log in")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(18.dp))
+                .clickable(onClick = onAccount)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+        ) {
+            Text(
+                text = accountLabel,
+                fontSize = 13.sp,
+                color = DimText,
+                maxLines = 1,
+                modifier = Modifier.widthIn(max = 110.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Account",
+                tint = DefaultAccent,
+                modifier = Modifier.size(28.dp),
+            )
+        }
     }
     HorizontalDivider(thickness = 1.dp, color = DividerColor)
 }

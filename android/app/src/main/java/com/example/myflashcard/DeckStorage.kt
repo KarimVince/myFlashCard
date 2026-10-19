@@ -36,6 +36,9 @@ object DeckStorage {
         return "${id}_${safe.take(40)}.json"
     }
 
+    /** Filename used for an AI-generated deck: "ai<id>_<sanitised-title>.json" */
+    fun aiFilename(generationId: Int, title: String): String = "ai" + remoteFilename(generationId, title)
+
     fun save(context: Context, filename: String, content: ByteArray): File {
         val file = decksDir(context).resolve(filename)
         file.writeBytes(content)
@@ -47,9 +50,9 @@ object DeckStorage {
 
     fun delete(file: File) { file.delete() }
 
-    /** Human-readable deck title from filename: strip leading id prefix and underscores. */
+    /** Human-readable deck title from filename: strip leading (ai)id prefix and underscores. */
     fun displayName(file: File): String =
         file.nameWithoutExtension
-            .replaceFirst(Regex("^\\d+_"), "")
+            .replaceFirst(Regex("^(ai)?\\d+_"), "")
             .replace('_', ' ')
 }

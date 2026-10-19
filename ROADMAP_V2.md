@@ -491,7 +491,7 @@ No free AI API is usable yet (Gemini/AI Studio blocked for the owner's account, 
 
 **2026-10-13:** Groq added as a provider (migration 010, OpenAI-compatible, free tier with no card). Once a Groq key is saved and tested in AI Card, it can be the default provider and the launch switches can be turned on.
 
-### Phase D — Android
+### Phase D — Android ✅ built (2026-10-19, testing locally before Play Store)
 Login / register / account screens (token in encrypted storage), "Do My Own" becomes **Create** (AI form + manual guide + load from file). New Play Store build.
 
 ### Phase E — Release 2.0.0
