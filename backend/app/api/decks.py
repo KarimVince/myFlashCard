@@ -1,6 +1,9 @@
+import re
+import unicodedata
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -78,19 +81,29 @@ async def deck_content(
     return await _fetch(deck)
 
 
-async def _fetch(deck: Deck) -> Response:
+async def _fetch(deck: Deck, headers: dict | None = None) -> Response:
     async with httpx.AsyncClient() as client:
         r = await client.get(deck.public_url, timeout=10)
     if r.status_code != 200:
         raise HTTPException(status_code=502, detail="Could not fetch deck file")
-    return Response(content=r.content, media_type="application/json")
+    return Response(content=r.content, media_type="application/json", headers=headers)
+
+
+def _download_name(title: str) -> str:
+    """'Crêpes à l'orange' → 'crepes-a-l-orange.json' (plain ASCII for every browser)."""
+    ascii_title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_title.lower()).strip("-")
+    return f"{slug or 'deck'}.json"
 
 
 @router.get("/{deck_id}/download")
-def download_deck(deck_id: int, db: Session = Depends(get_db)):
+async def download_deck(deck_id: int, db: Session = Depends(get_db)):
     """
-    Redirect to the deck's JSON file.
-    Only free decks are downloadable; premium decks return 403.
+    Download the deck's JSON file. Only free decks; premium decks return 403.
+
+    Served from here with Content-Disposition: attachment rather than redirecting to storage:
+    browsers ignore the link's `download` attribute for another site, and would show the JSON
+    as a page instead of saving it.
     """
     deck = _public_deck_or_404(deck_id, db)
     if not deck.is_free:
@@ -98,6 +111,10 @@ def download_deck(deck_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This deck requires access — free decks only",
         )
+    response = await _fetch(deck, {
+        "Content-Disposition": f'attachment; filename="{_download_name(deck.title)}"',
+        "Cache-Control": "no-store",
+    })
     deck.downloads += 1
     db.commit()
-    return RedirectResponse(url=deck.public_url, status_code=status.HTTP_302_FOUND)
+    return response
