@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCategories, getDecks } from "@/lib/api";
+import { getCategories, getDecks, getToken, hasAdminPasswordSession } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { canOpenPremiumDecks, TIER_LABEL } from "@/lib/tiers";
 import { Category, Deck } from "@/lib/types";
@@ -14,7 +14,12 @@ const PILLS_THRESHOLD = 7; // switch to <select> when more categories than this
 export default function LibraryPage() {
   const premiumEnabled = usePremiumEnabled();
   const { user, token } = useAuth();
-  const premiumAccess = premiumEnabled && canOpenPremiumDecks(user);
+  // An admin signed in with the admin password (no account) may download premium decks too.
+  const [adminPassword, setAdminPassword] = useState<string | null>(null);
+  useEffect(() => setAdminPassword(hasAdminPasswordSession() ? getToken() : null), []);
+  const passwordAdmin = !user && !!adminPassword;
+  const premiumAccess = premiumEnabled && (canOpenPremiumDecks(user) || passwordAdmin);
+  const premiumToken = premiumAccess ? (user ? token : adminPassword) : null;
   const [categories, setCategories] = useState<Category[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeSlug, setActiveSlug] = useState<string>("all");
@@ -70,7 +75,7 @@ export default function LibraryPage() {
         <span className="text-lg leading-none mt-0.5">★</span>
         {premiumAccess ? (
           <span>
-            {user?.role === "admin"
+            {passwordAdmin || user?.role === "admin"
               ? "As admin you can download every premium deck."
               : <>As a <strong>{TIER_LABEL[user!.tier]}</strong> member you can download every premium deck.</>}
           </span>
@@ -152,7 +157,7 @@ export default function LibraryPage() {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((deck) => (
-            <DeckCard key={deck.id} deck={deck} premiumEnabled={premiumEnabled} premiumToken={premiumAccess ? token : null} />
+            <DeckCard key={deck.id} deck={deck} premiumEnabled={premiumEnabled} premiumToken={premiumToken} />
           ))}
         </div>
       )}

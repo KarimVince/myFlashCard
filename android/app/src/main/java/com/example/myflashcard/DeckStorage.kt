@@ -48,6 +48,27 @@ object DeckStorage {
     fun exists(context: Context, filename: String): Boolean =
         decksDir(context).resolve(filename).exists()
 
+    /** The saved copy of library deck [deckId], whatever title it was saved under. */
+    fun libraryFile(context: Context, deckId: Int): File? =
+        listDecks(context).firstOrNull { it.name.startsWith("${deckId}_") }
+
+    /** The saved copy of AI generation [generationId], if any. */
+    fun aiFile(context: Context, generationId: Int): File? =
+        listDecks(context).firstOrNull { it.name.startsWith("ai${generationId}_") }
+
+    /**
+     * An AI deck was published to the library as [deckId]: keep a single copy, saved under the
+     * library name, so the Library shows it as already downloaded instead of offering a duplicate.
+     */
+    fun linkPublished(context: Context, generationId: Int, deckId: Int, title: String) {
+        val ai = aiFile(context, generationId) ?: return
+        if (libraryFile(context, deckId) != null) {
+            ai.delete()
+        } else {
+            ai.renameTo(decksDir(context).resolve(remoteFilename(deckId, title)))
+        }
+    }
+
     fun delete(file: File) { file.delete() }
 
     /** Human-readable deck title from filename: strip leading (ai)id prefix and underscores. */

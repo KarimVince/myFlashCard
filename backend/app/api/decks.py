@@ -1,9 +1,11 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.accounts import PREMIUM_DECK_TIERS, optional_user
+from app.auth import legacy_password_ok
 from app.db import get_db
 from app.models import Category, Deck, User
 from app.schemas import DeckPublicOut
@@ -61,12 +63,22 @@ def get_deck(deck_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{deck_id}/content")
 async def deck_content(
-    deck_id: int, db: Session = Depends(get_db), user: User | None = Depends(optional_user)
+    deck_id: int,
+    db: Session = Depends(get_db),
+    user: User | None = Depends(optional_user),
+    creds: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
 ):
     """Fetch and return deck JSON server-side — avoids R2 CORS restrictions.
-    Premium decks need a logged-in Silver or Gold member (send the session token)."""
+    Premium decks need a logged-in Silver or Gold member or an admin (session token,
+    or the admin password while it's still in use)."""
     deck = _public_deck_or_404(deck_id, db)
+    if not deck.is_free and user is None and creds and legacy_password_ok(creds.credentials):
+        return await _fetch(deck)
     _check_access(deck, user, db)
+    return await _fetch(deck)
+
+
+async def _fetch(deck: Deck) -> Response:
     async with httpx.AsyncClient() as client:
         r = await client.get(deck.public_url, timeout=10)
     if r.status_code != 200:

@@ -36,6 +36,9 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - `auto-deploy.yml`: on push to `main`, backend and frontend deploy to Render once their tests pass (only the part that changed). Render's own auto-deploy is turned off in `render.yaml`
 
 ### Fixed
+- Android: publishing an AI deck to the library no longer leaves a second copy — the phone's copy is kept under the library name, so the Library shows it as already downloaded (existing duplicates are cleaned up when the Create tab loads)
+- Website: a member's Premium level is re-checked when they come back to the tab, so a change made in Members (e.g. Bronze → Silver) applies without logging out
+- Website: an admin signed in with the admin password can download premium library decks (the backend now accepts it for premium deck content)
 - Note blocks: the coloured side bar was positioned against the wrong element
 - Admin "Sign out" now actually signs out (it cleared the wrong storage)
 - Migration 005 no longer fails when the Game category already exists, which would have stopped the backend from starting

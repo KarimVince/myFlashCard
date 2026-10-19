@@ -128,6 +128,10 @@ private fun AICreateSection(session: AppSession, onOpenDeck: (CardDeck) -> Unit,
             val sharedOk = first != null && (o.balance.unlimited || o.balance.total >= first.tokenCost)
             source = if (sharedOk || o.ownKey == null) "shared" else "own"
             history = ApiClient.generations(token)
+            // Decks published to the library (here or on the website): keep one copy, under the library name.
+            history.forEach { g ->
+                g.publishedDeckId?.let { DeckStorage.linkPublished(context, g.id, it, g.title ?: "AI deck") }
+            }
             loadError = null
         } catch (e: Exception) {
             loadError = e.message
@@ -137,7 +141,13 @@ private fun AICreateSection(session: AppSession, onOpenDeck: (CardDeck) -> Unit,
     /** Save a generated deck on the phone (it then shows in My Decks) and open it. */
     fun saveAndOpen(gen: Generation) {
         val title = gen.summary.title ?: "AI deck"
-        DeckStorage.save(context, DeckStorage.aiFilename(gen.summary.id, title), gen.deckJson.toByteArray())
+        val published = gen.summary.publishedDeckId
+        // Already in the library: reuse that copy rather than saving a second one.
+        val existing = if (published != null) DeckStorage.libraryFile(context, published) else DeckStorage.aiFile(context, gen.summary.id)
+        if (existing == null) {
+            val name = if (published != null) DeckStorage.remoteFilename(published, title) else DeckStorage.aiFilename(gen.summary.id, title)
+            DeckStorage.save(context, name, gen.deckJson.toByteArray())
+        }
         onOpenDeck(JsonParser.parse(gen.deckJson))
     }
 
@@ -302,6 +312,7 @@ private fun AIHistory(
     onChanged: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var publishing by remember { mutableStateOf<GenerationSummary?>(null) }
     var removing by remember { mutableStateOf<GenerationSummary?>(null) }
 
@@ -346,13 +357,27 @@ private fun AIHistory(
     }
 
     publishing?.let { g ->
-        PublishDialog(token, g, premiumEnabled, onDone = { publishing = null; onChanged() }, onCancel = { publishing = null })
+        PublishDialog(
+            token, g, premiumEnabled,
+            onDone = { deckId, title ->
+                DeckStorage.linkPublished(context, g.id, deckId, title)
+                publishing = null
+                onChanged()
+            },
+            onCancel = { publishing = null },
+        )
     }
 }
 
 /** Admin only: put a generated deck in the public library. */
 @Composable
-private fun PublishDialog(token: String, gen: GenerationSummary, premiumEnabled: Boolean, onDone: () -> Unit, onCancel: () -> Unit) {
+private fun PublishDialog(
+    token: String,
+    gen: GenerationSummary,
+    premiumEnabled: Boolean,
+    onDone: (deckId: Int, title: String) -> Unit,
+    onCancel: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     var title by remember { mutableStateOf(gen.title ?: "") }
     var description by remember { mutableStateOf("") }
@@ -385,8 +410,8 @@ private fun PublishDialog(token: String, gen: GenerationSummary, premiumEnabled:
                     busy = true
                     error = null
                     try {
-                        ApiClient.publishGeneration(token, gen.id, title.trim(), description.trim(), language.trim().ifEmpty { "en" }, !premium)
-                        onDone()
+                        val deckId = ApiClient.publishGeneration(token, gen.id, title.trim(), description.trim(), language.trim().ifEmpty { "en" }, !premium)
+                        onDone(deckId, title.trim())
                     } catch (e: Exception) {
                         error = e.message
                     } finally {

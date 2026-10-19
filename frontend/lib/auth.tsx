@@ -47,6 +47,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refresh();
+    // Re-check when the tab comes back into view, so changes made elsewhere
+    // (e.g. an admin giving this member Silver) apply without a reload.
+    function onVisible() {
+      if (document.visibilityState === "visible") refresh();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [refresh]);
 
   async function start(result: api.AuthResult): Promise<User> {

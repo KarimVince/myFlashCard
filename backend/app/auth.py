@@ -10,7 +10,7 @@ from app.db import get_db
 bearer_scheme = HTTPBearer()
 
 
-def _legacy_password_ok(token: str) -> bool:
+def legacy_password_ok(token: str) -> bool:
     """Transition: the old shared admin password (ADMIN_PASSWORD_HASH) still works if set."""
     if not settings.admin_password_hash:
         return False
@@ -31,7 +31,7 @@ def verify_admin_token(
     if user and user.is_admin:
         request.state.admin_user = user
         return
-    if _legacy_password_ok(token):
+    if legacy_password_ok(token):
         request.state.admin_user = None
         return
     raise HTTPException(

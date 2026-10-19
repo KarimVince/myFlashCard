@@ -116,3 +116,33 @@ def test_premium_deck_content_by_level(client, auth_headers, sample_deck_json, m
 def test_free_deck_content_needs_no_login(client, auth_headers, sample_deck_json, deck_file):
     free = _upload(client, auth_headers, sample_deck_json, True)
     assert client.get(f"/decks/{free['id']}/content").status_code == 200
+
+
+def test_admin_password_can_open_premium_deck_content(client, auth_headers, sample_deck_json):
+    premium = _upload(client, auth_headers, sample_deck_json, False)
+    _set_premium(client, auth_headers, True)
+    # Visitors can't; the admin password (legacy admin login) can.
+    assert client.get(f"/decks/{premium['id']}/content").status_code == 403
+    assert client.get(f"/decks/{premium['id']}/content", headers={"Authorization": "Bearer wrong"}).status_code == 403
+    import app.api.decks as decks_api
+
+    class FakeResp:
+        status_code = 200
+        content = b'{"deckTitle": "x", "cards": []}'
+
+    class FakeClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def get(self, url, timeout):
+            return FakeResp()
+
+    decks_api.httpx.AsyncClient, real = FakeClient, decks_api.httpx.AsyncClient
+    try:
+        resp = client.get(f"/decks/{premium['id']}/content", headers=auth_headers)
+    finally:
+        decks_api.httpx.AsyncClient = real
+    assert resp.status_code == 200

@@ -124,7 +124,9 @@ fun LibraryScreen(session: AppSession, onOpenDeck: (CardDeck) -> Unit) {
             ) {
                 items(decks, key = { it.id }) { deck ->
                     val filename    = DeckStorage.remoteFilename(deck.id, deck.title)
-                    val downloaded  = DeckStorage.exists(context, filename)
+                    // Matched by id, so a copy saved under another title (e.g. a published AI deck) counts.
+                    val savedFile   = DeckStorage.libraryFile(context, deck.id)
+                    val downloaded  = savedFile != null
                     val isDownloading = downloadingId == deck.id
 
                     // Premium decks are only listed while Premium is on; they open for Silver, Gold and admins.
@@ -138,7 +140,7 @@ fun LibraryScreen(session: AppSession, onOpenDeck: (CardDeck) -> Unit) {
                         onOpen = {
                             // Already downloaded — open local copy
                             try {
-                                val file = DeckStorage.decksDir(context).resolve(filename)
+                                val file = savedFile ?: DeckStorage.decksDir(context).resolve(filename)
                                 val parsed = JsonParser.parse(file.readText())
                                 onOpenDeck(parsed)
                             } catch (e: Exception) {
