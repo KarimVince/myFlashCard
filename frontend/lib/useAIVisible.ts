@@ -4,11 +4,13 @@ import { useAuth } from "./auth";
 import { useFeatures } from "./features";
 
 /**
- * Whether the Create (AI) screens are shown: to everyone once AI generation is switched on,
- * and always to admins. `loaded` turns true once both the switches and the login are known.
+ * Whether the AI screens (Create, the AI part of How to) are shown: always to admins; to other
+ * logged-in members only while both AI generation and Premium are switched on; never to visitors.
+ * `loaded` turns true once both the switches and the login are known.
  */
 export function useAIVisible(): { visible: boolean; loaded: boolean } {
   const features = useFeatures();
   const { user, loading } = useAuth();
-  return { visible: features.ai || user?.role === "admin", loaded: features.loaded && !loading };
+  const visible = user?.role === "admin" || (!!user && features.ai && features.premium);
+  return { visible, loaded: features.loaded && !loading };
 }

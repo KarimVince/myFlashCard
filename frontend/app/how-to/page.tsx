@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useFeatures } from "@/lib/features";
+import { useAIVisible } from "@/lib/useAIVisible";
 
 type Step = { title: string; body: string; link?: { href: string; label: string } };
 
@@ -70,7 +70,7 @@ function Steps({ steps }: { steps: Step[] }) {
 }
 
 export default function HowToPage() {
-  const { ai, loaded } = useFeatures();
+  const { visible: ai, loaded } = useAIVisible();
   if (!loaded) return null;
   if (!ai) return <ManualOnly />;
 
