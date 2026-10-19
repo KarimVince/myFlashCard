@@ -131,6 +131,51 @@ def test_validate_deck_rejects_bad_decks(deck, msg):
         validate_deck(deck)
 
 
+CHART_DECK = {
+    "deckTitle": "Pasta",
+    "cards": [{
+        "title": "Carbonara", "icon": "🍝",
+        "blocks": [
+            {"type": "stats", "items": [{"label": "Time", "value": "20 min", "icon": "⏱️"}]},
+            {"type": "chart", "style": "bar", "unit": "kcal", "heading": "Calories",
+             "items": [{"label": "Pasta", "value": 350}, {"label": "Pecorino", "value": 120.5, "icon": "🧀"}]},
+            {"type": "chart", "style": "progress", "max": 100, "items": [{"label": "Protein", "value": 40}]},
+        ],
+    }],
+}
+
+
+def test_icons_and_charts_are_valid():
+    assert validate_deck(json.loads(json.dumps(CHART_DECK)))["cards"][0]["icon"] == "🍝"
+
+
+@pytest.mark.parametrize("path,value,msg", [
+    (("icon",), "Pasta", "single emoji"),
+    (("blocks", 0, "items", 0, "icon"), "clock", "single emoji"),
+    (("blocks", 2, "items", 0, "value"), 150, "more than max"),
+    (("blocks", 1, "items", 0, "value"), -5, "0 or more"),
+    (("blocks", 1, "items", 0, "value"), "350", "format"),
+    (("blocks", 1, "style"), "pie", "format"),
+    (("blocks", 1, "items"), [], "1 to 12 items"),
+    (("blocks", 1, "items"), [{"label": "a", "value": 0}], "above 0"),
+])
+def test_bad_icons_and_charts_are_rejected(path, value, msg):
+    deck = json.loads(json.dumps(CHART_DECK))
+    target = deck["cards"][0]
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    with pytest.raises(InvalidDeck, match=msg):
+        validate_deck(deck)
+
+
+def test_format_guide_teaches_icons_and_charts():
+    from app.ai.deck import FORMAT_GUIDE
+
+    assert '"type": "chart"' in FORMAT_GUIDE and '"icon"' in FORMAT_GUIDE
+    assert "Don't invent numbers" in FORMAT_GUIDE
+
+
 # ── Access by level ───────────────────────────────────────────────────────
 
 def test_options_requires_login(client):

@@ -12,7 +12,10 @@ export default function BlockRenderer({ block, accent }: Props) {
         <div className="grid grid-cols-2 gap-2">
           {block.items.map((item, i) => (
             <div key={i} className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 mb-0.5">{item.label}</p>
+              <p className="text-xs text-gray-500 mb-0.5">
+                {item.icon && <span className="mr-1" aria-hidden>{item.icon}</span>}
+                {item.label}
+              </p>
               <p className="text-sm font-bold text-gray-900 leading-snug">{item.value}</p>
             </div>
           ))}
@@ -93,7 +96,55 @@ export default function BlockRenderer({ block, accent }: Props) {
         </div>
       );
 
+    case "chart":
+      return <Chart block={block} accent={accent} />;
+
     default:
       return null;
   }
+}
+
+type ChartBlock = Extract<Block, { type: "chart" }>;
+
+/** Format a number the way people read it: 12, 12.5, 1,250 — no long decimals. */
+function formatValue(v: number): string {
+  return v.toLocaleString(undefined, { maximumFractionDigits: v < 10 ? 1 : 0 });
+}
+
+/** Horizontal bars, drawn with plain elements so they work offline and in any theme. */
+function Chart({ block, accent }: { block: ChartBlock; accent: string }) {
+  const color = block.accentColor ?? accent;
+  const progress = block.style === "progress";
+  const top = progress ? block.max ?? 100 : Math.max(...block.items.map((i) => i.value), 0);
+  // Values show their unit; a progress chart out of 100 with no unit reads as a percentage.
+  const suffix = block.unit ? ` ${block.unit}` : progress && top === 100 ? "%" : "";
+  const outOf = progress && top !== 100 ? ` / ${formatValue(top)}` : "";
+  return (
+    <figure className="space-y-2" aria-label={block.heading ?? "Chart"}>
+      {block.heading && (
+        <figcaption className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{block.heading}</figcaption>
+      )}
+      {block.items.map((item, i) => {
+        const pct = top > 0 ? Math.min(100, (item.value / top) * 100) : 0;
+        return (
+          <div key={i}>
+            <div className="flex justify-between gap-3 text-sm">
+              <span className="text-gray-700 min-w-0 truncate">
+                {item.icon && <span className="mr-1" aria-hidden>{item.icon}</span>}
+                {item.label}
+              </span>
+              <span className="font-semibold text-gray-900 shrink-0 tabular-nums">
+                {formatValue(item.value)}
+                {suffix}
+                {outOf && <span className="text-gray-400 font-normal">{outOf}</span>}
+              </span>
+            </div>
+            <div className="h-2 rounded-full mt-1 overflow-hidden" style={{ backgroundColor: `${color}22` }}>
+              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+            </div>
+          </div>
+        );
+      })}
+    </figure>
+  );
 }

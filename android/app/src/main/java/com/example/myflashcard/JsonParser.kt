@@ -21,7 +21,8 @@ object JsonParser {
         val accentColor = obj.optString("accentColor", "").takeIf { it.isNotBlank() }
         val blocksArr = obj.getJSONArray("blocks")
         val blocks = (0 until blocksArr.length()).map { parseBlock(blocksArr.getJSONObject(it)) }
-        return Card(title, subtitle, accentColor, blocks)
+        val icon = obj.optString("icon", "").takeIf { it.isNotBlank() }
+        return Card(title, subtitle, accentColor, blocks, icon)
     }
 
     private fun parseBlock(obj: JSONObject): Block {
@@ -34,7 +35,11 @@ object JsonParser {
                 val arr = obj.getJSONArray("items")
                 val items = (0 until arr.length()).map {
                     val item = arr.getJSONObject(it)
-                    StatItem(item.getString("label"), item.getString("value"))
+                    StatItem(
+                        item.getString("label"),
+                        item.getString("value"),
+                        item.optString("icon", "").takeIf { it.isNotBlank() }
+                    )
                 }
                 Block.Stats(items)
             }
@@ -57,6 +62,24 @@ object JsonParser {
                     (0 until arr.length()).map { arr.getDouble(it).toFloat() }
                 }
             )
+            "chart" -> {
+                val arr = obj.getJSONArray("items")
+                Block.Chart(
+                    style = obj.optString("style", "bar"),
+                    heading = obj.optString("heading", "").takeIf { it.isNotBlank() },
+                    unit = obj.optString("unit", "").takeIf { it.isNotBlank() },
+                    max = if (obj.has("max")) obj.optDouble("max") else null,
+                    accentColor = obj.optString("accentColor", "").takeIf { it.isNotBlank() },
+                    items = (0 until arr.length()).map {
+                        val item = arr.getJSONObject(it)
+                        ChartItem(
+                            item.getString("label"),
+                            item.optDouble("value", 0.0),
+                            item.optString("icon", "").takeIf { s -> s.isNotBlank() }
+                        )
+                    }
+                )
+            }
             "text" -> Block.TextBlock(obj.getString("text"))
             "image" -> Block.Image(obj.optString("url", "").takeIf { it.isNotBlank() })
             else -> Block.TextBlock("[Unknown block: $type]")

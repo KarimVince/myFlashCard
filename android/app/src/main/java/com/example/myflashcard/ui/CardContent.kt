@@ -33,7 +33,7 @@ fun CardHeader(card: Card, deckAccent: Color) {
             .padding(top = 6.dp, bottom = 6.dp)
     ) {
         Text(
-            text = card.title,
+            text = if (card.icon != null) "${card.icon} ${card.title}" else card.title,
             fontFamily = FontFamily.Serif,
             fontSize = 27.sp,
             lineHeight = 33.sp,
@@ -95,7 +95,7 @@ fun StatsBlock(block: Block.Stats) {
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = item.label,
+                    text = if (item.icon != null) "${item.icon} ${item.label}" else item.label,
                     fontSize = 11.sp,
                     color = DimText,
                     textAlign = TextAlign.Center,
@@ -303,6 +303,74 @@ fun ImageBlockView(block: Block.Image) {
     }
 }
 
+// ── Chart (horizontal bars) ────────────────────────────────────────────────────
+
+/** 12, 12.5, 1250 — no long decimals. */
+fun formatChartValue(v: Double): String =
+    if (v == Math.floor(v) || v >= 10) Math.round(v).toString() else String.format(java.util.Locale.ROOT, "%.1f", v)
+
+/** Text after a value: its unit, "%" for a progress chart out of 100, or " / max". */
+fun chartValueLabel(block: Block.Chart, value: Double): String {
+    val progress = block.style == "progress"
+    val top = block.max ?: 100.0
+    val suffix = when {
+        block.unit != null -> " ${block.unit}"
+        progress && top == 100.0 -> "%"
+        else -> ""
+    }
+    val outOf = if (progress && top != 100.0) " / ${formatChartValue(top)}" else ""
+    return formatChartValue(value) + suffix + outOf
+}
+
+/** Share of the full bar (0..1) for one value. */
+fun chartFraction(block: Block.Chart, value: Double): Float {
+    val top = if (block.style == "progress") block.max ?: 100.0 else block.items.maxOfOrNull { it.value } ?: 0.0
+    return if (top > 0) (value / top).coerceIn(0.0, 1.0).toFloat() else 0f
+}
+
+@Composable
+fun ChartBlock(block: Block.Chart, accent: Color) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (block.heading != null) {
+            BlockHeading(text = block.heading, accent = accent)
+        }
+        block.items.forEach { item ->
+            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = if (item.icon != null) "${item.icon} ${item.label}" else item.label,
+                        fontSize = 14.sp,
+                        color = PrimaryText,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = chartValueLabel(block, item.value),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryText
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(accent.copy(alpha = 0.15f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(chartFraction(block, item.value))
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(accent)
+                    )
+                }
+            }
+        }
+    }
+}
+
 // ── Section heading (shared by Table and Steps) ────────────────────────────────
 
 @Composable
@@ -340,6 +408,7 @@ fun BlockView(block: Block, card: Card, deck: CardDeck) {
             is Block.Table     -> TableBlock(block, accent)
             is Block.TextBlock -> TextBlockView(block, accent)
             is Block.Image     -> ImageBlockView(block)
+            is Block.Chart     -> ChartBlock(block, accent)
         }
     }
 }

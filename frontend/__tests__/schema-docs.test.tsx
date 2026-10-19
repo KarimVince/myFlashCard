@@ -58,3 +58,11 @@ test("schema field table renders expected columns", async () => {
   expect(screen.getByText("Required")).toBeInTheDocument();
   expect(screen.getByText("Description")).toBeInTheDocument();
 });
+
+test("prompts and field table include the optional icons and charts", async () => {
+  render(<SchemaPage />);
+  await waitFor(() => expect(screen.getByText(/Create a recipe deck/i)).toBeInTheDocument());
+  expect(screen.getByText(/Optional extras \(all deck types\)/)).toBeInTheDocument();
+  expect(screen.getByText("cards[].icon")).toBeInTheDocument();
+  expect(screen.getByText("blocks[].type = chart")).toBeInTheDocument();
+});

@@ -10,10 +10,13 @@ data class Card(
     val title: String,
     val subtitle: String?,
     val accentColor: String?,
-    val blocks: List<Block>
+    val blocks: List<Block>,
+    val icon: String? = null          // one emoji shown before the title
 )
 
-data class StatItem(val label: String, val value: String)
+data class StatItem(val label: String, val value: String, val icon: String? = null)
+
+data class ChartItem(val label: String, val value: Double, val icon: String? = null)
 
 sealed class Block {
     data class Note(
@@ -38,6 +41,16 @@ sealed class Block {
         val columns: List<String>,
         val rows: List<List<String>>,
         val columnWeights: List<Float>? = null   // optional relative widths, e.g. [0.3, 0.7]
+    ) : Block()
+
+    /** Horizontal bars: "bar" scales to the largest value; "progress" is each value out of [max] (default 100). */
+    data class Chart(
+        val style: String,
+        val heading: String?,
+        val unit: String?,
+        val max: Double?,
+        val accentColor: String?,
+        val items: List<ChartItem>
     ) : Block()
 
     data class TextBlock(val text: String) : Block()

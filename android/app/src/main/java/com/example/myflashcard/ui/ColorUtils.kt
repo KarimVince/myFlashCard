@@ -66,6 +66,7 @@ fun resolveAccent(block: Block, card: Card, deck: CardDeck): Color {
         is Block.Note  -> block.accentColor
         is Block.Steps -> block.accentColor
         is Block.Table -> block.accentColor
+        is Block.Chart -> block.accentColor
         else           -> null
     }
     return resolveAccent(blockHex, card, deck)

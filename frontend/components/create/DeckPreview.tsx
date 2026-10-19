@@ -6,6 +6,7 @@ import { Block } from "@/components/app/AppShell";
 interface PreviewCard {
   title: string;
   subtitle?: string;
+  icon?: string;
   accentColor?: string;
   blocks: Block[];
 }
@@ -21,7 +22,10 @@ export default function DeckPreview({ deck }: { deck: { deckTitle: string; accen
           <article key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <header className="px-4 py-3 text-white" style={{ backgroundColor: accent }}>
               <p className="text-xs opacity-80">Card {i + 1} of {cards.length}</p>
-              <h3 className="font-semibold leading-snug">{card.title}</h3>
+              <h3 className="font-semibold leading-snug">
+                {card.icon && <span className="mr-1.5" aria-hidden>{card.icon}</span>}
+                {card.title}
+              </h3>
               {card.subtitle && <p className="text-sm opacity-90">{card.subtitle}</p>}
             </header>
             <div className="p-4 space-y-4">

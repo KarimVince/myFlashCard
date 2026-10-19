@@ -75,7 +75,10 @@ export default function CardViewer({ deck, json, onClose }: Props) {
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
           <div className="px-5 pt-5 pb-4" style={{ borderLeftWidth: 4, borderLeftColor: accent }}>
-            <h2 className="text-lg font-bold text-gray-900 leading-snug">{card.title}</h2>
+            <h2 className="text-lg font-bold text-gray-900 leading-snug">
+              {card.icon && <span className="mr-1.5" aria-hidden>{card.icon}</span>}
+              {card.title}
+            </h2>
             {card.subtitle && (
               <p className="text-sm text-gray-500 mt-1">{card.subtitle}</p>
             )}

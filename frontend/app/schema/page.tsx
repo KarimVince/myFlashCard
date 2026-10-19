@@ -45,6 +45,21 @@ const FIELD_DOCS: Record<
   ],
 };
 
+/** Optional extras that work for every deck type. Appended to each category's prompt. */
+const PROMPT_EXTRAS = `Optional extras (all deck types):
+- "icon": one emoji on a card, e.g. "icon": "🍝". Stats items can also have an "icon".
+- A "chart" block for real numbers worth comparing (2–8 items):
+  { "type": "chart", "style": "bar", "heading": "Calories", "unit": "kcal",
+    "items": [ { "label": "Pasta", "value": 350 }, { "label": "Cheese", "value": 120 } ] }
+  "style": "bar" compares amounts; "progress" shows parts of a whole out of "max" (default 100).
+  Values are plain numbers; put the unit in "unit". Don't invent numbers.`;
+
+const COMMON_FIELDS: { field: string; type: string; required: boolean; description: string }[] = [
+  { field: "cards[].icon", type: "string (emoji)", required: false, description: "One emoji shown before the card title" },
+  { field: "stats items[].icon", type: "string (emoji)", required: false, description: "Emoji before a stat's label" },
+  { field: "blocks[].type = chart", type: "object", required: false, description: "Bar or progress chart: style, items [{label, value}], optional heading, unit, max" },
+];
+
 export default function SchemaPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [active, setActive] = useState<string>("recipe");
@@ -58,11 +73,12 @@ export default function SchemaPage() {
   }, []);
 
   const cat = categories.find((c) => c.slug === active);
-  const fields = FIELD_DOCS[active] ?? [];
+  const fields = [...(FIELD_DOCS[active] ?? []), ...COMMON_FIELDS];
+  const prompt = cat?.ai_prompt ? `${cat.ai_prompt}\n\n${PROMPT_EXTRAS}` : null;
 
   function copyPrompt() {
-    if (!cat?.ai_prompt) return;
-    navigator.clipboard.writeText(cat.ai_prompt).then(() => {
+    if (!prompt) return;
+    navigator.clipboard.writeText(prompt).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -113,7 +129,7 @@ export default function SchemaPage() {
               </button>
             </div>
             <pre className="bg-gray-900 text-gray-100 rounded-xl p-4 text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap">
-              {cat.ai_prompt ?? "No prompt available yet."}
+              {prompt ?? "No prompt available yet."}
             </pre>
           </section>
 

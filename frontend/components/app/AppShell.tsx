@@ -25,15 +25,27 @@ export interface DeckJson {
 export interface CardData {
   title: string;
   subtitle?: string;
+  /** One emoji shown before the title. */
+  icon?: string;
   accentColor?: string;
   blocks: Block[];
 }
 
 export type Block =
-  | { type: "stats"; items: { label: string; value: string }[] }
+  | { type: "stats"; items: { label: string; value: string; icon?: string }[] }
   | { type: "note"; text: string; accentColor?: string }
   | { type: "steps"; style: "number" | "bullet"; items: string[]; accentColor?: string }
-  | { type: "table"; columns: string[]; rows: string[][]; heading?: string; accentColor?: string };
+  | { type: "table"; columns: string[]; rows: string[][]; heading?: string; accentColor?: string }
+  | {
+      type: "chart";
+      /** bar: compare amounts (scaled to the largest); progress: each value out of `max` (default 100). */
+      style: "bar" | "progress";
+      items: { label: string; value: number; icon?: string }[];
+      heading?: string;
+      unit?: string;
+      max?: number;
+      accentColor?: string;
+    };
 
 interface Props {
   initialTab?: Tab;
