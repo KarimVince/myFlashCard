@@ -1,6 +1,6 @@
 name: Deploy
 
-# MANUAL TRIGGER — select target and environment in the GitHub Actions UI → "Run workflow".
+# MANUAL TRIGGER — select target, track and status in the GitHub Actions UI → "Run workflow".
 # Backend and frontend also deploy automatically on push to main via auto-deploy.yml;
 # use this workflow for Android releases and for manual redeploys.
 #
@@ -10,9 +10,17 @@ name: Deploy
 #   frontend — trigger Render deploy hook
 #   all      — all of the above
 #
-# Environments:
-#   staging    → Play Store Internal Testing track
-#   production → Play Store Production track
+# Play tracks (Android only):
+#   alpha      → Closed testing
+#   internal   → Internal testing
+#   production → Production (the service account needs production permission first)
+#
+# Play status (Android only):
+#   completed → roll the release out on the track
+#   draft     → upload it and finish the rollout by hand in Play Console
+#
+# Before each Android release: bump appVersion in android/app/build.gradle.kts
+# and update the release notes in android/whatsnew/whatsnew-en-US.
 
 on:
   workflow_dispatch:
@@ -27,14 +35,23 @@ on:
           - frontend
           - all
         default: android
-      environment:
-        description: 'Target environment'
+      track:
+        description: 'Play track (alpha = Closed testing)'
         required: true
         type: choice
         options:
-          - staging
+          - alpha
+          - internal
           - production
-        default: staging
+        default: alpha
+      status:
+        description: 'Play release status'
+        required: true
+        type: choice
+        options:
+          - completed
+          - draft
+        default: completed
 
 jobs:
   # ── Step 0: Run full test suite before anything deploys ───────────────────
@@ -74,7 +91,7 @@ jobs:
 
   # ── Step 1: Build signed AAB and upload to Play Store ────────────────────
   deploy-android:
-    name: Build AAB → Play Store (${{ inputs.environment }})
+    name: Build AAB → Play Store (${{ inputs.track }}, ${{ inputs.status }})
     needs: test
     if: inputs.target == 'android' || inputs.target == 'all'
     runs-on: ubuntu-latest
@@ -103,17 +120,18 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/willygo-release.keystore
 
       - name: Write local.properties (CI credentials only — no sdk.dir needed)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           printf 'KEYSTORE_PASSWORD=%s\nKEY_PASSWORD=%s\n' \
-            "${{ secrets.KEYSTORE_PASSWORD }}" \
-            "${{ secrets.KEY_PASSWORD }}" \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" \
             > android/local.properties
 
       - name: Build signed release AAB
         working-directory: android
-        env:
-          VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew bundleRelease --no-daemon
+        # The offset keeps version codes above those of the releases uploaded by hand (1–4).
+        run: VERSION_CODE=$(( ${{ github.run_number }} + 100 )) ./gradlew bundleRelease --no-daemon
 
       - name: Upload AAB artifact (for inspection)
         uses: actions/upload-artifact@v4
@@ -128,9 +146,8 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
           packageName: com.willygo.myflashcard
           releaseFiles: android/app/build/outputs/bundle/release/*.aab
-          # staging → Internal Testing track; production → Production track
-          track: ${{ inputs.environment == 'production' && 'production' || 'internal' }}
-          status: completed
+          track: ${{ inputs.track }}
+          status: ${{ inputs.status }}
           whatsNewDirectory: android/whatsnew
 
   # ── Step 2: Backend deploy → Render ──────────────────────────────────────
