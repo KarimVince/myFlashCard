@@ -6,11 +6,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myflashcard.AppSession
+import com.example.myflashcard.BuildConfig
 import com.example.myflashcard.api.ApiClient
 import com.example.myflashcard.models.TIER_LABELS
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +49,24 @@ fun AccountScreen(session: AppSession, onBack: () -> Unit, onOpenAISettings: () 
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (session.user == null) SignedOut(session) else SignedIn(session, onBack, onOpenAISettings)
+            AppInfo()
         }
+    }
+}
+
+// ── App info: shows which build is running ────────────────────────────────────
+
+@Composable
+private fun AppInfo() {
+    val build = if (BuildConfig.DEBUG) " · ${BuildConfig.BUILD_TYPE} build" else ""
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+    ) {
+        Text("myFlashCard", color = DimText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text("By WillYGO", color = DimText, fontSize = 12.sp)
+        Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})$build", color = DimText, fontSize = 12.sp)
     }
 }
 

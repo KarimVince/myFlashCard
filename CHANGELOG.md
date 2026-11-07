@@ -8,6 +8,7 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 ## [Unreleased]
 
 ### Added — 2.1 (in progress)
+- Android: the Account screen shows the app name, creator and version, so you can tell which build is running
 - AI from a document: on Create, add a PDF, Word (.docx) or text file (.txt, .md, .csv); its text (up to about 12,000 characters, ~3,000 words) is sent with the description and the AI builds the deck from it. The file isn't stored. Scanned PDFs (images of pages) aren't supported yet
 - Deck format: optional emoji **icons** (one per card, shown before the title; optional on stats) and a **chart** block — horizontal bars (`"style": "bar"`, scaled to the largest value) or progress bars (`"style": "progress"`, out of `max`, default 100), with optional heading and unit. Drawn by the website, web app and Android app (no images, works offline). The AI is told to use them sparingly and never to invent numbers; every value is checked. The JSON Schema page lists them and adds them to each copied prompt. Older Android versions show a chart as an "Unknown block" line
 - iPhone web app matches Android 2.0: header with logo and account button (alias or "Log in") opening an in-app Account screen (log in / create account, plan badge, AI settings, profile & password, Admin, log out); account pages opened from the app show "‹ Back to the app". The **Create** tab is always there, like Android: AI creation (when offered), your AI decks with Open, Remove and — for admins — "＋ Library", a manual guide, and **Load from file** for a .json deck
