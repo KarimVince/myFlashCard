@@ -13,6 +13,8 @@ Format: [Semantic Versioning](https://semver.org) — `MAJOR.MINOR.PATCH`.
 - iPhone web app matches Android 2.0: header with logo and account button (alias or "Log in") opening an in-app Account screen (log in / create account, plan badge, AI settings, profile & password, Admin, log out); account pages opened from the app show "‹ Back to the app". The **Create** tab is always there, like Android: AI creation (when offered), your AI decks with Open, Remove and — for admins — "＋ Library", a manual guide, and **Load from file** for a .json deck
 
 ### Fixed — 2.1
+- Android: a deck opened with **Load from file** now stays in My Decks, like library decks (loading the same title again replaces it)
+- Security: Row-Level Security is on for every database table, so Supabase's public Data API can't read or change them
 - Library "Download JSON" sometimes opened the deck as a web page instead of saving it: the link redirected to the file in storage (another site), where browsers ignore "download". The backend now serves the file itself as an attachment named after the deck (e.g. `crepes-a-l-orange.json`), so it always downloads
 
 ### Added

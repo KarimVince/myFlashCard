@@ -89,6 +89,7 @@ private fun FlashCardApp() {
             val json = stream.bufferedReader().use { it.readText() }
             val deck = JsonParser.parse(json)
             if (deck.cards.isEmpty()) error("No cards found in the file")
+            DeckStorage.save(context, DeckStorage.personalFilename(deck.deckTitle), json.toByteArray())
             errorMessage = null
             screen = Screen.Viewer(deck)
         } catch (e: Exception) {

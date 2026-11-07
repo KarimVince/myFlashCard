@@ -66,7 +66,7 @@ fun MyDecksScreen(
         if (localDecks.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "No decks yet.\nBrowse the Library or load a file from My Own.",
+                    text = "No decks yet.\nBrowse the Library or load a file from Create.",
                     fontSize = 15.sp,
                     color = DimText,
                     textAlign = TextAlign.Center,
